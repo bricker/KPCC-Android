@@ -15,9 +15,9 @@ Here's a high-level view of all the key screens in the app and how they fit toge
 
 We created a number of interactive prototypes to document the small animations and transitions we were trying to achieve in certain spots. Here are links to relevant prototypes:
 
-[On-Demand Player: Swiping Between Episodes](http://scpr.github.io/KPCC-iPhone-Prototypes/prototype.iphone.programs-prev-next.framer/)
-[Live Player: Loading preroll from a cold start](http://scpr.github.io/KPCC-iPhone-Prototypes/prototype.iphone.home-preroll.framer/)
-[App Onboarding](http://scpr.github.io/KPCC-iPhone-Prototypes/prototype.iphone.onboarding.framer/)
+* [On-Demand Player: Swiping Between Episodes](http://scpr.github.io/KPCC-iPhone-Prototypes/prototype.iphone.programs-prev-next.framer/)
+* [Live Player: Loading preroll from a cold start](http://scpr.github.io/KPCC-iPhone-Prototypes/prototype.iphone.home-preroll.framer/)
+* [App Onboarding](http://scpr.github.io/KPCC-iPhone-Prototypes/prototype.iphone.onboarding.framer/)
 
 A lot of these design and interaction details (especially the use of blurred images) have a distinctly iOS aesthetic to them, and I need your expertise in assessing whether this design will feel appropriate for Android, and also whether there are native APIs or 3rd party libraries that will make it possible to accomplish this on Android without a large amount of effort. So consider these prototypes a conversation starter rather than a firm target to hit. 
 
