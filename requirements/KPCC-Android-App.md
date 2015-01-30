@@ -9,7 +9,7 @@ Here's a high-level view of all the key screens in the app and how they fit toge
 
 ![KPCC Phone App - Storyboards](AppStoryboards.png)
 
-**A note about stream rewinding features:** Android has poor support for HTTP Live Streaming, which we've found is the best way to deliver StreamMachine's live rewind features. Because of that and our desire  we're choosing not to implement any of the live rewind features in this first version of the Android app.
+**A note about stream rewinding features:** Android has poor support for HTTP Live Streaming, which we've found is the best way to deliver StreamMachine's live rewind features. Because of that and our desire to get an app to market soon, we're choosing not to implement any of the live rewind features in this first version of the Android app.
 
 ## Prototypes
 
