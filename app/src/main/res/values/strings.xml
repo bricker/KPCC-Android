@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">KPCC for Android BETA</string>
+    <string name="title_section1">KPCC Live</string>
+    <string name="title_section2">Programs</string>
+    <string name="title_section3">Headlines</string>
+    <string name="title_section4">Feedback</string>
+    <string name="title_section5">Donate</string>
+    <string name="navigation_drawer_open">Open navigation drawer</string>
+    <string name="navigation_drawer_close">Close navigation drawer</string>
+    <string name="action_example">Example action</string>
+    <string name="action_settings">Settings</string>
+    <string name="title_activity_programs">Programs</string>
+    <string name="hello_world">Hello world!</string>
+    <string name="title_activity_headlines">Headlines</string>
+    <string name="title_activity_program">Program</string>
+    <string name="title_activity_episode">Episode</string>
+    <string name="title_activity_feedback">Feedback</string>
+
+</resources>

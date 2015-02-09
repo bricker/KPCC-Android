@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="org.kpcc.android" >
+
+    <application
+        android:allowBackup="true"
+        android:icon="@drawable/ic_launcher"
+        android:label="@string/app_name"
+        android:theme="@style/AppTheme" >
+        <activity
+            android:name=".MainActivity"
+            android:label="@string/app_name" >
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        <activity
+            android:name=".ProgramsActivity"
+            android:label="@string/title_activity_programs" >
+        </activity>
+        <activity
+            android:name=".HeadlinesActivity"
+            android:label="@string/title_activity_headlines" >
+        </activity>
+        <activity
+            android:name=".ProgramActivity"
+            android:label="@string/title_activity_program"
+            android:parentActivityName=".ProgramsActivity" >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="org.kpcc.android.ProgramsActivity" />
+        </activity>
+        <activity
+            android:name=".EpisodeActivity"
+            android:label="@string/title_activity_episode"
+            android:parentActivityName=".ProgramActivity" >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="org.kpcc.android.ProgramActivity" />
+        </activity>
+        <activity
+            android:name=".FeedbackActivity"
+            android:label="@string/title_activity_feedback" >
+        </activity>
+    </application>
+
+</manifest>
