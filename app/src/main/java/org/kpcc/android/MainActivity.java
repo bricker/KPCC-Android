@@ -7,10 +7,8 @@ import android.os.Bundle;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBarActivity;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.webkit.WebView;
 
 
 public class MainActivity extends ActionBarActivity
@@ -25,9 +23,14 @@ public class MainActivity extends ActionBarActivity
      * Used to store the last screen title. For use in {@link #restoreActionBar()}.
      */
     private CharSequence mTitle;
+    public Analytics analytics;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        AppConfiguration.setupInstance(getApplicationContext());
+        Analytics.setupInstance(getApplicationContext());
+        analytics = Analytics.getInstance();
+
         Navigation.getInstance().addItem(0, R.string.kpcc_live,
                 new Navigation.NavigationItemSelectedCallback() {
                     public void perform() {
@@ -90,20 +93,7 @@ public class MainActivity extends ActionBarActivity
         );
 
         super.onCreate(savedInstanceState);
-
         setContentView(R.layout.activity_main);
-
-        // Build Navigation
-        // KPCC Live
-//        Navigation.getInstance().addNavigationItem(R.string.kpcc_live,
-//                new Navigation.NavigationItemSelectedCallback() {
-//                    public void perform(FragmentManager fragmentManager) {
-//                        fragmentManager.beginTransaction()
-//                                .replace(R.id.container, LiveFragment.newInstance(position))
-//                                .commit();
-//                    }
-//                }
-//        );
 
         mNavigationDrawerFragment = (NavigationDrawerFragment)
                 getSupportFragmentManager().findFragmentById(R.id.navigation_drawer);
@@ -158,4 +148,9 @@ public class MainActivity extends ActionBarActivity
         return super.onOptionsItemSelected(item);
     }
 
+    @Override
+    protected void onDestroy() {
+        analytics.flush();
+        super.onDestroy();
+    }
 }
