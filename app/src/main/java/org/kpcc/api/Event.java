@@ -15,6 +15,7 @@ public class Event extends Entity
     private int mId;
     private String mTitle;
     private String mPublicUrl;
+    private Date mUpdatedAt;
     private Date mStartDate;
     private Date mEndDate;
     private boolean mIsAllDay;
@@ -41,6 +42,7 @@ public class Event extends Entity
             event.setId(jsonEvent.getInt("id"));
             event.setTitle(jsonEvent.getString("title"));
             event.setPublicUrl(jsonEvent.getString("public_url"));
+            event.setUpdatedAt(parseISODate(jsonEvent.getString("updated_at")));
             event.setStartDate(parseISODate(jsonEvent.getString("start_date")));
             event.setEndDate(parseISODate(jsonEvent.getString("end_date")));
             event.setAllDay(jsonEvent.getBoolean("is_all_day"));
@@ -58,7 +60,7 @@ public class Event extends Entity
             if (jsonEvent.has("rsvp_url"))
             { event.setRsvpUrl(jsonEvent.getString("rsvp_url")); }
 
-            if (jsonEvent.has("category"))
+            if (jsonEvent.has("program"))
             { event.setProgram(Program.buildFromJson(jsonEvent.getJSONObject("program"))); }
 
             JSONArray assets = jsonEvent.getJSONArray("assets");
@@ -88,6 +90,7 @@ public class Event extends Entity
         mId = id;
     }
 
+
     public String getTitle()
     {
         return mTitle;
@@ -97,6 +100,7 @@ public class Event extends Entity
     {
         mTitle = title;
     }
+
 
     public String getPublicUrl()
     {
@@ -108,6 +112,16 @@ public class Event extends Entity
         mPublicUrl = publicUrl;
     }
 
+
+    public Date getUpdatedAt() {
+        return mUpdatedAt;
+    }
+
+    public void setUpdatedAt(Date updatedAt) {
+        mUpdatedAt = updatedAt;
+    }
+
+
     public Date getStartDate()
     {
         return mStartDate;
@@ -117,6 +131,7 @@ public class Event extends Entity
     {
         mStartDate = startDate;
     }
+
 
     public Date getEndDate()
     {
@@ -128,6 +143,7 @@ public class Event extends Entity
         mEndDate = endDate;
     }
 
+
     public boolean isAllDay()
     {
         return mIsAllDay;
@@ -137,6 +153,7 @@ public class Event extends Entity
     {
         mIsAllDay = isAllDay;
     }
+
 
     public String getTeaser()
     {
@@ -148,6 +165,7 @@ public class Event extends Entity
         mTeaser = teaser;
     }
 
+
     public String getBody()
     {
         return mBody;
@@ -157,6 +175,7 @@ public class Event extends Entity
     {
         mBody = body;
     }
+
 
     public String getPastTenseBody()
     {
@@ -168,6 +187,7 @@ public class Event extends Entity
         mPastTenseBody = pastTenseBody;
     }
 
+
     public String getHashtag()
     {
         return mHashtag;
@@ -177,6 +197,7 @@ public class Event extends Entity
     {
         mHashtag = hashtag;
     }
+
 
     public String getType()
     {
@@ -188,6 +209,7 @@ public class Event extends Entity
         mType = type;
     }
 
+
     public boolean isKpccEvent()
     {
         return mIsKpccEvent;
@@ -197,6 +219,7 @@ public class Event extends Entity
     {
         mIsKpccEvent = isKpccEvent;
     }
+
 
     public Location getLocation()
     {
@@ -208,6 +231,7 @@ public class Event extends Entity
         mLocation = location;
     }
 
+
     public Sponsor getSponsor()
     {
         return mSponsor;
@@ -218,6 +242,7 @@ public class Event extends Entity
         mSponsor = sponsor;
     }
 
+
     public String getRsvpUrl()
     {
         return mRsvpUrl;
@@ -227,6 +252,7 @@ public class Event extends Entity
     {
         mRsvpUrl = rsvpUrl;
     }
+
 
     public Program getProgram()
     {

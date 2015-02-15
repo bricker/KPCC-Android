@@ -17,8 +17,9 @@ public class ScheduleOccurrence extends Entity
 
     private String mTitle;
     private String mUrl;
-    private Date mStartDate;
-    private Date mEndDate;
+    private Date mStartsAt;
+    private Date mEndsAt;
+    private Date mSoftStartsAt;
     private boolean mIsRecurring;
     private Program mProgram;
 
@@ -32,8 +33,9 @@ public class ScheduleOccurrence extends Entity
             schedule.setTitle(jsonSchedule.getString("title"));
             schedule.setUrl(jsonSchedule.getString("public_url"));
             schedule.setIsRecurring(jsonSchedule.getBoolean("is_recurring"));
-            schedule.setStartDate(parseISODate(jsonSchedule.getString("starts_at")));
-            schedule.setEndDate(parseISODate(jsonSchedule.getString("ends_at")));
+            schedule.setStartsAt(parseISODate(jsonSchedule.getString("starts_at")));
+            schedule.setEndsAt(parseISODate(jsonSchedule.getString("ends_at")));
+            schedule.setSoftStartsAt(parseISODate(jsonSchedule.getString("ends_at")));
 
             if (jsonSchedule.has("program"))
             { schedule.setProgram(Program.buildFromJson(jsonSchedule.getJSONObject("program"))); }
@@ -69,25 +71,34 @@ public class ScheduleOccurrence extends Entity
     }
 
 
-    public Date getStartDate()
+    public Date getStartsAt()
     {
-        return mStartDate;
+        return mStartsAt;
     }
 
-    public void setStartDate(Date startDate)
+    public void setStartsAt(Date startsAt)
     {
-        mStartDate = startDate;
+        mStartsAt = startsAt;
     }
 
 
-    public Date getEndDate()
+    public Date getEndsAt()
     {
-        return mEndDate;
+        return mEndsAt;
     }
 
-    public void setEndDate(Date endDate)
+    public void setEndsAt(Date endsAt)
     {
-        mEndDate = endDate;
+        mEndsAt = endsAt;
+    }
+
+
+    public Date getSoftStartsAt() {
+        return mSoftStartsAt;
+    }
+
+    public void setSoftStartsAt(Date softStartsAt) {
+        mSoftStartsAt = softStartsAt;
     }
 
 

@@ -24,7 +24,7 @@ import com.loopj.android.http.RequestParams;
 //   }
 public class BaseApiClient
 {
-    public static final String API_ROOT = "http://www.scpr.org/api/v2/";
+    public static final String API_ROOT = "http://www.scpr.org/api/v3/";
 
     protected String mEndpoint;
     protected AsyncHttpClient client = new AsyncHttpClient();

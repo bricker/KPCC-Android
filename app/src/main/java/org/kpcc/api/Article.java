@@ -21,19 +21,22 @@ public class Article extends Entity
     private String mId;
     private String mTitle;
     private String mShortTitle;
-    private String mPublicUrl;
-    private Category mCategory;
     private String mByline;
-    private Date mTimestamp;
+    private Date mPublishedAt;
+    private Date mUpdatedAt;
     private String mTeaser;
     private String mBody;
     private Spanned mParsedBody;
+    private String mPublicUrl;
+    private String mThumbnail;
+    private Category mCategory;
     private ArrayList<Asset> mAssets = new ArrayList<Asset>();
     private ArrayList<Audio> mAudio = new ArrayList<Audio>();
     private ArrayList<Attribution> mAttributions = new ArrayList<Attribution>();
+    private ArrayList<Tag> mTags = new ArrayList<Tag>();
 
     // Build an Article from a JSON response.
-    // https://github.com/SCPR/api-docs/blob/master/KPCC/v2/endpoints/articles.md
+    // https://github.com/SCPR/api-docs/blob/master/KPCC/v3/endpoints/articles.md
     public static Article buildFromJson(JSONObject jsonArticle)
     {
         Article article = new Article();
@@ -43,27 +46,36 @@ public class Article extends Entity
             article.setId(jsonArticle.getString("id"));
             article.setTitle(jsonArticle.getString("title"));
             article.setShortTitle(jsonArticle.getString("short_title"));
-            article.setPublicUrl(jsonArticle.getString("public_url"));
             article.setByline(jsonArticle.getString("byline"));
+            article.setPublishedAt(parseISODate(jsonArticle.getString("published_at")));
+            article.setUpdatedAt(parseISODate(jsonArticle.getString("updated_at")));
             article.setTeaser(jsonArticle.getString("teaser"));
             article.setBody(jsonArticle.getString("body"));
-            article.setTimestamp(parseISODate(jsonArticle.getString("published_at")));
+            article.setPublicUrl(jsonArticle.getString("public_url"));
+            article.setThumbnail(jsonArticle.getString("thumbnail"));
 
             if (jsonArticle.has("category"))
             { article.setCategory(Category.buildFromJson(jsonArticle.getJSONObject("category"))); }
 
             JSONArray assets = jsonArticle.getJSONArray("assets");
-            for (int i=0; i < assets.length(); i++)
-            { article.addAsset(Asset.buildFromJson(assets.getJSONObject(i))); }
+            for (int i=0; i < assets.length(); i++) {
+                article.addAsset(Asset.buildFromJson(assets.getJSONObject(i)));
+            }
 
             JSONArray audio = jsonArticle.getJSONArray("audio");
-            for (int i=0; i < audio.length(); i++)
-            { article.addAudio(Audio.buildFromJson(audio.getJSONObject(i))); }
+            for (int i=0; i < audio.length(); i++) {
+                article.addAudio(Audio.buildFromJson(audio.getJSONObject(i)));
+            }
 
             JSONArray attributions = jsonArticle.getJSONArray("attributions");
-            for (int i=0; i < attributions.length(); i++)
-            { article.addAttribution(Attribution.buildFromJson(attributions.getJSONObject(i))); }
+            for (int i=0; i < attributions.length(); i++) {
+                article.addAttribution(Attribution.buildFromJson(attributions.getJSONObject(i)));
+            }
 
+            JSONArray tags = jsonArticle.getJSONArray("tags");
+            for (int i=0; i < tags.length(); i++) {
+                article.addTag(Tag.buildFromJson(tags.getJSONObject(i)));
+            }
         } catch (JSONException e) {
             // TODO: Handle error
             e.printStackTrace();
@@ -71,14 +83,6 @@ public class Article extends Entity
 
         return article;
     }
-
-
-    @Override
-    public String toString()
-    {
-        return mTitle;
-    }
-
 
     public String getId()
     {
@@ -123,6 +127,13 @@ public class Article extends Entity
         mPublicUrl = publicUrl;
     }
 
+    public String getThumbnail() {
+        return mThumbnail;
+    }
+
+    public void setThumbnail(String thumbnail) {
+        mThumbnail = thumbnail;
+    }
 
     public Category getCategory()
     {
@@ -146,16 +157,23 @@ public class Article extends Entity
     }
 
 
-    public Date getTimestamp()
+    public Date getPublishedAt()
     {
-        return mTimestamp;
+        return mPublishedAt;
     }
 
-    public void setTimestamp(Date timestamp)
+    public void setPublishedAt(Date publishedAt)
     {
-        mTimestamp = timestamp;
+        mPublishedAt = publishedAt;
     }
 
+    public Date getUpdatedAt() {
+        return mUpdatedAt;
+    }
+
+    public void setUpdatedAt(Date updatedAt) {
+        mUpdatedAt = updatedAt;
+    }
 
     public String getTeaser()
     {
@@ -250,6 +268,27 @@ public class Article extends Entity
     public boolean hasAttributions()
     {
         return mAttributions.size() > 0;
+    }
+
+
+    public ArrayList<Tag> getTags()
+    {
+        return mTags;
+    }
+
+    public void setTags(ArrayList<Tag> tags)
+    {
+        mTags = tags;
+    }
+
+    public void addTag(Tag tag)
+    {
+        mTags.add(tag);
+    }
+
+    public boolean hasTags()
+    {
+        return mTags.size() > 0;
     }
 
 }

@@ -17,6 +17,7 @@ public class Edition extends Entity
     private int mId;
     private String mTitle;
     private Date mPublishedAt;
+    private Date mUpdatedAt;
     private ArrayList<Abstract> mAbstracts;
 
 
@@ -29,6 +30,7 @@ public class Edition extends Entity
             edition.setId(jsonEdition.getInt("id"));
             edition.setTitle(jsonEdition.getString("title"));
             edition.setPublishedAt(parseISODate(jsonEdition.getString("published_at")));
+            edition.setUpdatedAt(parseISODate(jsonEdition.getString("updated_at")));
 
             JSONArray abstracts = jsonEdition.getJSONArray("abstracts");
             for (int i=0; i < abstracts.length(); i++)
@@ -73,6 +75,15 @@ public class Edition extends Entity
     public void setPublishedAt(Date publishedAt)
     {
         mPublishedAt = publishedAt;
+    }
+
+
+    public Date getUpdatedAt() {
+        return mUpdatedAt;
+    }
+
+    public void setUpdatedAt(Date updatedAt) {
+        mUpdatedAt = updatedAt;
     }
 
 

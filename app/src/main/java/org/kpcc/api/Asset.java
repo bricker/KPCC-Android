@@ -5,7 +5,7 @@ import org.json.JSONObject;
 
 public class Asset extends Entity
 {
-
+    private int mId;
     private String mTitle;
     private String mCaption;
     private String mCredit;
@@ -22,6 +22,7 @@ public class Asset extends Entity
 
         try
         {
+            asset.setId(jsonAsset.getInt("id"));
             asset.setTitle(jsonAsset.getString("title"));
             asset.setCaption(jsonAsset.getString("caption"));
             asset.setCredit(jsonAsset.getString("owner"));
@@ -42,6 +43,15 @@ public class Asset extends Entity
         }
 
         return asset;
+    }
+
+
+    public int getId() {
+        return mId;
+    }
+
+    public void setId(int id) {
+        mId = id;
     }
 
 
