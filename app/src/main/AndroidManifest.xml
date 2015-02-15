@@ -16,34 +16,6 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity
-            android:name=".ProgramsActivity"
-            android:label="@string/title_activity_programs" >
-        </activity>
-        <activity
-            android:name=".HeadlinesActivity"
-            android:label="@string/title_activity_headlines" >
-        </activity>
-        <activity
-            android:name=".ProgramActivity"
-            android:label="@string/title_activity_program"
-            android:parentActivityName=".ProgramsActivity" >
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value="org.kpcc.android.ProgramsActivity" />
-        </activity>
-        <activity
-            android:name=".EpisodeActivity"
-            android:label="@string/title_activity_episode"
-            android:parentActivityName=".ProgramActivity" >
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value="org.kpcc.android.ProgramActivity" />
-        </activity>
-        <activity
-            android:name=".FeedbackActivity"
-            android:label="@string/title_activity_feedback" >
-        </activity>
     </application>
 
 </manifest>

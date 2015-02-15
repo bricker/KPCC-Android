@@ -1,22 +1,16 @@
 package org.kpcc.android;
 
-import android.app.Activity;
-import android.support.v7.app.ActionBarActivity;
-import android.support.v7.app.ActionBar;
-import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentManager;
-import android.content.Context;
-import android.os.Build;
+import android.app.FragmentManager;
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
-import android.view.Gravity;
-import android.view.LayoutInflater;
+import android.support.v4.widget.DrawerLayout;
+import android.support.v7.app.ActionBar;
+import android.support.v7.app.ActionBarActivity;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
-import android.view.ViewGroup;
-import android.support.v4.widget.DrawerLayout;
-import android.widget.ArrayAdapter;
-import android.widget.TextView;
+import android.webkit.WebView;
 
 
 public class MainActivity extends ActionBarActivity
@@ -34,8 +28,82 @@ public class MainActivity extends ActionBarActivity
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        Navigation.getInstance().addItem(0, R.string.kpcc_live,
+                new Navigation.NavigationItemSelectedCallback() {
+                    public void perform() {
+                        FragmentManager fragmentManager = getFragmentManager();
+
+                        fragmentManager.beginTransaction()
+                                .replace(R.id.container, LiveFragment.newInstance())
+                                .commit();
+                    }
+                }
+        );
+
+        Navigation.getInstance().addItem(1, R.string.programs,
+                new Navigation.NavigationItemSelectedCallback() {
+                    public void perform() {
+                        FragmentManager fragmentManager = getFragmentManager();
+
+                        fragmentManager.beginTransaction()
+                                .replace(R.id.container, ProgramsFragment.newInstance())
+                                .commit();
+                    }
+                }
+        );
+
+        Navigation.getInstance().addItem(2, R.string.headlines,
+                new Navigation.NavigationItemSelectedCallback() {
+                    public void perform() {
+                        FragmentManager fragmentManager = getFragmentManager();
+
+                        fragmentManager.beginTransaction()
+                                .replace(R.id.container, HeadlinesFragment.newInstance())
+                                .commit();
+                    }
+                }
+        );
+
+        Navigation.getInstance().addItem(3, R.string.donate,
+                new Navigation.NavigationItemSelectedCallback() {
+                    public void perform() {
+                        Uri uri = Uri.parse("http://scpr.org");
+                        Intent intent = new Intent(Intent.ACTION_VIEW, uri);
+                        startActivity(intent);
+//                        WebView webView = new WebView(getApplicationContext());
+//                        setContentView(webView);
+//                        webView.loadUrl("http://www.scpr.org");
+                    }
+                }
+        );
+
+        Navigation.getInstance().addItem(4, R.string.feedback,
+                new Navigation.NavigationItemSelectedCallback() {
+                    public void perform() {
+                        FragmentManager fragmentManager = getFragmentManager();
+
+                        fragmentManager.beginTransaction()
+                                .replace(R.id.container, FeedbackFragment.newInstance())
+                                .commit();
+                    }
+                }
+        );
+
         super.onCreate(savedInstanceState);
+
         setContentView(R.layout.activity_main);
+
+        // Build Navigation
+        // KPCC Live
+//        Navigation.getInstance().addNavigationItem(R.string.kpcc_live,
+//                new Navigation.NavigationItemSelectedCallback() {
+//                    public void perform(FragmentManager fragmentManager) {
+//                        fragmentManager.beginTransaction()
+//                                .replace(R.id.container, LiveFragment.newInstance(position))
+//                                .commit();
+//                    }
+//                }
+//        );
 
         mNavigationDrawerFragment = (NavigationDrawerFragment)
                 getSupportFragmentManager().findFragmentById(R.id.navigation_drawer);
@@ -49,31 +117,14 @@ public class MainActivity extends ActionBarActivity
 
     @Override
     public void onNavigationDrawerItemSelected(int position) {
+        Navigation.NavigationItem item = Navigation.getInstance().getItem(position);
+
         // update the main content by replacing fragments
-        FragmentManager fragmentManager = getSupportFragmentManager();
-        fragmentManager.beginTransaction()
-                .replace(R.id.container, PlaceholderFragment.newInstance(position + 1))
-                .commit();
+        item.performCallback();
     }
 
-    public void onSectionAttached(int number) {
-        switch (number) {
-            case 1:
-                mTitle = getString(R.string.title_section1);
-                break;
-            case 2:
-                mTitle = getString(R.string.title_section2);
-                break;
-            case 3:
-                mTitle = getString(R.string.title_section3);
-                break;
-            case 4:
-                mTitle = getString(R.string.title_section4);
-                break;
-            case 5:
-                mTitle = getString(R.string.title_section5);
-                break;
-        }
+    public void onSectionAttached(int titleId) {
+        mTitle = getString(titleId);
     }
 
     public void restoreActionBar() {
@@ -104,52 +155,7 @@ public class MainActivity extends ActionBarActivity
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
 
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
-        }
-
         return super.onOptionsItemSelected(item);
-    }
-
-    /**
-     * A placeholder fragment containing a simple view.
-     */
-    public static class PlaceholderFragment extends Fragment {
-        /**
-         * The fragment argument representing the section number for this
-         * fragment.
-         */
-        private static final String ARG_SECTION_NUMBER = "section_number";
-
-        /**
-         * Returns a new instance of this fragment for the given section
-         * number.
-         */
-        public static PlaceholderFragment newInstance(int sectionNumber) {
-            PlaceholderFragment fragment = new PlaceholderFragment();
-            Bundle args = new Bundle();
-            args.putInt(ARG_SECTION_NUMBER, sectionNumber);
-            fragment.setArguments(args);
-            return fragment;
-        }
-
-        public PlaceholderFragment() {
-        }
-
-        @Override
-        public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                                 Bundle savedInstanceState) {
-            View rootView = inflater.inflate(R.layout.fragment_main, container, false);
-            return rootView;
-        }
-
-        @Override
-        public void onAttach(Activity activity) {
-            super.onAttach(activity);
-            ((MainActivity) activity).onSectionAttached(
-                    getArguments().getInt(ARG_SECTION_NUMBER));
-        }
     }
 
 }
