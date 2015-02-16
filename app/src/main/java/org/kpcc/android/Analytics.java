@@ -1,7 +1,6 @@
 package org.kpcc.android;
 
 import android.content.Context;
-import android.util.Log;
 
 import com.mixpanel.android.mpmetrics.MixpanelAPI;
 
@@ -23,7 +22,6 @@ public class Analytics {
 
     public static void setupInstance(Context context) {
         if (instance == null) {
-            Log.d(TAG, "Setting Instance with context: " + context.toString());
             instance = new Analytics(context);
         }
     }
@@ -39,7 +37,6 @@ public class Analytics {
     }
 
     public void logEvent(String name) {
-        Log.d(TAG, "Logging event with MixPanel: " + mMixpanelAPI.toString());
         // Send empty parameters
         JSONObject parameters = new JSONObject();
         mMixpanelAPI.track(name, parameters);

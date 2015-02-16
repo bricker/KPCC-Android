@@ -38,13 +38,13 @@ public class LiveFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_live, container, false);
+        return inflater.inflate(org.kpcc.android.R.layout.fragment_live, container, false);
     }
 
     @Override
     public void onAttach(Activity activity) {
         super.onAttach(activity);
-        ((MainActivity) activity).onSectionAttached(R.string.kpcc_live);
+        ((MainActivity) activity).onSectionAttached(org.kpcc.android.R.string.kpcc_live);
     }
 
     @Override

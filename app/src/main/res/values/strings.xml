@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-
-    <string name="app_name">KPCC for Android BETA</string>
+    <string name="app_name">KPCC Radio</string>
     <string name="kpcc_live">KPCC Live</string>
     <string name="programs">Programs</string>
     <string name="episodes">Episodes</string>
