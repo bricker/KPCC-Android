@@ -1,18 +1,24 @@
 package org.kpcc.api;
 
+import android.support.annotation.NonNull;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 
 
 public class Program extends Entity
+        implements Comparable<Program>
 {
+    public final static String ENDPOINT = "programs";
+    public final static String PLURAL_KEY = "programs";
+    public final static String SINGULAR_KEY = "programs";
 
     // API Client
-    public final static BaseApiClient Client = new BaseApiClient("programs");
+    public final static BaseApiClient Client = new BaseApiClient(ENDPOINT);
 
 
     private String mTitle;
-    private String mId;
+    private String mSlug;
     private String mHost;
     private String mAirStatus;
     private String mTwitterHandle;
@@ -30,7 +36,7 @@ public class Program extends Entity
         try
         {
             program.setTitle(jsonProgram.getString("title"));
-            program.setId(jsonProgram.getString("slug"));
+            program.setSlug(jsonProgram.getString("slug"));
             program.setHost(jsonProgram.getString("host"));
             program.setAirStatus(jsonProgram.getString("air_status"));
             program.setAirtime(jsonProgram.getString("airtime"));
@@ -61,20 +67,24 @@ public class Program extends Entity
         return mTitle;
     }
 
+    protected String getNormalizedTitle() {
+        return mTitle.replaceFirst("^(The )", "");
+    }
+
     public void setTitle(String title)
     {
         mTitle = title;
     }
 
 
-    public String getId()
+    public String getSlug()
     {
-        return mId;
+        return mSlug;
     }
 
-    public void setId(String id)
+    public void setSlug(String slug)
     {
-        mId = id;
+        mSlug = slug;
     }
 
 
@@ -165,4 +175,9 @@ public class Program extends Entity
         mPublicUrl = publicUrl;
     }
 
+
+    @Override
+    public int compareTo(@NonNull Program otherProgram) {
+        return getNormalizedTitle().compareTo(otherProgram.getNormalizedTitle());
+    }
 }
