@@ -38,13 +38,13 @@ public class HeadlinesFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        return inflater.inflate(org.kpcc.android.R.layout.fragment_headlines, container, false);
+        return inflater.inflate(R.layout.fragment_headlines, container, false);
     }
 
     @Override
     public void onAttach(Activity activity) {
         super.onAttach(activity);
-        ((MainActivity) activity).onSectionAttached(org.kpcc.android.R.string.headlines);
+        ((MainActivity) activity).onSectionAttached(R.string.headlines);
     }
 
     @Override

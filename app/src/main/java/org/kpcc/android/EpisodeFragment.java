@@ -38,13 +38,13 @@ public class EpisodeFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        return inflater.inflate(org.kpcc.android.R.layout.fragment_episode, container, false);
+        return inflater.inflate(R.layout.fragment_episode, container, false);
     }
 
     @Override
     public void onAttach(Activity activity) {
         super.onAttach(activity);
-        ((MainActivity) activity).onSectionAttached(org.kpcc.android.R.string.episode);
+        ((MainActivity) activity).onSectionAttached(R.string.episode);
     }
 
     @Override

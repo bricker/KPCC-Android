@@ -29,43 +29,43 @@ public class MainActivity extends ActionBarActivity
     protected void onCreate(Bundle savedInstanceState) {
         analytics = Analytics.getInstance();
 
-        Navigation.getInstance().addItem(0, org.kpcc.android.R.string.kpcc_live,
+        Navigation.getInstance().addItem(0, R.string.kpcc_live,
                 new Navigation.NavigationItemSelectedCallback() {
                     public void perform() {
                         FragmentManager fragmentManager = getFragmentManager();
 
                         fragmentManager.beginTransaction()
-                                .replace(org.kpcc.android.R.id.container, LiveFragment.newInstance())
+                                .replace(R.id.container, LiveFragment.newInstance())
                                 .commit();
                     }
                 }
         );
 
-        Navigation.getInstance().addItem(1, org.kpcc.android.R.string.programs,
+        Navigation.getInstance().addItem(1, R.string.programs,
                 new Navigation.NavigationItemSelectedCallback() {
                     public void perform() {
                         FragmentManager fragmentManager = getFragmentManager();
 
                         fragmentManager.beginTransaction()
-                                .replace(org.kpcc.android.R.id.container, ProgramsFragment.newInstance())
+                                .replace(R.id.container, ProgramsFragment.newInstance())
                                 .commit();
                     }
                 }
         );
 
-        Navigation.getInstance().addItem(2, org.kpcc.android.R.string.headlines,
+        Navigation.getInstance().addItem(2, R.string.headlines,
                 new Navigation.NavigationItemSelectedCallback() {
                     public void perform() {
                         FragmentManager fragmentManager = getFragmentManager();
 
                         fragmentManager.beginTransaction()
-                                .replace(org.kpcc.android.R.id.container, HeadlinesFragment.newInstance())
+                                .replace(R.id.container, HeadlinesFragment.newInstance())
                                 .commit();
                     }
                 }
         );
 
-        Navigation.getInstance().addItem(3, org.kpcc.android.R.string.donate,
+        Navigation.getInstance().addItem(3, R.string.donate,
                 new Navigation.NavigationItemSelectedCallback() {
                     public void perform() {
                         Uri uri = Uri.parse("http://scpr.org");
@@ -78,29 +78,41 @@ public class MainActivity extends ActionBarActivity
                 }
         );
 
-        Navigation.getInstance().addItem(4, org.kpcc.android.R.string.feedback,
+        Navigation.getInstance().addItem(4, R.string.feedback,
                 new Navigation.NavigationItemSelectedCallback() {
                     public void perform() {
                         FragmentManager fragmentManager = getFragmentManager();
 
                         fragmentManager.beginTransaction()
-                                .replace(org.kpcc.android.R.id.container, FeedbackFragment.newInstance())
+                                .replace(R.id.container, FeedbackFragment.newInstance())
+                                .commit();
+                    }
+                }
+        );
+
+        Navigation.getInstance().addItem(5, R.string.settings,
+                new Navigation.NavigationItemSelectedCallback() {
+                    public void perform() {
+                        FragmentManager fragmentManager = getFragmentManager();
+
+                        fragmentManager.beginTransaction()
+                                .replace(R.id.container, SettingsFragment.newInstance())
                                 .commit();
                     }
                 }
         );
 
         super.onCreate(savedInstanceState);
-        setContentView(org.kpcc.android.R.layout.activity_main);
+        setContentView(R.layout.activity_main);
 
         mNavigationDrawerFragment = (NavigationDrawerFragment)
-                getSupportFragmentManager().findFragmentById(org.kpcc.android.R.id.navigation_drawer);
+                getSupportFragmentManager().findFragmentById(R.id.navigation_drawer);
         mTitle = getTitle();
 
         // Set up the drawer.
         mNavigationDrawerFragment.setUp(
-                org.kpcc.android.R.id.navigation_drawer,
-                (DrawerLayout) findViewById(org.kpcc.android.R.id.drawer_layout));
+                R.id.navigation_drawer,
+                (DrawerLayout) findViewById(R.id.drawer_layout));
     }
 
     @Override
@@ -129,7 +141,7 @@ public class MainActivity extends ActionBarActivity
             // Only show items in the action bar relevant to this screen
             // if the drawer is not showing. Otherwise, let the drawer
             // decide what to show in the action bar.
-            getMenuInflater().inflate(org.kpcc.android.R.menu.main, menu);
+            getMenuInflater().inflate(R.menu.main, menu);
             restoreActionBar();
             return true;
         }
