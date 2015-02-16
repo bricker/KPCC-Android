@@ -13,7 +13,7 @@ import org.json.JSONObject;
 public class Analytics {
     private static Analytics instance = null;
     public static final String TAG = "Analytics";
-    private static final String TOKEN = AppConfiguration.getInstance().getConfig("mixpanelToken");
+    private static final String TOKEN = AppConfiguration.getInstance().getConfig("mixpanel.token");
 
     private MixpanelAPI mMixpanelAPI;
 

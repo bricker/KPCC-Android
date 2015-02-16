@@ -27,8 +27,6 @@ public class MainActivity extends ActionBarActivity
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        AppConfiguration.setupInstance(getApplicationContext());
-        Analytics.setupInstance(getApplicationContext());
         analytics = Analytics.getInstance();
 
         Navigation.getInstance().addItem(0, R.string.kpcc_live,
