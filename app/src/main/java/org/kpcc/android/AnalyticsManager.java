@@ -9,26 +9,26 @@ import org.json.JSONObject;
 /**
  * Created by rickb014 on 2/15/15.
  */
-public class Analytics {
-    private static Analytics instance = null;
-    public static final String TAG = "Analytics";
-    private static final String TOKEN = AppConfiguration.getInstance().getConfig("mixpanel.token");
+public class AnalyticsManager {
+    private static AnalyticsManager instance = null;
+    public static final String TAG = "AnalyticsManager";
+    private static final String MIXPANEL_TOKEN = AppConfiguration.getInstance().getConfig("mixpanel.token");
 
     private MixpanelAPI mMixpanelAPI;
 
-    public static Analytics getInstance() {
+    public static AnalyticsManager getInstance() {
         return instance;
     }
 
     public static void setupInstance(Context context) {
         if (instance == null) {
-            instance = new Analytics(context);
+            instance = new AnalyticsManager(context);
         }
     }
 
 
-    protected Analytics(Context context) {
-        mMixpanelAPI = MixpanelAPI.getInstance(context, TOKEN);
+    protected AnalyticsManager(Context context) {
+        mMixpanelAPI = MixpanelAPI.getInstance(context, MIXPANEL_TOKEN);
     }
 
 

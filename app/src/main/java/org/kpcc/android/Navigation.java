@@ -4,7 +4,7 @@ public class Navigation {
     private static Navigation instance = null;
 
     // We're declaring the size statically so we can use native Array.
-    private NavigationItem[] mNavigationItems = new NavigationItem[5];
+    private NavigationItem[] mNavigationItems = new NavigationItem[6];
 
     protected Navigation() { }
 

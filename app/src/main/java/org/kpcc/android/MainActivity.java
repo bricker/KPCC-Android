@@ -23,11 +23,11 @@ public class MainActivity extends ActionBarActivity
      * Used to store the last screen title. For use in {@link #restoreActionBar()}.
      */
     private CharSequence mTitle;
-    public Analytics analytics;
+    public AnalyticsManager mAnalyticsManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        analytics = Analytics.getInstance();
+        mAnalyticsManager = AnalyticsManager.getInstance();
 
         Navigation.getInstance().addItem(0, R.string.kpcc_live,
                 new Navigation.NavigationItemSelectedCallback() {
@@ -160,7 +160,7 @@ public class MainActivity extends ActionBarActivity
 
     @Override
     protected void onDestroy() {
-        analytics.flush();
+        mAnalyticsManager.flush();
         super.onDestroy();
     }
 }

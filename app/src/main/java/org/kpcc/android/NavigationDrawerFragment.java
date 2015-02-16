@@ -57,7 +57,7 @@ public class NavigationDrawerFragment extends Fragment {
     private boolean mFromSavedInstanceState;
     private boolean mUserLearnedDrawer;
 
-    public Analytics analytics;
+    public AnalyticsManager mAnalyticsManager;
 
     public NavigationDrawerFragment() {
     }
@@ -65,7 +65,7 @@ public class NavigationDrawerFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        analytics = Analytics.getInstance();
+        mAnalyticsManager = AnalyticsManager.getInstance();
 
         // Read in the flag indicating whether or not the user has demonstrated awareness of the
         // drawer. See PREF_USER_LEARNED_DRAWER for details.
@@ -152,7 +152,7 @@ public class NavigationDrawerFragment extends Fragment {
         ) {
             @Override
             public void onDrawerClosed(View drawerView) {
-                analytics.logEvent("menuClosed");
+                mAnalyticsManager.logEvent("menuClosed");
 
                 super.onDrawerClosed(drawerView);
                 if (!isAdded()) {
@@ -164,7 +164,7 @@ public class NavigationDrawerFragment extends Fragment {
 
             @Override
             public void onDrawerOpened(View drawerView) {
-                analytics.logEvent("menuOpened");
+                mAnalyticsManager.logEvent("menuOpened");
 
                 super.onDrawerOpened(drawerView);
                 if (!isAdded()) {
