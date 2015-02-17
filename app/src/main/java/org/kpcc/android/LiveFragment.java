@@ -6,6 +6,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.TextView;
 
 import com.loopj.android.http.JsonHttpResponseHandler;
@@ -25,12 +26,9 @@ import java.util.Date;
 public class LiveFragment extends Fragment {
     public final static String TAG = "LiveFragment";
 
-    private final static long PREROLL_THRESHOLD = 600L;
-    public final static String LIVESTREAM_URL = "http://live.scpr.org/aac";
-    public final static String LIVESTREAM_NOPREROLL_URL = LIVESTREAM_URL + "?preskip=true";
-
-    public TextView mTitle;
-    public TextView mStatus;
+    private TextView mTitle;
+    private TextView mStatus;
+    private Button mStreamPlayBtn;
 
     /**
      * Use this factory method to create a new instance of
@@ -89,8 +87,27 @@ public class LiveFragment extends Fragment {
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_live, container, false);
 
+
         mTitle = (TextView) view.findViewById(R.id.live_title);
         mStatus = (TextView) view.findViewById(R.id.live_status);
+        mStreamPlayBtn = (Button) view.findViewById(R.id.play_button);
+
+        mStreamPlayBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                MainActivity activity = (MainActivity) getActivity();
+                StreamManager sm = activity.getStreamManager();
+
+                if (activity.streamIsBound()) {
+                    if (sm.isPlaying()) {
+                        sm.stop();
+                        sm.release();
+                    } else {
+                        sm.startLiveStream();
+                    }
+                }
+            }
+        });
 
         return view;
     }

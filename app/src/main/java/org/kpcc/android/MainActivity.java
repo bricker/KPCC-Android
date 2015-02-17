@@ -1,26 +1,34 @@
 package org.kpcc.android;
 
+import android.content.ComponentName;
+import android.content.Context;
+import android.content.Intent;
+import android.content.ServiceConnection;
+import android.os.Binder;
 import android.os.Bundle;
+import android.os.IBinder;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBarActivity;
+import android.util.Log;
 
 
 public class MainActivity extends ActionBarActivity
         implements NavigationDrawerFragment.NavigationDrawerCallbacks {
+
+    public final static String TAG = "kpcc.MainActivity";
 
     /**
      * Fragment managing the behaviors, interactions and presentation of the navigation drawer.
      */
     private NavigationDrawerFragment mNavigationDrawerFragment;
 
-    public AnalyticsManager mAnalyticsManager;
+    private StreamManager mStreamManager;
+    private boolean mBound = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        mAnalyticsManager = AnalyticsManager.getInstance();
-
         Navigation.getInstance().addItem(0, R.string.kpcc_live,
                 new Navigation.NavigationItemSelectedCallback() {
                     public void perform(FragmentManager fm) {
@@ -108,9 +116,56 @@ public class MainActivity extends ActionBarActivity
     }
 
 
+    public StreamManager getStreamManager() {
+        return mStreamManager;
+    }
+
+    public boolean streamIsBound() {
+        return mBound;
+    }
+
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        Intent intent = new Intent(this, StreamManager.class);
+        bindService(intent, mConnection, Context.BIND_AUTO_CREATE);
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+
+        if (mBound) {
+            unbindService(mConnection);
+            mBound = false;
+        }
+    }
+
     @Override
     protected void onDestroy() {
-        mAnalyticsManager.flush();
+        AnalyticsManager.getInstance().flush();
         super.onDestroy();
     }
+
+
+    private ServiceConnection mConnection = new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName className,
+                                       IBinder service) {
+            StreamManager.LocalBinder binder = (StreamManager.LocalBinder) service;
+            mStreamManager = binder.getService();
+            mBound = true;
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName arg0) {
+            if (mBound) {
+                mStreamManager.stop();
+                mStreamManager.release();
+            }
+
+            mBound = false;
+        }
+    };
 }
