@@ -1,6 +1,7 @@
 package org.kpcc.android;
 
 import android.app.Activity;
+import android.app.FragmentManager;
 import android.content.Context;
 import android.os.Bundle;
 import android.app.Fragment;
@@ -21,7 +22,9 @@ import org.kpcc.api.Program;
  * Large screen devices (such as tablets) are supported by replacing the ListView
  * with a GridView.
  */
-public class ProgramsFragment extends Fragment implements AbsListView.OnItemClickListener {
+public class ProgramsFragment extends Fragment
+        implements AdapterView.OnItemClickListener {
+
     public final static String TAG = "ProgramsFragment";
 
     /**
@@ -89,18 +92,12 @@ public class ProgramsFragment extends Fragment implements AbsListView.OnItemClic
     }
 
     @Override
-    public void onAttach(Activity activity) {
-        super.onAttach(activity);
-    }
-
-    @Override
-    public void onDetach() {
-        super.onDetach();
-    }
-
-
-    @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-        Log.d(TAG, "Loading program.");
+        Program program = ProgramsManager.ALL_PROGRAMS.get(position);
+
+        FragmentManager fragmentManager = getFragmentManager();
+        fragmentManager.beginTransaction()
+                .replace(R.id.container, EpisodesFragment.newInstance(program.getSlug()))
+                .commit();
     }
 }
