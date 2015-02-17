@@ -87,8 +87,6 @@ public class EpisodesFragment extends Fragment implements AbsListView.OnItemClic
 
             @Override
             public void onSuccess(JSONObject response) {
-                Log.d(TAG, "Got Episodes.");
-
                 try {
                     JSONArray jsonEpisodes = response.getJSONArray(Episode.PLURAL_KEY);
 
@@ -102,7 +100,6 @@ public class EpisodesFragment extends Fragment implements AbsListView.OnItemClic
                     }
 
                     Collections.sort(mEpisodes);
-                    Log.d(TAG, "Episodes: " + String.valueOf(jsonEpisodes.length()));
 
                     mAdapter = (new ArrayAdapter<Episode>(getActivity(), R.layout.list_item_episode, mEpisodes) {
                         @Override

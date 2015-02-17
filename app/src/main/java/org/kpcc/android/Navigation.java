@@ -1,5 +1,8 @@
 package org.kpcc.android;
 
+import android.app.FragmentManager;
+import android.content.Context;
+
 public class Navigation {
     private static Navigation instance = null;
 
@@ -46,12 +49,14 @@ public class Navigation {
             return mTitleId;
         }
 
-        public void performCallback() {
-            mCallback.perform();
+        public void performCallback(Context context) {
+            MainActivity activity = ((MainActivity) context);
+            FragmentManager fm = activity.getFragmentManager();
+            mCallback.perform(fm);
         }
     }
 
     public static interface NavigationItemSelectedCallback {
-        public void perform();
+        public void perform(FragmentManager fm);
     }
 }

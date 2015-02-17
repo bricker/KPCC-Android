@@ -40,15 +40,4 @@ public class FeedbackFragment extends Fragment {
         // Inflate the layout for this fragment
         return inflater.inflate(R.layout.fragment_feedback, container, false);
     }
-
-    @Override
-    public void onAttach(Activity activity) {
-        super.onAttach(activity);
-        ((MainActivity) activity).onSectionAttached(R.string.feedback);
-    }
-
-    @Override
-    public void onDetach() {
-        super.onDetach();
-    }
 }

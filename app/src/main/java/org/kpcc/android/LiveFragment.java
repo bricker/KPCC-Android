@@ -42,12 +42,6 @@ public class LiveFragment extends Fragment {
     }
 
     @Override
-    public void onAttach(Activity activity) {
-        super.onAttach(activity);
-        ((MainActivity) activity).onSectionAttached(R.string.kpcc_live);
-    }
-
-    @Override
     public void onDetach() {
         super.onDetach();
     }
