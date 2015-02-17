@@ -1,8 +1,7 @@
 package org.kpcc.android;
 
-import android.app.Fragment;
 import android.os.Bundle;
-import android.preference.PreferenceFragment;
+import android.support.v4.preference.PreferenceFragment;
 
 /**
  * A simple {@link Fragment} subclass.

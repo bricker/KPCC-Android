@@ -1,9 +1,9 @@
 package org.kpcc.android;
 
-import android.app.Fragment;
-import android.app.FragmentManager;
 import android.content.Context;
 import android.os.Bundle;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -158,7 +158,7 @@ public class EpisodesFragment extends Fragment implements AbsListView.OnItemClic
         Episode episode = mEpisodes.get(position);
         Audio audio = episode.getAudio();
 
-        FragmentManager fragmentManager = getFragmentManager();
+        FragmentManager fragmentManager = getActivity().getSupportFragmentManager();
         fragmentManager.beginTransaction()
                 .replace(R.id.container, EpisodeFragment.newInstance(
                         mProgram.getSlug(), episode.getTitle(), String.valueOf(episode.getAirDate()),

@@ -1,9 +1,9 @@
 package org.kpcc.android;
 
-import android.app.Fragment;
-import android.app.FragmentManager;
 import android.content.Context;
 import android.os.Bundle;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -94,7 +94,7 @@ public class ProgramsFragment extends Fragment
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
         Program program = ProgramsManager.ALL_PROGRAMS.get(position);
 
-        FragmentManager fragmentManager = getFragmentManager();
+        FragmentManager fragmentManager = getActivity().getSupportFragmentManager();
         fragmentManager.beginTransaction()
                 .replace(R.id.container, EpisodesFragment.newInstance(program.getSlug()))
                 .commit();

@@ -1,7 +1,7 @@
 package org.kpcc.android;
 
-import android.app.FragmentManager;
 import android.content.Context;
+import android.support.v4.app.FragmentManager;
 
 public class Navigation {
     private static Navigation instance = null;
@@ -51,7 +51,7 @@ public class Navigation {
 
         public void performCallback(Context context) {
             MainActivity activity = ((MainActivity) context);
-            FragmentManager fm = activity.getFragmentManager();
+            FragmentManager fm = activity.getSupportFragmentManager();
             mCallback.perform(fm);
         }
     }
