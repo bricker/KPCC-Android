@@ -44,8 +44,6 @@ public class DonateFragment extends Fragment {
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         View v = inflater.inflate(R.layout.fragment_donate, container, false);
-        final Activity activity = getActivity();
-
         WebView browser = (WebView) v.findViewById(R.id.donate);
 
         final LinearLayout progressBar = (LinearLayout) v.findViewById(R.id.progress_layout);

@@ -56,6 +56,7 @@ public class HeadlinesFragment extends Fragment {
 
         mProgressBar = (LinearLayout) v.findViewById(R.id.progress_layout);
 
+        // TODO: Handle back button. This would have to be handled in the Activity and checked if this is the current fragment.
         browser.setWebViewClient(new WebViewClient() {
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, String url) {
@@ -69,7 +70,6 @@ public class HeadlinesFragment extends Fragment {
                 mProgressBar.setVisibility(View.GONE);
                 super.onPageFinished(view, url);
             }
-
         });
 
         browser.setWebChromeClient(new WebChromeClient() {

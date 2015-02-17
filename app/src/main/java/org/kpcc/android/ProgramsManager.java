@@ -41,8 +41,6 @@ public class ProgramsManager {
         Program.Client.getCollection(params, new JsonHttpResponseHandler() {
             @Override
             public void onSuccess(JSONObject response) {
-                Log.d(TAG, "Got Programs");
-
                 // TODO: Download images too
 
                 try {
