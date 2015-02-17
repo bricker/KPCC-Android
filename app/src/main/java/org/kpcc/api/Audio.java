@@ -3,8 +3,6 @@ package org.kpcc.api;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.util.Date;
-
 public class Audio extends Entity
 {
     public final static String ENDPOINT = "audio";

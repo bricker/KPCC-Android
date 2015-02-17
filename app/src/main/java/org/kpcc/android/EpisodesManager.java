@@ -7,7 +7,6 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.kpcc.api.Episode;
-import org.kpcc.api.Program;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -33,7 +32,7 @@ public class EpisodesManager {
                 try {
                     JSONArray jsonEpisodes = response.getJSONArray(Episode.PLURAL_KEY);
 
-                    for (int i=0; i < jsonEpisodes.length(); i++) {
+                    for (int i = 0; i < jsonEpisodes.length(); i++) {
                         Episode episode = Episode.buildFromJson(jsonEpisodes.getJSONObject(i));
                         mEpisodes.add(episode);
                     }
