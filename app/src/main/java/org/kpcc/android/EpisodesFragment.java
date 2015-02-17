@@ -120,8 +120,7 @@ public class EpisodesFragment extends Fragment implements AbsListView.OnItemClic
                         }
                     });
 
-                    mListView.setAdapter(mAdapter);
-                    mProgressBar.setVisibility(View.GONE);
+                    setAdapter();
 
                 } catch (JSONException e) {
                     Log.d(TAG, "JSON Error");
@@ -149,6 +148,7 @@ public class EpisodesFragment extends Fragment implements AbsListView.OnItemClic
 
         // Set OnItemClickListener so we can be notified on item clicks
         mListView.setOnItemClickListener(this);
+        setAdapter();
 
         return view;
     }
@@ -163,6 +163,14 @@ public class EpisodesFragment extends Fragment implements AbsListView.OnItemClic
                 .replace(R.id.container, EpisodeFragment.newInstance(
                         mProgram.getSlug(), episode.getTitle(), String.valueOf(episode.getAirDate()),
                         audio.getUrl(), audio.getFilesizeBytes(), audio.getDurationSeconds()))
+                .addToBackStack(null)
                 .commit();
+    }
+
+    public void setAdapter() {
+        if (mAdapter != null) {
+            mListView.setAdapter(mAdapter);
+            mProgressBar.setVisibility(View.GONE);
+        }
     }
 }

@@ -97,6 +97,7 @@ public class ProgramsFragment extends Fragment
         FragmentManager fragmentManager = getActivity().getSupportFragmentManager();
         fragmentManager.beginTransaction()
                 .replace(R.id.container, EpisodesFragment.newInstance(program.getSlug()))
+                .addToBackStack(null)
                 .commit();
     }
 }
