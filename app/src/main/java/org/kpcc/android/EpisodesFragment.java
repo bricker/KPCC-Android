@@ -1,6 +1,7 @@
 package org.kpcc.android;
 
 import android.app.Fragment;
+import android.app.FragmentManager;
 import android.content.Context;
 import android.os.Bundle;
 import android.util.Log;
@@ -19,6 +20,7 @@ import com.loopj.android.http.RequestParams;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.kpcc.api.Audio;
 import org.kpcc.api.Episode;
 import org.kpcc.api.Program;
 
@@ -92,7 +94,11 @@ public class EpisodesFragment extends Fragment implements AbsListView.OnItemClic
 
                     for (int i=0; i < jsonEpisodes.length(); i++) {
                         Episode episode = Episode.buildFromJson(jsonEpisodes.getJSONObject(i));
-                        mEpisodes.add(episode);
+
+                        // Don't show the episode if there is no audio.
+                        if (episode.getAudio() != null) {
+                            mEpisodes.add(episode);
+                        }
                     }
 
                     Collections.sort(mEpisodes);
@@ -101,8 +107,6 @@ public class EpisodesFragment extends Fragment implements AbsListView.OnItemClic
                     mAdapter = (new ArrayAdapter<Episode>(getActivity(), R.layout.list_item_episode, mEpisodes) {
                         @Override
                         public View getView(int position, View convertView, ViewGroup parent) {
-                            Log.d(TAG, "getView called");
-
                             View v = convertView;
 
                             if (v == null) {
@@ -150,6 +154,14 @@ public class EpisodesFragment extends Fragment implements AbsListView.OnItemClic
 
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-        Log.d(TAG, "Loading episode.");
+        Episode episode = mEpisodes.get(position);
+        Audio audio = episode.getAudio();
+
+        FragmentManager fragmentManager = getFragmentManager();
+        fragmentManager.beginTransaction()
+                .replace(R.id.container, EpisodeFragment.newInstance(
+                        mProgram.getSlug(), episode.getTitle(), String.valueOf(episode.getAirDate()),
+                        audio.getUrl(), audio.getFilesizeBytes(), audio.getDurationSeconds()))
+                .commit();
     }
 }

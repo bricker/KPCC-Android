@@ -2,7 +2,22 @@
     xmlns:tools="http://schemas.android.com/tools" android:layout_width="match_parent"
     android:layout_height="match_parent" tools:context="org.kpcc.android.EpisodeFragment">
 
-    <TextView android:layout_width="match_parent" android:layout_height="match_parent"
-        android:text="@string/hello_blank_fragment" />
+    <TextView
+        android:id="@+id/episode_title"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:text="@string/episode" />
+
+    <TextView
+        android:id="@+id/air_date"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:text="@string/date" />
+
+    <TextView
+        android:id="@+id/audio_url"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:text="@string/date" />
 
 </FrameLayout>
