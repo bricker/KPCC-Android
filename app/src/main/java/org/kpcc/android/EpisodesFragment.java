@@ -11,6 +11,7 @@ import android.view.ViewGroup;
 import android.widget.AbsListView;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.LinearLayout;
 import android.widget.ListAdapter;
 import android.widget.TextView;
 
@@ -41,6 +42,7 @@ public class EpisodesFragment extends Fragment implements AbsListView.OnItemClic
      * The fragment's ListView/GridView.
      */
     private AbsListView mListView;
+    private LinearLayout mProgressBar;
 
     /**
      * The Adapter which will be used to populate the ListView/GridView with
@@ -63,7 +65,7 @@ public class EpisodesFragment extends Fragment implements AbsListView.OnItemClic
      * Mandatory empty constructor for the fragment manager to instantiate the
      * fragment (e.g. upon screen orientation changes).
      */
-    protected EpisodesFragment() {
+    public EpisodesFragment() {
     }
 
     @Override
@@ -119,6 +121,7 @@ public class EpisodesFragment extends Fragment implements AbsListView.OnItemClic
                     });
 
                     mListView.setAdapter(mAdapter);
+                    mProgressBar.setVisibility(View.GONE);
 
                 } catch (JSONException e) {
                     Log.d(TAG, "JSON Error");
@@ -142,6 +145,7 @@ public class EpisodesFragment extends Fragment implements AbsListView.OnItemClic
 
         // Set the adapter
         mListView = (AbsListView) view.findViewById(android.R.id.list);
+        mProgressBar = (LinearLayout) view.findViewById(R.id.progress_layout);
 
         // Set OnItemClickListener so we can be notified on item clicks
         mListView.setOnItemClickListener(this);

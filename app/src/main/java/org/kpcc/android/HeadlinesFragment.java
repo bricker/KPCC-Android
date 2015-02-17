@@ -23,6 +23,7 @@ public class HeadlinesFragment extends Fragment {
     private static final String SHORTLIST_URL = "http://www.scpr.org/short-list/latest#no-prelims";
 
     private boolean mDidBrowse = false;
+    private LinearLayout mProgressBar;
 
     /**
      * Use this factory method to create a new instance of
@@ -53,7 +54,7 @@ public class HeadlinesFragment extends Fragment {
 
         WebView browser = (WebView) v.findViewById(R.id.shortlist);
 
-        final LinearLayout progressBar = (LinearLayout) v.findViewById(R.id.progress_layout);
+        mProgressBar = (LinearLayout) v.findViewById(R.id.progress_layout);
 
         browser.setWebViewClient(new WebViewClient() {
             @Override
@@ -65,7 +66,7 @@ public class HeadlinesFragment extends Fragment {
 
             @Override
             public void onPageFinished(WebView view, String url) {
-                progressBar.setVisibility(View.GONE);
+                mProgressBar.setVisibility(View.GONE);
                 super.onPageFinished(view, url);
             }
 
