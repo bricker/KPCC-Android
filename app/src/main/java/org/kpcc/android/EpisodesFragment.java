@@ -83,11 +83,6 @@ public class EpisodesFragment extends Fragment implements AbsListView.OnItemClic
 
         Episode.Client.getCollection(params, new JsonHttpResponseHandler() {
             @Override
-            public void onStart() {
-                // TODO: Loading indicator
-            }
-
-            @Override
             public void onSuccess(JSONObject response) {
                 try {
                     JSONArray jsonEpisodes = response.getJSONArray(Episode.PLURAL_KEY);

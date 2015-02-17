@@ -10,17 +10,24 @@ import java.util.Date;
 
 public class ScheduleOccurrence extends Entity
 {
+    public final static String ENDPOINT = "schedule";
+    public final static String PLURAL_KEY = "schedule_occurrences";
+    public final static String SINGULAR_KEY = "schedule_occurrence";
+    public final static String CURRENT_ENDPOINT = "current";
+
+    public final static String PROP_TITLE = "title";
+    public final static String PROP_STARTS_AT = "starts_at";
+    public final static String PROP_ENDS_AT = "ends_at";
+    public final static String PROP_SOFT_STARTS_AT = "soft_starts_at";
 
     // API Client
-    public final static ApiClient Client = new ApiClient("schedule");
+    public final static ApiClient Client = new ApiClient(ENDPOINT);
 
 
     private String mTitle;
-    private String mUrl;
     private Date mStartsAt;
     private Date mEndsAt;
     private Date mSoftStartsAt;
-    private boolean mIsRecurring;
     private Program mProgram;
 
 
@@ -30,15 +37,13 @@ public class ScheduleOccurrence extends Entity
 
         try
         {
-            schedule.setTitle(jsonSchedule.getString("title"));
-            schedule.setUrl(jsonSchedule.getString("public_url"));
-            schedule.setIsRecurring(jsonSchedule.getBoolean("is_recurring"));
-            schedule.setStartsAt(parseISODateTime(jsonSchedule.getString("starts_at")));
-            schedule.setEndsAt(parseISODateTime(jsonSchedule.getString("ends_at")));
-            schedule.setSoftStartsAt(parseISODateTime(jsonSchedule.getString("soft_start_at")));
+            schedule.setTitle(jsonSchedule.getString(PROP_TITLE));
+            schedule.setStartsAt(parseISODateTime(jsonSchedule.getString(PROP_STARTS_AT)));
+            schedule.setEndsAt(parseISODateTime(jsonSchedule.getString(PROP_ENDS_AT)));
+            schedule.setSoftStartsAt(parseISODateTime(jsonSchedule.getString(PROP_SOFT_STARTS_AT)));
 
-            if (jsonSchedule.has("program"))
-            { schedule.setProgram(Program.buildFromJson(jsonSchedule.getJSONObject("program"))); }
+            if (jsonSchedule.has(Program.SINGULAR_KEY))
+            { schedule.setProgram(Program.buildFromJson(jsonSchedule.getJSONObject(Program.SINGULAR_KEY))); }
 
         } catch(JSONException e) {
             // TODO: Handle error
@@ -57,17 +62,6 @@ public class ScheduleOccurrence extends Entity
     public void setTitle(String title)
     {
         mTitle = title;
-    }
-
-
-    public String getUrl()
-    {
-        return mUrl;
-    }
-
-    public void setUrl(String url)
-    {
-        mUrl = url;
     }
 
 
@@ -102,17 +96,6 @@ public class ScheduleOccurrence extends Entity
     }
 
 
-    public boolean isRecurring()
-    {
-        return mIsRecurring;
-    }
-
-    public void setIsRecurring(boolean isRecurring)
-    {
-        mIsRecurring = isRecurring;
-    }
-
-
     public Program getProgram()
     {
         return mProgram;
@@ -130,7 +113,7 @@ public class ScheduleOccurrence extends Entity
 
         public void getCurrent(AsyncHttpResponseHandler handler)
         {
-            get("current", null, handler);
+            get(CURRENT_ENDPOINT, null, handler);
         }
     }
 
