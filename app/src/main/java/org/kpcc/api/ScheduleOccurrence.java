@@ -35,7 +35,7 @@ public class ScheduleOccurrence extends Entity
             schedule.setIsRecurring(jsonSchedule.getBoolean("is_recurring"));
             schedule.setStartsAt(parseISODateTime(jsonSchedule.getString("starts_at")));
             schedule.setEndsAt(parseISODateTime(jsonSchedule.getString("ends_at")));
-            schedule.setSoftStartsAt(parseISODateTime(jsonSchedule.getString("ends_at")));
+            schedule.setSoftStartsAt(parseISODateTime(jsonSchedule.getString("soft_start_at")));
 
             if (jsonSchedule.has("program"))
             { schedule.setProgram(Program.buildFromJson(jsonSchedule.getJSONObject("program"))); }
