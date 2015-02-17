@@ -30,7 +30,7 @@ public class Abstract extends Entity
             abs.setUrl(jsonAbstract.getString("url"));
             abs.setHeadline(jsonAbstract.getString("headline"));
             abs.setSummary(jsonAbstract.getString("summary"));
-            abs.setArticlePublishedAt(parseISODate(jsonAbstract.getString("article_published_at")));
+            abs.setArticlePublishedAt(parseISODateTime(jsonAbstract.getString("article_published_at")));
 
             if (jsonAbstract.has("category"))
             { abs.setCategory(Category.buildFromJson(jsonAbstract.getJSONObject("category"))); }

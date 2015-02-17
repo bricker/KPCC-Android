@@ -7,20 +7,21 @@ import java.util.Date;
 
 public class Audio extends Entity
 {
+    public final static String ENDPOINT = "audio";
+    public final static String PLURAL_KEY = "audio";
+    public final static String SINGULAR_KEY = "audio";
+
+    public final static String PROP_URL = "url";
+    public final static String PROP_DURATION = "duration";
+    public final static String PROP_FILESIZE = "filesize";
 
     // API Client
     public final static BaseApiClient Client = new BaseApiClient("audio");
 
 
-    private int mId;
-    private String mDescription;
     private String mUrl;
-    private String mByline;
-    private Date mUploadedAt;
-    private int mPosition;
     private int mDurationSeconds;
     private int mFilesizeBytes;
-    private String mArticleId;
 
 
     public static Audio buildFromJson(JSONObject jsonAudio)
@@ -29,15 +30,9 @@ public class Audio extends Entity
 
         try
         {
-            audio.setId(jsonAudio.getInt("id"));
-            audio.setDescription(jsonAudio.getString("description"));
-            audio.setUrl(jsonAudio.getString("url"));
-            audio.setByline(jsonAudio.getString("byline"));
-            audio.setPosition(jsonAudio.getInt("position"));
-            audio.setDurationSeconds(jsonAudio.getInt("duration"));
-            audio.setFilesizeBytes(jsonAudio.getInt("filesize"));
-            audio.setArticleId(jsonAudio.getString("article_obj_key"));
-            audio.setUploadedAt(parseISODate(jsonAudio.getString("uploaded_at")));
+            audio.setUrl(jsonAudio.getString(PROP_URL));
+            audio.setDurationSeconds(jsonAudio.getInt(PROP_DURATION));
+            audio.setFilesizeBytes(jsonAudio.getInt(PROP_FILESIZE));
 
         } catch(JSONException e) {
             // TODO: Handle error
@@ -45,28 +40,6 @@ public class Audio extends Entity
         }
 
         return audio;
-    }
-
-
-    public int getId()
-    {
-        return mId;
-    }
-
-    public void setId(int id)
-    {
-        mId = id;
-    }
-
-
-    public String getDescription()
-    {
-        return mDescription;
-    }
-
-    public void setDescription(String description)
-    {
-        mDescription = description;
     }
 
 
@@ -78,39 +51,6 @@ public class Audio extends Entity
     public void setUrl(String url)
     {
         mUrl = url;
-    }
-
-
-    public String getByline()
-    {
-        return mByline;
-    }
-
-    public void setByline(String byline)
-    {
-        mByline = byline;
-    }
-
-
-    public Date getUploadedAt()
-    {
-        return mUploadedAt;
-    }
-
-    public void setUploadedAt(Date uploadedAt)
-    {
-        mUploadedAt = uploadedAt;
-    }
-
-
-    public int getPosition()
-    {
-        return mPosition;
-    }
-
-    public void setPosition(int position)
-    {
-        mPosition = position;
     }
 
 
@@ -133,17 +73,6 @@ public class Audio extends Entity
     public void setFilesizeBytes(int filesizeBytes)
     {
         mFilesizeBytes = filesizeBytes;
-    }
-
-
-    public String getArticleId()
-    {
-        return mArticleId;
-    }
-
-    public void setArticleId(String articleId)
-    {
-        mArticleId = articleId;
     }
 
 }

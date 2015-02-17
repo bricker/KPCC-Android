@@ -8,20 +8,25 @@ import java.util.ArrayList;
 import java.util.Date;
 
 public class Episode extends Entity
+        implements Comparable<Episode>
 {
+    public final static String ENDPOINT = "episodes";
+    public final static String PLURAL_KEY = "episodes";
+    public final static String SINGULAR_KEY = "episode";
+
+    public final static String PROP_TITLE = "title";
+    public final static String PROP_AIR_DATE = "air_date";
+    public final static String PROP_PUBLIC_URL = "public_url";
 
     // API Client
-    public final static BaseApiClient Client = new BaseApiClient("episodes");
+    public final static BaseApiClient Client = new BaseApiClient(ENDPOINT);
 
 
     private String mTitle;
-    private String mSummary;
     private Date mAirDate;
     private String mPublicUrl;
     private Program mProgram;
-    private ArrayList<Asset> mAssets;
-    private ArrayList<Audio> mAudio;
-    private ArrayList<Article> mSegments;
+    private Audio mAudio;
 
 
     public static Episode buildFromJson(JSONObject jsonEpisode)
@@ -30,24 +35,17 @@ public class Episode extends Entity
 
         try
         {
-            episode.setTitle(jsonEpisode.getString("title"));
-            episode.setSummary(jsonEpisode.getString("summary"));
-            episode.setAirDate(parseISODate(jsonEpisode.getString("air_date")));
-            episode.setPublicUrl(jsonEpisode.getString("public_url"));
+            episode.setTitle(jsonEpisode.getString(PROP_TITLE));
+            episode.setAirDate(parseISODate(jsonEpisode.getString(PROP_AIR_DATE)));
+            episode.setPublicUrl(jsonEpisode.getString(PROP_PUBLIC_URL));
 
-            episode.setProgram(Program.buildFromJson(jsonEpisode.getJSONObject("program")));
+            episode.setProgram(Program.buildFromJson(jsonEpisode.getJSONObject(Program.SINGULAR_KEY)));
 
-            JSONArray assets = jsonEpisode.getJSONArray("assets");
-            for (int i=0; i < assets.length(); i++)
-            { episode.addAsset(Asset.buildFromJson(assets.getJSONObject(i))); }
-
-            JSONArray audio = jsonEpisode.getJSONArray("audio");
-            for (int i=0; i < audio.length(); i++)
-            { episode.addAudio(Audio.buildFromJson(audio.getJSONObject(i))); }
-
-            JSONArray segments = jsonEpisode.getJSONArray("segments");
-            for (int i=0; i < segments.length(); i++)
-            { episode.addSegment(Article.buildFromJson(segments.getJSONObject(i))); }
+            // This app only uses the first audio.
+            JSONObject audioJson = jsonEpisode.getJSONArray(Audio.PLURAL_KEY).getJSONObject(0);
+            if (audioJson != null) {
+                episode.setAudio(Audio.buildFromJson(audioJson));
+            }
 
         } catch (JSONException e) {
             // TODO: Handle exception
@@ -66,17 +64,6 @@ public class Episode extends Entity
     public void setTitle(String title)
     {
         mTitle = title;
-    }
-
-
-    public String getSummary()
-    {
-        return mSummary;
-    }
-
-    public void setSummary(String summary)
-    {
-        mSummary = summary;
     }
 
 
@@ -113,66 +100,20 @@ public class Episode extends Entity
     }
 
 
-    public ArrayList<Asset> getAssets()
-    {
-        return mAssets;
-    }
-
-    public void setAssets(ArrayList<Asset> assets)
-    {
-        mAssets = assets;
-    }
-
-    public void addAsset(Asset asset)
-    {
-        mAssets.add(asset);
-    }
-
-    public boolean hasAssets()
-    {
-        return mAssets.size() > 0;
-    }
-
-
-    public ArrayList<Audio> getAudio()
+    public Audio getAudio()
     {
         return mAudio;
     }
 
-    public void setAudio(ArrayList<Audio> audio)
+    public void setAudio(Audio audio)
     {
         mAudio = audio;
     }
 
-    public void addAudio(Audio audio)
-    {
-        mAudio.add(audio);
-    }
 
-    public boolean hasAudio()
-    {
-        return mAudio.size() > 0;
-    }
-
-
-    public ArrayList<Article> getSegments()
-    {
-        return mSegments;
-    }
-
-    public void setSegments(ArrayList<Article> segments)
-    {
-        mSegments = segments;
-    }
-
-    public void addSegment(Article segment)
-    {
-        mSegments.add(segment);
-    }
-
-    public boolean hasSegments()
-    {
-        return mSegments.size() > 0;
+    @Override
+    public int compareTo(@NonNull Episode otherEpisode) {
+        return -getAirDate().compareTo(otherEpisode.getAirDate());
     }
 
 }

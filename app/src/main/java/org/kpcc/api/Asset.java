@@ -5,6 +5,9 @@ import org.json.JSONObject;
 
 public class Asset extends Entity
 {
+    public final static String PLURAL_KEY = "assets";
+    public final static String SINGULAR_KEY = "asset";
+
     private int mId;
     private String mTitle;
     private String mCaption;

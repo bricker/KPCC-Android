@@ -29,8 +29,8 @@ public class Edition extends Entity
         {
             edition.setId(jsonEdition.getInt("id"));
             edition.setTitle(jsonEdition.getString("title"));
-            edition.setPublishedAt(parseISODate(jsonEdition.getString("published_at")));
-            edition.setUpdatedAt(parseISODate(jsonEdition.getString("updated_at")));
+            edition.setPublishedAt(parseISODateTime(jsonEdition.getString("published_at")));
+            edition.setUpdatedAt(parseISODateTime(jsonEdition.getString("updated_at")));
 
             JSONArray abstracts = jsonEdition.getJSONArray("abstracts");
             for (int i=0; i < abstracts.length(); i++)
