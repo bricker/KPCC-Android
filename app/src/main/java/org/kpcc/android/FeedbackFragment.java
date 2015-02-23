@@ -13,10 +13,6 @@ import android.widget.EditText;
 import android.widget.RadioButton;
 import android.widget.TextView;
 
-import com.loopj.android.http.JsonHttpResponseHandler;
-
-import org.json.JSONObject;
-
 public class FeedbackFragment extends Fragment {
     public static final String TAG = "kpcc.FeedbackFragment";
 

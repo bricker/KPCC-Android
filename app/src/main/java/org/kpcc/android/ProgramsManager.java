@@ -1,6 +1,5 @@
 package org.kpcc.android;
 
-import android.content.Context;
 import android.util.Log;
 
 import com.loopj.android.http.JsonHttpResponseHandler;
