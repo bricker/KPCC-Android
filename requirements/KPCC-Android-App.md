@@ -53,7 +53,7 @@ Sean will work to prepare and export all icons, images and sounds so they can be
 - [ ] After onboarding has finished, deliver the user to the Home/KPCC Live view
 
 ### All Programs
-- [ ] List all programs from the API endpoint where `air_status=onair`
+- [x] List all programs from the API endpoint where `air_status=onair`
 - [ ] If program avatar doesn't exist, render a generic gray avatar with the first letter of the show (ignoring the word "The")
 
 ### Single Program Episode
