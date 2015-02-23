@@ -10,19 +10,19 @@ import org.json.JSONObject;
  * Created by rickb014 on 2/15/15.
  */
 public class AnalyticsManager {
-    private static AnalyticsManager instance = null;
+    private static AnalyticsManager INSTANCE = null;
     public static final String TAG = "AnalyticsManager";
     private static final String MIXPANEL_TOKEN = AppConfiguration.getInstance().getConfig("mixpanel.token");
 
     private MixpanelAPI mMixpanelAPI;
 
     public static AnalyticsManager getInstance() {
-        return instance;
+        return INSTANCE;
     }
 
     public static void setupInstance(Context context) {
-        if (instance == null) {
-            instance = new AnalyticsManager(context);
+        if (INSTANCE == null) {
+            INSTANCE = new AnalyticsManager(context);
         }
     }
 

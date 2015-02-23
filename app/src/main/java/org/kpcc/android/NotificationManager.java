@@ -16,17 +16,17 @@ import com.parse.ParsePushBroadcastReceiver;
 public class NotificationManager
         implements SharedPreferences.OnSharedPreferenceChangeListener {
 
-    private static NotificationManager instance = null;
+    private static NotificationManager INSTANCE = null;
     public static final String TAG = "NotificationManager";
     public static final String CHANNEL_BREAKING_NEWS = "breakingNews";
 
     public static NotificationManager getInstance() {
-        return instance;
+        return INSTANCE;
     }
 
     public static void setupInstance(Application application) {
-        if (instance == null) {
-            instance = new NotificationManager(application);
+        if (INSTANCE == null) {
+            INSTANCE = new NotificationManager(application);
         }
     }
 

@@ -10,18 +10,18 @@ import com.parse.ParseInstallation;
  * functions) should be abstracted into different managers, which use Parse if they want to.
 */
 public class ParseManager {
-    private static ParseManager instance = null;
+    private static ParseManager INSTANCE = null;
     public static final String TAG = "ParseManager";
     private static final String PARSE_APP_ID = AppConfiguration.getInstance().getConfig("parse.applicationId");
     private static final String PARSE_CLIENT_KEY = AppConfiguration.getInstance().getConfig("parse.clientKey");
 
     public static ParseManager getInstance() {
-        return instance;
+        return INSTANCE;
     }
 
     public static void setupInstance(Application application) {
-        if (instance == null) {
-            instance = new ParseManager(application);
+        if (INSTANCE == null) {
+            INSTANCE = new ParseManager(application);
         }
     }
 

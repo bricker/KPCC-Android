@@ -15,26 +15,16 @@ import java.util.ArrayList;
 import java.util.Collections;
 
 public class ProgramsManager {
-    private static ProgramsManager instance = null;
+    private static ProgramsManager INSTANCE = new ProgramsManager();
+
     public static final String TAG = "ProgramsManager";
     public static ArrayList<Program> ALL_PROGRAMS = new ArrayList<Program>();
 
     public static ProgramsManager getInstance() {
-        return instance;
+        return INSTANCE;
     }
 
-    public static void setupInstance(Context context) {
-        if (instance == null) {
-            instance = new ProgramsManager(context);
-        }
-    }
-
-
-    protected ProgramsManager(Context context) {
-        loadAllPrograms();
-    }
-
-    public void loadAllPrograms() {
+    protected ProgramsManager() {
         RequestParams params = new RequestParams();
         params.add("air_status", "onair");
 
@@ -46,7 +36,7 @@ public class ProgramsManager {
                 try {
                     JSONArray jsonPrograms = response.getJSONArray(Program.PLURAL_KEY);
 
-                    for (int i=0; i < jsonPrograms.length(); i++) {
+                    for (int i = 0; i < jsonPrograms.length(); i++) {
                         Program program = Program.buildFromJson(jsonPrograms.getJSONObject(i));
                         ALL_PROGRAMS.add(program);
                     }

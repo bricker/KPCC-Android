@@ -11,18 +11,18 @@ import java.util.Properties;
 
 public class AppConfiguration {
     public static final String TAG = "AppConfiguration";
-    private static AppConfiguration instance = null;
+    private static AppConfiguration INSTANCE = null;
 
     private Properties props;
 
     public static void setupInstance(Context context) {
-        if (instance == null) {
-            instance = new AppConfiguration(context);
+        if (INSTANCE == null) {
+            INSTANCE = new AppConfiguration(context);
         }
     }
 
     public static AppConfiguration getInstance() {
-        return instance;
+        return INSTANCE;
     }
 
     // If keys.properties is missing or can't be read, you'll get a big ol' IOException.
