@@ -17,6 +17,7 @@ public class KPCCApplication extends Application {
         AnalyticsManager.setupInstance(this);
         NotificationManager.setupInstance(this);
         FeedbackManager.setupInstance();
+        ProgramsManager.setupInstance();
 
         super.onCreate();
 

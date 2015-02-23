@@ -14,13 +14,19 @@ import java.util.ArrayList;
 import java.util.Collections;
 
 public class ProgramsManager {
-    private static ProgramsManager INSTANCE = new ProgramsManager();
+    private static ProgramsManager INSTANCE = null;
 
     public static final String TAG = "ProgramsManager";
     public static ArrayList<Program> ALL_PROGRAMS = new ArrayList<Program>();
 
     public static ProgramsManager getInstance() {
         return INSTANCE;
+    }
+
+    public static void setupInstance() {
+        if (INSTANCE == null) {
+            INSTANCE = new ProgramsManager();
+        }
     }
 
     protected ProgramsManager() {
@@ -30,6 +36,7 @@ public class ProgramsManager {
         Program.Client.getCollection(params, new JsonHttpResponseHandler() {
             @Override
             public void onSuccess(JSONObject response) {
+                Log.d(TAG, "programs success");
                 // TODO: Download images too
 
                 try {
@@ -50,11 +57,11 @@ public class ProgramsManager {
             @Override
             public void onFailure(String responseBody, Throwable error) {
                 // TODO: Handle response errors
+                Log.d(TAG, "programs failure");
                 super.onFailure(responseBody, error);
             }
         });
     }
-
 
     public Program find(String slug) {
         Program foundProgram = null;
