@@ -16,9 +16,7 @@ public class KPCCApplication extends Application {
         ParseManager.setupInstance(this);
         AnalyticsManager.setupInstance(this);
         NotificationManager.setupInstance(this);
-
-        // TODO: This should actually block the boot process, since the app depends on programs being populated. Right now it runs asynchronously.
-        ProgramsManager.setupInstance(this);
+        FeedbackManager.setupInstance();
 
         super.onCreate();
 

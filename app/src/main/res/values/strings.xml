@@ -15,6 +15,21 @@
     <string name="action_settings">Settings</string>
     <string name="hello_blank_fragment">Hello blank fragment</string>
 
+    <string name="feedback_header_reason">Reason for Inquiry</string>
+    <string name="feedback_header_comments">Comments</string>
+    <string name="feedback_header_details">Your Details</string>
+    <string name="feedback_type_bug">Bug</string>
+    <string name="feedback_type_suggestion">Suggestion</string>
+    <string name="feedback_type_feedback">General Feedback</string>
+    <string name="feedback_hint_name">Name</string>
+    <string name="feedback_hint_email">Email</string>
+    <string name="feedback_placeholder_name">eg. Ornette Coleman</string>
+    <string name="feedback_placeholder_email">eg. you@domain.com</string>
+    <string name="feedback_placeholder_comments">Add your comments here</string>
+    <string name="feedback_submit">Submit</string>
+    <string name="feedback_app_version">App Version</string>
+    <string name="feedback_validation_message">All Fields are Required</string>
+
     <string name="on_now">On Now</string>
     <string name="up_next">Up Next</string>
 

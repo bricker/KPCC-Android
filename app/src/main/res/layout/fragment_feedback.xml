@@ -1,8 +1,103 @@
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools" android:layout_width="match_parent"
-    android:layout_height="match_parent" tools:context="org.kpcc.android.FeedbackFragment">
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+             xmlns:tools="http://schemas.android.com/tools"
+             android:layout_width="match_parent"
+             android:layout_height="match_parent"
+             tools:context="org.kpcc.android.FeedbackFragment"
+             android:orientation="vertical">
 
-    <TextView android:layout_width="match_parent" android:layout_height="match_parent"
-        android:text="@string/hello_blank_fragment" />
+    <!-- TODO: Update blank fragment layout -->
 
-</FrameLayout>
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:text="@string/feedback_header_reason"
+        android:id="@+id/header1"/>
+
+    <RadioGroup
+        android:layout_width="fill_parent"
+        android:layout_height="111dp">
+
+        <RadioButton
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/feedback_type_bug"
+            android:id="@+id/feedbackTypeBug"
+            android:checked="true"/>
+
+        <RadioButton
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/feedback_type_suggestion"
+            android:id="@+id/feedbackTypeSuggestion"
+            android:checked="false"/>
+
+        <RadioButton
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/feedback_type_feedback"
+            android:id="@+id/feedbackTypeFeedback"
+            android:checked="false"/>
+
+    </RadioGroup>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:text="@string/feedback_header_comments"
+        android:id="@+id/header2"/>
+
+    <EditText
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:inputType="textLongMessage"
+        android:id="@+id/inputComments"
+        android:text="Test Message"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:text="@string/feedback_header_details"
+        android:id="@+id/header3"/>
+
+    <EditText
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:inputType="textPersonName"
+        android:hint="@string/feedback_hint_name"
+        android:ems="10"
+        android:id="@+id/inputName"
+        android:text="Bryan Ricker"/>
+
+    <EditText
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:inputType="textEmailAddress"
+        android:ems="10"
+        android:id="@+id/inputEmail"
+        android:hint="@string/feedback_hint_email"
+        android:text="bryancricker@gmail.com"/>
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/feedback_submit"
+        android:id="@+id/submitButton"
+        android:layout_gravity="center_horizontal"
+        android:enabled="false" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/feedback_validation_message"
+        android:id="@+id/validationMessage"
+        android:visibility="gone" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/feedback_app_version"
+        android:id="@+id/appVersion"/>
+</LinearLayout>
