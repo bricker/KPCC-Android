@@ -4,6 +4,7 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.support.v4.app.FragmentManager;
@@ -16,6 +17,7 @@ public class MainActivity extends ActionBarActivity
         implements NavigationDrawerFragment.NavigationDrawerCallbacks {
 
     public final static String TAG = "kpcc.MainActivity";
+    private static final String DONATE_URL = "https://scprcontribute.publicradio.org/contribute.php";
 
     /**
      * Fragment managing the behaviors, interactions and presentation of the navigation drawer.
@@ -60,10 +62,12 @@ public class MainActivity extends ActionBarActivity
         Navigation.getInstance().addItem(3, R.string.donate,
                 new Navigation.NavigationItemSelectedCallback() {
                     public void perform(FragmentManager fm) {
-                        fm.beginTransaction()
-                                .replace(R.id.container, DonateFragment.newInstance())
-                                .commit();
+                        Uri uri = Uri.parse(DONATE_URL);
+                        Intent intent = new Intent(Intent.ACTION_VIEW, uri);
 
+                        if (intent.resolveActivity(getPackageManager()) != null) {
+                            startActivity(intent);
+                        }
                     }
                 }
         );
