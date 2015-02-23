@@ -52,8 +52,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:inputType="textLongMessage"
-        android:id="@+id/inputComments"
-        android:text="Test Message"/>
+        android:id="@+id/inputComments"/>
 
     <TextView
         android:layout_width="wrap_content"
@@ -68,8 +67,7 @@
         android:inputType="textPersonName"
         android:hint="@string/feedback_hint_name"
         android:ems="10"
-        android:id="@+id/inputName"
-        android:text="Bryan Ricker"/>
+        android:id="@+id/inputName"/>
 
     <EditText
         android:layout_width="match_parent"
@@ -77,8 +75,7 @@
         android:inputType="textEmailAddress"
         android:ems="10"
         android:id="@+id/inputEmail"
-        android:hint="@string/feedback_hint_email"
-        android:text="bryancricker@gmail.com"/>
+        android:hint="@string/feedback_hint_email"/>
 
     <Button
         android:layout_width="wrap_content"
