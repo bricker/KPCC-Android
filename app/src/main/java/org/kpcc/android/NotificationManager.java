@@ -18,7 +18,7 @@ public class NotificationManager
 
     private static NotificationManager INSTANCE = null;
     public static final String TAG = "NotificationManager";
-    public static final String CHANNEL_BREAKING_NEWS = "breakingNews";
+    public static final String CHANNEL_LISTEN_LIVE = "sandbox_listenLive";
 
     public static NotificationManager getInstance() {
         return INSTANCE;
@@ -36,7 +36,7 @@ public class NotificationManager
         prefs.registerOnSharedPreferenceChangeListener(this);
 
         if (prefs.getBoolean(SettingsFragment.PREF_KEY_PUSH_NOTIFICATIONS, true)) {
-            subscribe(CHANNEL_BREAKING_NEWS);
+            subscribe(CHANNEL_LISTEN_LIVE);
         }
     }
 
@@ -48,9 +48,9 @@ public class NotificationManager
                 boolean pushEnabled = sharedPreferences.getBoolean(key, true);
 
                 if (pushEnabled) {
-                    subscribe(CHANNEL_BREAKING_NEWS);
+                    subscribe(CHANNEL_LISTEN_LIVE);
                 } else {
-                    unsubscribe(CHANNEL_BREAKING_NEWS);
+                    unsubscribe(CHANNEL_LISTEN_LIVE);
                 }
 
                 break;
