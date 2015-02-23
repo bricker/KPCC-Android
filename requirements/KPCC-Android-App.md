@@ -1,6 +1,6 @@
 ## Platform and Device Requirements
 
-- [ ] Based on current Android app metrics, we should support Android 4.1 and above
+- [x] Based on current Android app metrics, we should support Android 4.1 and above
 - [ ] Our focus in terms of screen sizes are small through large screens (Android Developers - Supporting Different Screens)[http://developer.android.com/training/basics/supporting-devices/screens.html]. If adding support for x-large screens was a quick win we'd definitely consider adding it.
 
 ## Storyboard of Key Views
