@@ -9,6 +9,8 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.TextView;
 
+import com.android.volley.toolbox.NetworkImageView;
+
 import org.kpcc.api.Program;
 
 
@@ -35,6 +37,7 @@ public class EpisodeFragment extends Fragment {
     private int mAudioDuration;
     private Button mPlayButton;
     private Button mPauseButton;
+    private NetworkImageView mBackground;
 
     public EpisodeFragment() {
         // Required empty public constructor
@@ -102,6 +105,8 @@ public class EpisodeFragment extends Fragment {
 
         mPlayButton = (Button) view.findViewById((R.id.play_button));
         mPauseButton = (Button) view.findViewById((R.id.pause_button));
+        mBackground = (NetworkImageView) view.findViewById(R.id.background);
+        RequestManager.getInstance().setBackgroundImage(mBackground, mProgram.getSlug());
 
         title.setText(mEpisodeTitle);
         date.setText(mEpisodeDate);

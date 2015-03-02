@@ -10,7 +10,6 @@ public class Program extends Entity
         implements Comparable<Program> {
     public final static String PLURAL_KEY = "programs";
     public final static String ENDPOINT = PLURAL_KEY;
-    // API Client
     public final static BaseApiClient Client = new BaseApiClient(ENDPOINT);
     public final static String SINGULAR_KEY = "program";
     private String mTitle;

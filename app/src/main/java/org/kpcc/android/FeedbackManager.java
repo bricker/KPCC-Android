@@ -3,9 +3,11 @@ package org.kpcc.android;
 import android.util.Base64;
 import android.util.Log;
 
-import com.loopj.android.http.AsyncHttpClient;
-import com.loopj.android.http.JsonHttpResponseHandler;
-import com.loopj.android.http.RequestParams;
+import com.android.volley.AuthFailureError;
+import com.android.volley.Request;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.JsonObjectRequest;
 
 import org.apache.http.entity.StringEntity;
 import org.json.JSONArray;
@@ -13,11 +15,15 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.UnsupportedEncodingException;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Created by rickb014 on 2/22/15.
  */
 public class FeedbackManager {
+    private static FeedbackManager INSTANCE = null;
+
     public final static String TAG = "kpcc.FeedbackManager";
     public final static String TYPE_BUG = "bug";
     public final static String TYPE_SUGGESTION = "suggestion";
@@ -43,8 +49,8 @@ public class FeedbackManager {
             "Android Version: %s\n" +
             "Device: %s %s %s\n" +
             "App Version: %s (%s)";
-    private static FeedbackManager INSTANCE = null;
-    private AsyncHttpClient client = new AsyncHttpClient();
+
+    private HashMap<String, String> mHeaders = new HashMap<>();
 
     protected FeedbackManager() {
         // Currently using bricker88@gmail.com account.
@@ -53,12 +59,12 @@ public class FeedbackManager {
 
         // The setBasicAuth method doesn't build the header correctly for this, so we have
         // to do it manually.
-        client.addHeader("Authorization", "Basic " +
+        mHeaders.put("Authorization", "Basic " +
                         Base64.encodeToString((email + ":" + password).getBytes(), Base64.NO_WRAP)
         );
 
-        client.addHeader("Content-Type", CONTENT_TYPE);
-        client.addHeader("Accept", CONTENT_TYPE);
+        mHeaders.put("Content-Type", CONTENT_TYPE);
+        mHeaders.put("Accept", CONTENT_TYPE);
     }
 
     public static void setupInstance() {
@@ -74,13 +80,15 @@ public class FeedbackManager {
     private void searchCustomer(final String customerEmail,
                                 final CustomerResponseCallback responseHandler) {
         Log.d(TAG, "searchCustomer");
-        RequestParams params = new RequestParams();
+        HashMap<String, String> params = new HashMap<>();
         params.put("email", customerEmail);
+
         Log.d(TAG, "searchCustomer sending request...");
-        client.get(getAbsoluteUrl(ENDPOINT_CUSTOMERS_SEARCH), params,
-                new JsonHttpResponseHandler() {
+        HttpRequest.get(
+                getAbsoluteUrl(ENDPOINT_CUSTOMERS_SEARCH), params, mHeaders,
+                new Response.Listener<JSONObject>() {
                     @Override
-                    public void onSuccess(JSONObject response) {
+                    public void onResponse(JSONObject response) {
                         Log.d(TAG, "POST /customers/search success");
                         String customerId = "";
 
@@ -112,12 +120,10 @@ public class FeedbackManager {
                             // TODO: Handle Errors
                         }
                     }
-
+                }, new Response.ErrorListener() {
                     @Override
-                    public void onFailure(Throwable e, JSONObject errorResponse) {
-                        Log.d(TAG, "POST /customers/search failure");
-                        // TODO: Handle errors
-                        super.onFailure(e, errorResponse);
+                    public void onErrorResponse(VolleyError error) {
+                        // TODO: Handle Errors
                     }
                 }
         );
@@ -156,12 +162,12 @@ public class FeedbackManager {
                 params.put("last_name", names[1]);
             }
 
-            StringEntity seParams = makeParams(params);
             Log.d(TAG, "createOrFindCustomer sending request...");
-            client.post(null, getAbsoluteUrl(ENDPOINT_CUSTOMERS_CREATE), seParams, CONTENT_TYPE,
-                    new JsonHttpResponseHandler() {
+            HttpRequest.post(
+                    getAbsoluteUrl(ENDPOINT_CUSTOMERS_CREATE), params, mHeaders,
+                    new Response.Listener<JSONObject>() {
                         @Override
-                        public void onSuccess(JSONObject response) {
+                        public void onResponse(JSONObject response) {
                             Log.d(TAG, "POST /customers success");
                             String customerId = "";
 
@@ -179,13 +185,13 @@ public class FeedbackManager {
                                 Log.d(TAG, "Unhandled scenario.");
                             }
                         }
-
+                    }, new Response.ErrorListener() {
                         @Override
-                        public void onFailure(int statusCode, Throwable e, JSONObject errorResponse) {
+                        public void onErrorResponse(VolleyError error) {
                             Log.d(TAG, "POST /customers failure.");
-                            Log.d(TAG, "statusCode: " + String.valueOf(statusCode));
+                            Log.d(TAG, "statusCode: " + String.valueOf(error.networkResponse.statusCode));
                             // Unprocessable Entity
-                            if (statusCode == 422) {
+                            if (error.networkResponse.statusCode == 422) {
                                 Log.d(TAG, "User already exists. Searching...");
                                 // User already exists.
                                 // Search for a customer with this e-mail address, get the href attribute.
@@ -196,6 +202,7 @@ public class FeedbackManager {
                         }
                     }
             );
+
         } catch (JSONException e) {
             Log.d(TAG, "JSON Error 3");
             // TODO: Handle JSONException
@@ -280,19 +287,19 @@ public class FeedbackManager {
                 @Override
                 public void onSuccess(String customerId) {
                     String path = String.format(ENDPOINT_CUSTOMERS_CASES, customerId);
-                    StringEntity seParams = makeParams(params);
 
                     Log.d(TAG, "sendFeedback sending request...");
-                    client.post(null, getAbsoluteUrl(path), seParams, CONTENT_TYPE,
-                            new JsonHttpResponseHandler() {
+                    HttpRequest.post(
+                            getAbsoluteUrl(path), params, mHeaders,
+                            new Response.Listener<JSONObject>() {
                                 @Override
-                                public void onSuccess(JSONObject response) {
+                                public void onResponse(JSONObject response) {
                                     Log.d(TAG, "POST /customers/:id/cases success");
                                     callback.onSuccess();
                                 }
-
+                            }, new Response.ErrorListener() {
                                 @Override
-                                public void onFailure(Throwable e, JSONObject errorResponse) {
+                                public void onErrorResponse(VolleyError error) {
                                     Log.d(TAG, "POST /customers/:id/cases failure");
                                     callback.onFailure();
                                 }
@@ -317,27 +324,13 @@ public class FeedbackManager {
         return DESK_ROOT + relativePath;
     }
 
-    private StringEntity makeParams(JSONObject params) {
-        StringEntity se;
-        try {
-            se = new StringEntity(params.toString());
-        } catch (UnsupportedEncodingException e) {
-            Log.d(TAG, "Error building string entity.");
-            return null;
-        }
-
-        return se;
-    }
-
     private static interface CustomerResponseCallback {
         public void onSuccess(String customerId);
-
         public void onFailure();
     }
 
     public static interface FeedbackCallback {
         public void onSuccess();
-
         public void onFailure();
     }
 }

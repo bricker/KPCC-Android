@@ -2,8 +2,8 @@ package org.kpcc.android;
 
 import android.util.Log;
 
-import com.loopj.android.http.JsonHttpResponseHandler;
-import com.loopj.android.http.RequestParams;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -12,19 +12,26 @@ import org.kpcc.api.Program;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 
 public class ProgramsManager {
-    public static final String TAG = "ProgramsManager";
-    public static ArrayList<Program> ALL_PROGRAMS = new ArrayList<Program>();
     private static ProgramsManager INSTANCE = null;
 
-    protected ProgramsManager() {
-        RequestParams params = new RequestParams();
-        params.add("air_status", "onair");
+    public static final String TAG = "ProgramsManager";
+    public static ArrayList<Program> ALL_PROGRAMS = new ArrayList<Program>();
+    public static final String PROGRAM_TILE_URL = "http://media.scpr.org/iphone/program-images/program_tile_%s@2x.jpg";
 
-        Program.Client.getCollection(params, new JsonHttpResponseHandler() {
+    public static String buildTileUrl(String slug) {
+        return String.format(ProgramsManager.PROGRAM_TILE_URL, slug);
+    }
+
+    protected ProgramsManager() {
+        HashMap<String, String> params = new HashMap<>();
+        params.put("air_status", "onair");
+
+        Program.Client.getCollection(params, new Response.Listener<JSONObject>() {
             @Override
-            public void onSuccess(JSONObject response) {
+            public void onResponse(JSONObject response) {
                 Log.d(TAG, "programs success");
                 // TODO: Download images too
 
@@ -42,12 +49,11 @@ public class ProgramsManager {
                     Log.e(TAG, "ERROR");
                 }
             }
-
+        }, new Response.ErrorListener() {
             @Override
-            public void onFailure(String responseBody, Throwable error) {
+            public void onErrorResponse(VolleyError error) {
                 // TODO: Handle response errors
                 Log.d(TAG, "programs failure");
-                super.onFailure(responseBody, error);
             }
         });
     }

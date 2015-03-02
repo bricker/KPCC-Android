@@ -1,6 +1,6 @@
 package org.kpcc.api;
 
-import com.loopj.android.http.AsyncHttpResponseHandler;
+import com.android.volley.Response;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -10,7 +10,6 @@ import java.util.Date;
 
 public class ScheduleOccurrence extends Entity {
     public final static String ENDPOINT = "schedule";
-    // API Client
     public final static ApiClient Client = new ApiClient(ENDPOINT);
     public final static String SINGULAR_KEY = "schedule_occurrence";
     public final static String CURRENT_ENDPOINT = "current";
@@ -18,7 +17,7 @@ public class ScheduleOccurrence extends Entity {
     private Date mStartsAt;
     private Date mEndsAt;
     private Date mSoftStartsAt;
-    private Program mProgram;
+    private String mProgramSlug;
 
 
     public static ScheduleOccurrence buildFromJson(JSONObject jsonSchedule) {
@@ -31,7 +30,7 @@ public class ScheduleOccurrence extends Entity {
             schedule.setSoftStartsAt(parseISODateTime(jsonSchedule.getString(PROP_SOFT_STARTS_AT)));
 
             if (jsonSchedule.has(Program.SINGULAR_KEY)) {
-                schedule.setProgram(Program.buildFromJson(jsonSchedule.getJSONObject(Program.SINGULAR_KEY)));
+                schedule.setProgramSlug(jsonSchedule.getJSONObject(Program.SINGULAR_KEY).getString(PROP_SLUG));
             }
 
         } catch (JSONException e) {
@@ -79,12 +78,12 @@ public class ScheduleOccurrence extends Entity {
     }
 
 
-    public Program getProgram() {
-        return mProgram;
+    public String getProgramSlug() {
+        return mProgramSlug;
     }
 
-    public void setProgram(Program program) {
-        mProgram = program;
+    public void setProgramSlug(String programSlug) {
+        mProgramSlug = programSlug;
     }
 
 
@@ -93,8 +92,8 @@ public class ScheduleOccurrence extends Entity {
             super(endpoint);
         }
 
-        public void getCurrent(AsyncHttpResponseHandler handler) {
-            get(CURRENT_ENDPOINT, null, handler);
+        public void getCurrent(Response.Listener<JSONObject> listener, Response.ErrorListener errorListener) {
+            get(CURRENT_ENDPOINT, null, listener, errorListener);
         }
     }
 

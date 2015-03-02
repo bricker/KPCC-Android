@@ -1,0 +1,77 @@
+package org.kpcc.android;
+
+import android.content.Context;
+import android.graphics.Bitmap;
+import android.support.v4.util.LruCache;
+
+import com.android.volley.AuthFailureError;
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.toolbox.ImageLoader;
+import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.NetworkImageView;
+import com.android.volley.toolbox.Volley;
+
+import org.json.JSONObject;
+
+import java.util.HashMap;
+import java.util.Map;
+
+/**
+ * Created by rickb014 on 3/1/15.
+ */
+public class RequestManager {
+    private static RequestManager INSTANCE = null;
+
+    private RequestQueue mRequestQueue;
+    private ImageLoader mImageLoader;
+
+    public static void setupInstance(Context context) {
+        if (INSTANCE == null) {
+            INSTANCE = new RequestManager(context);
+        }
+    }
+
+    public static RequestManager getInstance() {
+        return INSTANCE;
+    }
+
+    private RequestManager(Context context) {
+        mRequestQueue = Volley.newRequestQueue(context.getApplicationContext());
+
+        mImageLoader = new ImageLoader(mRequestQueue,
+                new ImageLoader.ImageCache() {
+                    private final LruCache<String, Bitmap>
+                            cache = new LruCache<String, Bitmap>(20);
+
+                    @Override
+                    public Bitmap getBitmap(String url) {
+                        return cache.get(url);
+                    }
+
+                    @Override
+                    public void putBitmap(String url, Bitmap bitmap) {
+                        cache.put(url, bitmap);
+                    }
+                });
+    }
+
+    public void setBackgroundImage(NetworkImageView view, String slug) {
+        view.setErrorImageResId(R.drawable.tile_generic);
+        view.setImageUrl(ProgramsManager.buildTileUrl(slug), mImageLoader);
+    }
+
+    public RequestQueue getRequestQueue() {
+        return mRequestQueue;
+    }
+
+    public <T> void addToRequestQueue(Request<T> req) {
+        mRequestQueue.add(req);
+    }
+
+    public ImageLoader getImageLoader() {
+        return mImageLoader;
+    }
+
+}

@@ -5,6 +5,8 @@
              android:layout_height="match_parent"
              tools:context="org.kpcc.android.EpisodesFragment">
 
+    <include layout="@layout/program_background" />
+
     <ListView
         android:id="@android:id/list"
         android:layout_width="match_parent"

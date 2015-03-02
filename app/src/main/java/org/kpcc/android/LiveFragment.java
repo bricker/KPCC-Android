@@ -1,5 +1,7 @@
 package org.kpcc.android;
 
+import android.app.DownloadManager;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.util.Log;
@@ -7,14 +9,20 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.loopj.android.http.JsonHttpResponseHandler;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.ImageLoader;
+import com.android.volley.toolbox.NetworkImageView;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.kpcc.api.ScheduleOccurrence;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.Date;
 
 
@@ -30,6 +38,7 @@ public class LiveFragment extends Fragment {
     private TextView mStatus;
     private Button mPlayButton;
     private Button mStopButton;
+    private NetworkImageView mBackground;
 
     public LiveFragment() {
         // Required empty public constructor
@@ -49,37 +58,6 @@ public class LiveFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-        ScheduleOccurrence.Client.getCurrent(new JsonHttpResponseHandler() {
-            @Override
-            public void onSuccess(JSONObject response) {
-                try {
-                    JSONObject jsonSchedule = response.getJSONObject(ScheduleOccurrence.SINGULAR_KEY);
-                    ScheduleOccurrence schedule = ScheduleOccurrence.buildFromJson(jsonSchedule);
-
-                    mTitle.setText(schedule.getTitle());
-
-                    // If we're before this occurrence's 'soft start', then say "up next".
-                    // Otherwise, set "On Now".
-                    if (new Date().getTime() < schedule.getSoftStartsAt().getTime()) {
-                        mStatus.setText(R.string.up_next);
-                    } else {
-                        mStatus.setText(R.string.on_now);
-                    }
-
-                } catch (JSONException e) {
-                    Log.d(TAG, "JSON Error");
-                    // TODO: Handle failures
-                    e.printStackTrace();
-                }
-            }
-
-            @Override
-            public void onFailure(String responseBody, Throwable error) {
-                Log.d(TAG, "API Error");
-                // TODO: Handle failures
-            }
-        });
     }
 
     @Override
@@ -95,6 +73,40 @@ public class LiveFragment extends Fragment {
         mStatus = (TextView) view.findViewById(R.id.live_status);
         mPlayButton = (Button) view.findViewById(R.id.play_button);
         mStopButton = (Button) view.findViewById(R.id.stop_button);
+        mBackground = (NetworkImageView) view.findViewById(R.id.background);
+
+        ScheduleOccurrence.Client.getCurrent(new Response.Listener<JSONObject>() {
+            @Override
+            public void onResponse(JSONObject response) {
+                try {
+                    JSONObject jsonSchedule = response.getJSONObject(ScheduleOccurrence.SINGULAR_KEY);
+                    ScheduleOccurrence schedule = ScheduleOccurrence.buildFromJson(jsonSchedule);
+
+                    mTitle.setText(schedule.getTitle());
+
+                    // If we're before this occurrence's 'soft start', then say "up next".
+                    // Otherwise, set "On Now".
+                    if (new Date().getTime() < schedule.getSoftStartsAt().getTime()) {
+                        mStatus.setText(R.string.up_next);
+                    } else {
+                        mStatus.setText(R.string.on_now);
+                    }
+
+                    RequestManager.getInstance().setBackgroundImage(mBackground, schedule.getProgramSlug());
+
+                } catch (JSONException e) {
+                    Log.d(TAG, "JSON Error");
+                    // TODO: Handle failures
+                    e.printStackTrace();
+                }
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                Log.d(TAG, "API Error");
+                // TODO: Handle failures
+            }
+        });
 
         final AudioButtonManager audioButtonManager = new AudioButtonManager(activity, view);
 

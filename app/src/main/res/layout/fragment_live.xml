@@ -1,10 +1,12 @@
-<LinearLayout
+<RelativeLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
     tools:context="org.kpcc.android.LiveFragment">
+
+    <include layout="@layout/program_background" />
 
     <TextView
         android:id="@+id/live_status"
@@ -14,10 +16,12 @@
 
     <TextView
         android:id="@+id/live_title"
+        android:layout_below="@id/live_status"
+        android:layout_above="@id/audio_buttons"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/kpcc_live" />
 
     <include layout="@layout/audio_button" />
 
-</LinearLayout>
+</RelativeLayout>

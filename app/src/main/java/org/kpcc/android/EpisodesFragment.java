@@ -16,8 +16,9 @@ import android.widget.LinearLayout;
 import android.widget.ListAdapter;
 import android.widget.TextView;
 
-import com.loopj.android.http.JsonHttpResponseHandler;
-import com.loopj.android.http.RequestParams;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.NetworkImageView;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -29,6 +30,7 @@ import org.kpcc.api.Segment;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 
 /**
  * A fragment representing a list of Items.
@@ -45,6 +47,7 @@ public class EpisodesFragment extends Fragment implements AbsListView.OnItemClic
      */
     private AbsListView mListView;
     private LinearLayout mProgressBar;
+    private NetworkImageView mBackground;
 
     /**
      * The Adapter which will be used to populate the ListView/GridView with
@@ -79,13 +82,15 @@ public class EpisodesFragment extends Fragment implements AbsListView.OnItemClic
             mProgram = ProgramsManager.getInstance().find(programSlug);
         }
 
-        RequestParams params = new RequestParams();
-        params.add("program", mProgram.getSlug());
-        params.add("limit", "8");
+        HashMap<String, String> params = new HashMap<>();
 
-        Episode.Client.getCollection(params, new JsonHttpResponseHandler() {
+        params.put("program", mProgram.getSlug());
+        params.put("limit", "8");
+
+        Log.d(TAG, params.toString());
+        Episode.Client.getCollection(params, new Response.Listener<JSONObject>() {
             @Override
-            public void onSuccess(JSONObject response) {
+            public void onResponse(JSONObject response) {
                 try {
                     JSONArray jsonEpisodes = response.getJSONArray(Episode.PLURAL_KEY);
 
@@ -134,9 +139,9 @@ public class EpisodesFragment extends Fragment implements AbsListView.OnItemClic
                     e.printStackTrace();
                 }
             }
-
+        }, new Response.ErrorListener() {
             @Override
-            public void onFailure(String responseBody, Throwable error) {
+            public void onErrorResponse(VolleyError error) {
                 Log.d(TAG, "API Error");
                 // TODO: Handle failures
             }
@@ -161,6 +166,8 @@ public class EpisodesFragment extends Fragment implements AbsListView.OnItemClic
         // Set the adapter
         mListView = (AbsListView) view.findViewById(android.R.id.list);
         mProgressBar = (LinearLayout) view.findViewById(R.id.progress_layout);
+        mBackground = (NetworkImageView) view.findViewById(R.id.background);
+        RequestManager.getInstance().setBackgroundImage(mBackground, mProgram.getSlug());
 
         // Set OnItemClickListener so we can be notified on item clicks
         mListView.setOnItemClickListener(this);

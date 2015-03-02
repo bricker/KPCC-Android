@@ -13,6 +13,7 @@ public class KPCCApplication extends Application {
         // Can we move these to static initializers? Probably not, because the order
         // of these honors dependencies and needs to stay intact.
         AppConfiguration.setupInstance(this);
+        RequestManager.setupInstance(this);
         ParseManager.setupInstance(this);
         AnalyticsManager.setupInstance(this);
         NotificationManager.setupInstance(this);

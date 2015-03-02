@@ -1,8 +1,17 @@
 package org.kpcc.api;
 
-import com.loopj.android.http.AsyncHttpClient;
-import com.loopj.android.http.AsyncHttpResponseHandler;
-import com.loopj.android.http.RequestParams;
+import android.net.Uri;
+
+import com.android.volley.Request;
+import com.android.volley.Response;
+import com.android.volley.toolbox.JsonObjectRequest;
+
+import org.json.JSONObject;
+import org.kpcc.android.HttpRequest;
+import org.kpcc.android.RequestManager;
+
+import java.util.HashMap;
+import java.util.Map;
 
 // Provides basic functionality for retrieving data from the API.
 //
@@ -26,28 +35,34 @@ public class BaseApiClient {
     public static final String API_ROOT = "http://www.scpr.org/api/v3/";
 
     protected String mEndpoint;
-    protected AsyncHttpClient client = new AsyncHttpClient();
-
 
     public BaseApiClient(String endpoint) {
         mEndpoint = endpoint;
     }
 
 
-    public void get(
-            String relativePath, RequestParams params, AsyncHttpResponseHandler responseHandler) {
-        client.get(getAbsoluteUrl(relativePath), params, responseHandler);
+    public void get(String relativePath,
+                    Map<String, String> params,
+                    Response.Listener<JSONObject> listener,
+                    Response.ErrorListener errorListener) {
+
+        HttpRequest.get(buildUrl(relativePath, params), null, null, listener, errorListener);
     }
 
 
-    public void getCollection(
-            RequestParams params, AsyncHttpResponseHandler responseHandler) {
-        client.get(getAbsoluteUrl(""), params, responseHandler);
+    public void getCollection(Map<String, String> params,
+                              Response.Listener<JSONObject> listener,
+                              Response.ErrorListener errorListener) {
+
+        HttpRequest.get(buildUrl("", params), null, null, listener, errorListener);
     }
 
 
-    private String getAbsoluteUrl(String relativePath) {
-        return API_ROOT + mEndpoint + "/" + relativePath;
-    }
+    private String buildUrl(String path, Map<String, String> params) {
+        Uri.Builder builder = Uri.parse(API_ROOT).buildUpon()
+                .appendPath(mEndpoint)
+                .appendPath(path);
 
+        return HttpRequest.addQueryParams(builder.build().toString(), params);
+    }
 }
