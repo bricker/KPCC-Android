@@ -18,10 +18,6 @@
         android:layout_height="wrap_content"
         android:text="@string/kpcc_live" />
 
-    <Button
-        android:id="@+id/play_button"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Play Live Stream" />
+    <include layout="@layout/audio_button" />
 
 </LinearLayout>

@@ -7,6 +7,17 @@ import java.util.Date;
 
 public abstract class Entity
 {
+    public final static String PROP_TITLE = "title";
+    public final static String PROP_SLUG = "slug";
+    public final static String PROP_PUBLIC_URL = "public_url";
+    public final static String PROP_URL = "url";
+    public final static String PROP_DURATION = "duration";
+    public final static String PROP_FILESIZE = "filesize";
+    public final static String PROP_AIR_DATE = "air_date";
+    public final static String PROP_STARTS_AT = "starts_at";
+    public final static String PROP_ENDS_AT = "ends_at";
+    public final static String PROP_SOFT_STARTS_AT = "soft_starts_at";
+    public final static String PROP_PUBLISHED_AT = "published_at";
 
     public static String ISO_DATETIME_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSSZ";
     public static String ISO_DATE_FORMAT = "yyyy-MM-dd";

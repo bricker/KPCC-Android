@@ -11,14 +11,8 @@ import java.util.Date;
 public class ScheduleOccurrence extends Entity
 {
     public final static String ENDPOINT = "schedule";
-    public final static String PLURAL_KEY = "schedule_occurrences";
     public final static String SINGULAR_KEY = "schedule_occurrence";
     public final static String CURRENT_ENDPOINT = "current";
-
-    public final static String PROP_TITLE = "title";
-    public final static String PROP_STARTS_AT = "starts_at";
-    public final static String PROP_ENDS_AT = "ends_at";
-    public final static String PROP_SOFT_STARTS_AT = "soft_starts_at";
 
     // API Client
     public final static ApiClient Client = new ApiClient(ENDPOINT);

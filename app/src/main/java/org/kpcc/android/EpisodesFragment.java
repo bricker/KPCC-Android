@@ -4,6 +4,7 @@ import android.content.Context;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
+import android.support.v7.app.ActionBar;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -24,6 +25,7 @@ import org.json.JSONObject;
 import org.kpcc.api.Audio;
 import org.kpcc.api.Episode;
 import org.kpcc.api.Program;
+import org.kpcc.api.Segment;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -93,6 +95,15 @@ public class EpisodesFragment extends Fragment implements AbsListView.OnItemClic
                         // Don't show the episode if there is no audio.
                         if (episode.getAudio() != null) {
                             mEpisodes.add(episode);
+                        } else {
+                            // If there was no episode but there are segments, use those as episodes.
+                            if (episode.getSegments().size() > 0) {
+                                for (Segment segment : episode.getSegments()) {
+                                    if (segment.getAudio() != null) {
+                                        mEpisodes.add(Episode.buildFromSegment(segment));
+                                    }
+                                }
+                            }
                         }
                     }
 
@@ -135,6 +146,16 @@ public class EpisodesFragment extends Fragment implements AbsListView.OnItemClic
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
+
+        MainActivity activity = (MainActivity) getActivity();
+
+        String title = mProgram.getTitle();
+        activity.setTitle(title);
+        ActionBar ab = activity.getSupportActionBar();
+        if (ab != null) {
+            ab.setTitle(title);
+        }
+
         View view = inflater.inflate(R.layout.fragment_episodes, container, false);
 
         // Set the adapter

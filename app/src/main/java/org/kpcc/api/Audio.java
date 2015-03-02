@@ -5,17 +5,7 @@ import org.json.JSONObject;
 
 public class Audio extends Entity
 {
-    public final static String ENDPOINT = "audio";
     public final static String PLURAL_KEY = "audio";
-    public final static String SINGULAR_KEY = "audio";
-
-    public final static String PROP_URL = "url";
-    public final static String PROP_DURATION = "duration";
-    public final static String PROP_FILESIZE = "filesize";
-
-    // API Client
-    public final static BaseApiClient Client = new BaseApiClient("audio");
-
 
     private String mUrl;
     private int mDurationSeconds;

@@ -9,13 +9,9 @@ import org.json.JSONObject;
 public class Program extends Entity
         implements Comparable<Program>
 {
-    public final static String ENDPOINT = "programs";
     public final static String PLURAL_KEY = "programs";
     public final static String SINGULAR_KEY = "program";
-
-    public final static String PROP_TITLE = "title";
-    public final static String PROP_SLUG = "slug";
-    public final static String PROP_PUBLIC_URL = "public_url";
+    public final static String ENDPOINT = PLURAL_KEY;
 
     // API Client
     public final static BaseApiClient Client = new BaseApiClient(ENDPOINT);

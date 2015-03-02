@@ -5,7 +5,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
-import android.widget.Toast;
 
 import com.parse.ParsePush;
 import com.parse.ParsePushBroadcastReceiver;
@@ -76,8 +75,9 @@ public class NotificationManager
             // Determine which type of push notification this was and
             // do something about it.
             super.onPushOpen(context, intent);
-            Toast toast = Toast.makeText(context, "Push Opened!", Toast.LENGTH_SHORT);
-            toast.show();
+            // TODO: Automatically start stream.
+            // We'll need to add extras to the main activity to specify that the stream should
+            // auto-start, and then check for that in the LiveFragment code.
         }
 
         @Override

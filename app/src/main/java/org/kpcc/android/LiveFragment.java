@@ -28,7 +28,8 @@ public class LiveFragment extends Fragment {
 
     private TextView mTitle;
     private TextView mStatus;
-    private Button mStreamPlayBtn;
+    private Button mPlayButton;
+    private Button mStopButton;
 
     /**
      * Use this factory method to create a new instance of
@@ -84,28 +85,37 @@ public class LiveFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
+
+        final MainActivity activity = (MainActivity) getActivity();
+
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_live, container, false);
 
-
         mTitle = (TextView) view.findViewById(R.id.live_title);
         mStatus = (TextView) view.findViewById(R.id.live_status);
-        mStreamPlayBtn = (Button) view.findViewById(R.id.play_button);
+        mPlayButton = (Button) view.findViewById(R.id.play_button);
+        mStopButton = (Button) view.findViewById(R.id.stop_button);
 
-        mStreamPlayBtn.setOnClickListener(new View.OnClickListener() {
+        final AudioButtonManager audioButtonManager = new AudioButtonManager(activity, view);
+
+        StreamManager streamManager = activity.getStreamManager();
+        if (streamManager != null && streamManager.isPlaying(StreamManager.LIVESTREAM_URL)) {
+            audioButtonManager.togglePlayingForStop();
+        } else {
+            audioButtonManager.toggleStopped();
+        }
+
+        mPlayButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                MainActivity activity = (MainActivity) getActivity();
-                StreamManager sm = activity.getStreamManager();
+                activity.getStreamManager().playLiveStream(activity, audioButtonManager);
+            }
+        });
 
-                if (activity.streamIsBound()) {
-                    if (sm.isPlaying()) {
-                        sm.stop();
-                        sm.release();
-                    } else {
-                        sm.startLiveStream();
-                    }
-                }
+        mStopButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                activity.getStreamManager().stop(audioButtonManager);
             }
         });
 

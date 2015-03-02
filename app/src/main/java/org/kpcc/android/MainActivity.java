@@ -163,7 +163,6 @@ public class MainActivity extends ActionBarActivity
         @Override
         public void onServiceDisconnected(ComponentName arg0) {
             if (mBound) {
-                mStreamManager.stop();
                 mStreamManager.release();
             }
 

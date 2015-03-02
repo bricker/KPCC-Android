@@ -2,9 +2,11 @@ package org.kpcc.android;
 
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.support.v7.app.ActionBar;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.TextView;
 
 import org.kpcc.api.Program;
@@ -16,6 +18,8 @@ import org.kpcc.api.Program;
  * create an instance of this fragment.
  */
 public class EpisodeFragment extends Fragment {
+    public static final String TAG = "kpcc.EpisodeFragment";
+
     private static final String ARG_PROGRAM_SLUG = "programSlug";
     private static final String ARG_EPISODE_TITLE = "episodeTitle";
     private static final String ARG_EPISODE_DATE = "episodeDate";
@@ -29,6 +33,8 @@ public class EpisodeFragment extends Fragment {
     private String mAudioUrl;
     private int mAudioFilesize;
     private int mAudioDuration;
+    private Button mPlayButton;
+    private Button mPauseButton;
 
     /**
      * Use this factory method to create a new instance of
@@ -79,17 +85,53 @@ public class EpisodeFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        // Inflate the layout for this fragment
-        View v = inflater.inflate(R.layout.fragment_episode, container, false);
 
-        TextView title = (TextView) v.findViewById(R.id.episode_title);
-        TextView date = (TextView) v.findViewById(R.id.air_date);
-        TextView audioUrl = (TextView) v.findViewById(R.id.audio_url);
+        final MainActivity activity = (MainActivity) getActivity();
+
+        activity.setTitle(R.string.programs);
+        ActionBar ab = activity.getSupportActionBar();
+        if (ab != null) {
+            ab.setTitle(R.string.programs);
+        }
+
+        // Inflate the layout for this fragment
+        View view = inflater.inflate(R.layout.fragment_episode, container, false);
+
+        TextView title = (TextView) view.findViewById(R.id.episode_title);
+        TextView date = (TextView) view.findViewById(R.id.air_date);
+
+        mPlayButton = (Button) view.findViewById((R.id.play_button));
+        mPauseButton = (Button) view.findViewById((R.id.pause_button));
 
         title.setText(mEpisodeTitle);
         date.setText(mEpisodeDate);
-        audioUrl.setText(mAudioUrl);
 
-        return v;
+        final AudioButtonManager audioButtonManager = new AudioButtonManager(activity, view);
+
+        StreamManager streamManager = activity.getStreamManager();
+        if (streamManager != null && streamManager.isPlaying(mAudioUrl)) {
+            audioButtonManager.togglePlayingForPause();
+        } else {
+            audioButtonManager.toggleStopped();
+        }
+
+        mPlayButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                activity.getStreamManager().playEpisode(mAudioUrl, activity, audioButtonManager);
+            }
+        });
+
+        mPauseButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                activity.getStreamManager().pause(audioButtonManager);
+            }
+        });
+
+        // Start the episode right away.
+        mPlayButton.callOnClick();
+
+        return view;
     }
 }
