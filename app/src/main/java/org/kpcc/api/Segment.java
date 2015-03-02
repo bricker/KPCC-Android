@@ -6,8 +6,7 @@ import org.json.JSONObject;
 
 import java.util.Date;
 
-public class Segment extends Entity
-{
+public class Segment extends Entity {
     public final static String PLURAL_KEY = "segments";
 
     private String mTitle;
@@ -15,12 +14,10 @@ public class Segment extends Entity
     private String mPublicUrl;
     private Audio mAudio;
 
-    public static Segment buildFromJson(JSONObject jsonSegment)
-    {
+    public static Segment buildFromJson(JSONObject jsonSegment) {
         Segment segment = new Segment();
 
-        try
-        {
+        try {
             segment.setTitle(jsonSegment.getString(PROP_TITLE));
             segment.setPublishedAt(parseISODateTime(jsonSegment.getString(PROP_PUBLISHED_AT)));
             segment.setPublicUrl(jsonSegment.getString(PROP_PUBLIC_URL));
@@ -44,46 +41,38 @@ public class Segment extends Entity
     }
 
 
-    public String getTitle()
-    {
+    public String getTitle() {
         return mTitle;
     }
 
-    public void setTitle(String title)
-    {
+    public void setTitle(String title) {
         mTitle = title;
     }
 
 
-    public Date getPublishedAt()
-    {
+    public Date getPublishedAt() {
         return mPublishedAt;
     }
 
-    public void setPublishedAt(Date publishedAt)
-    {
+    public void setPublishedAt(Date publishedAt) {
         mPublishedAt = publishedAt;
     }
 
 
-    public String getPublicUrl()
-    {
+    public String getPublicUrl() {
         return mPublicUrl;
     }
 
-    public void setPublicUrl(String publicUrl)
-    {
+    public void setPublicUrl(String publicUrl) {
         mPublicUrl = publicUrl;
     }
 
 
-    public Audio getAudio()
-    {
+    public Audio getAudio() {
         return mAudio;
     }
 
-    public void setAudio(Audio audio)
-    {
+    public void setAudio(Audio audio) {
         mAudio = audio;
     }
 }

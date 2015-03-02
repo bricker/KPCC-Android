@@ -36,6 +36,10 @@ public class EpisodeFragment extends Fragment {
     private Button mPlayButton;
     private Button mPauseButton;
 
+    public EpisodeFragment() {
+        // Required empty public constructor
+    }
+
     /**
      * Use this factory method to create a new instance of
      * this fragment.
@@ -61,10 +65,6 @@ public class EpisodeFragment extends Fragment {
 
         fragment.setArguments(args);
         return fragment;
-    }
-
-    public EpisodeFragment() {
-        // Required empty public constructor
     }
 
     @Override

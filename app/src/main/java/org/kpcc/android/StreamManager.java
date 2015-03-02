@@ -17,12 +17,11 @@ import java.io.IOException;
 public class StreamManager extends Service {
 
     public static final String TAG = "kpcc.StreamManager";
-    private final static long PREROLL_THRESHOLD = 600L;
     public final static String LIVESTREAM_URL = "http://live.scpr.org/kpcclive";
     public final static String LIVESTREAM_NOPREROLL_URL = LIVESTREAM_URL + "?preskip=true";
-
-    private MediaPlayer mAudioPlayer = null;
+    private final static long PREROLL_THRESHOLD = 600L;
     private final IBinder mBinder = new LocalBinder();
+    private MediaPlayer mAudioPlayer = null;
     private String mCurrentAudioUrl = null;
 
     public void playEpisode(String audioUrl,
@@ -96,25 +95,31 @@ public class StreamManager extends Service {
     }
 
     public void startForPause(AudioButtonManager audioButtonManager) {
-        if (mAudioPlayer == null) { return; }
+        if (mAudioPlayer == null) {
+            return;
+        }
         audioButtonManager.togglePlayingForPause();
         mAudioPlayer.start();
     }
 
     public void startForStop(AudioButtonManager audioButtonManager) {
-        if (mAudioPlayer == null) { return; }
+        if (mAudioPlayer == null) {
+            return;
+        }
         audioButtonManager.togglePlayingForStop();
         mAudioPlayer.start();
     }
 
     public boolean isPlaying(String audioUrl) {
-        return  (mAudioPlayer != null) &&
+        return (mAudioPlayer != null) &&
                 (mCurrentAudioUrl != null) &&
                 (mCurrentAudioUrl.equals(audioUrl));
     }
 
     public void pause(AudioButtonManager audioButtonManager) {
-        if (mAudioPlayer == null) { return; }
+        if (mAudioPlayer == null) {
+            return;
+        }
         mAudioPlayer.pause();
 
         if (audioButtonManager != null) {
@@ -123,7 +128,9 @@ public class StreamManager extends Service {
     }
 
     public void stop(AudioButtonManager audioButtonManager) {
-        if (mAudioPlayer == null) { return; }
+        if (mAudioPlayer == null) {
+            return;
+        }
         mAudioPlayer.stop();
         mCurrentAudioUrl = null;
 
@@ -133,7 +140,9 @@ public class StreamManager extends Service {
     }
 
     public void release() {
-        if (mAudioPlayer == null) { return; }
+        if (mAudioPlayer == null) {
+            return;
+        }
         mAudioPlayer.release();
         mAudioPlayer = null;
         mCurrentAudioUrl = null;

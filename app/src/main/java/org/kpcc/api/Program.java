@@ -7,32 +7,26 @@ import org.json.JSONObject;
 
 
 public class Program extends Entity
-        implements Comparable<Program>
-{
+        implements Comparable<Program> {
     public final static String PLURAL_KEY = "programs";
-    public final static String SINGULAR_KEY = "program";
     public final static String ENDPOINT = PLURAL_KEY;
-
     // API Client
     public final static BaseApiClient Client = new BaseApiClient(ENDPOINT);
-
-
+    public final static String SINGULAR_KEY = "program";
     private String mTitle;
     private String mSlug;
     private String mPublicUrl;
 
 
-    public static Program buildFromJson(JSONObject jsonProgram)
-    {
+    public static Program buildFromJson(JSONObject jsonProgram) {
         Program program = new Program();
 
-        try
-        {
+        try {
             program.setTitle(jsonProgram.getString(PROP_TITLE));
             program.setSlug(jsonProgram.getString(PROP_SLUG));
             program.setPublicUrl(jsonProgram.getString(PROP_PUBLIC_URL));
 
-        } catch(JSONException e) {
+        } catch (JSONException e) {
             // TODO: Handle error
             e.printStackTrace();
         }
@@ -41,39 +35,32 @@ public class Program extends Entity
     }
 
 
-    public String getTitle()
-    {
+    public String getTitle() {
         return mTitle;
+    }
+
+    public void setTitle(String title) {
+        mTitle = title;
     }
 
     protected String getNormalizedTitle() {
         return mTitle.replaceFirst("^(The )", "");
     }
 
-    public void setTitle(String title)
-    {
-        mTitle = title;
-    }
-
-
-    public String getSlug()
-    {
+    public String getSlug() {
         return mSlug;
     }
 
-    public void setSlug(String slug)
-    {
+    public void setSlug(String slug) {
         mSlug = slug;
     }
 
 
-    public String getPublicUrl()
-    {
+    public String getPublicUrl() {
         return mPublicUrl;
     }
 
-    public void setPublicUrl(String publicUrl)
-    {
+    public void setPublicUrl(String publicUrl) {
         mPublicUrl = publicUrl;
     }
 

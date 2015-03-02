@@ -14,20 +14,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 
 public class ProgramsManager {
-    private static ProgramsManager INSTANCE = null;
-
     public static final String TAG = "ProgramsManager";
     public static ArrayList<Program> ALL_PROGRAMS = new ArrayList<Program>();
-
-    public static ProgramsManager getInstance() {
-        return INSTANCE;
-    }
-
-    public static void setupInstance() {
-        if (INSTANCE == null) {
-            INSTANCE = new ProgramsManager();
-        }
-    }
+    private static ProgramsManager INSTANCE = null;
 
     protected ProgramsManager() {
         RequestParams params = new RequestParams();
@@ -61,6 +50,16 @@ public class ProgramsManager {
                 super.onFailure(responseBody, error);
             }
         });
+    }
+
+    public static ProgramsManager getInstance() {
+        return INSTANCE;
+    }
+
+    public static void setupInstance() {
+        if (INSTANCE == null) {
+            INSTANCE = new ProgramsManager();
+        }
     }
 
     public Program find(String slug) {

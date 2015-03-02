@@ -26,6 +26,24 @@ public class MainActivity extends ActionBarActivity
 
     private StreamManager mStreamManager;
     private boolean mBound = false;
+    private ServiceConnection mConnection = new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName className,
+                                       IBinder service) {
+            StreamManager.LocalBinder binder = (StreamManager.LocalBinder) service;
+            mStreamManager = binder.getService();
+            mBound = true;
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName arg0) {
+            if (mBound) {
+                mStreamManager.release();
+            }
+
+            mBound = false;
+        }
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -117,7 +135,6 @@ public class MainActivity extends ActionBarActivity
         }
     }
 
-
     public StreamManager getStreamManager() {
         return mStreamManager;
     }
@@ -125,7 +142,6 @@ public class MainActivity extends ActionBarActivity
     public boolean streamIsBound() {
         return mBound;
     }
-
 
     @Override
     protected void onStart() {
@@ -149,24 +165,4 @@ public class MainActivity extends ActionBarActivity
         AnalyticsManager.getInstance().flush();
         super.onDestroy();
     }
-
-
-    private ServiceConnection mConnection = new ServiceConnection() {
-        @Override
-        public void onServiceConnected(ComponentName className,
-                                       IBinder service) {
-            StreamManager.LocalBinder binder = (StreamManager.LocalBinder) service;
-            mStreamManager = binder.getService();
-            mBound = true;
-        }
-
-        @Override
-        public void onServiceDisconnected(ComponentName arg0) {
-            if (mBound) {
-                mStreamManager.release();
-            }
-
-            mBound = false;
-        }
-    };
 }

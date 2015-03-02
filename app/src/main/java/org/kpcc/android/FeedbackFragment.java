@@ -26,13 +26,13 @@ public class FeedbackFragment extends Fragment {
     private EditText mInputEmail;
     private TextView mValidationMessage;
 
+    public FeedbackFragment() {
+        // Required empty public constructor
+    }
+
     public static FeedbackFragment newInstance() {
         FeedbackFragment fragment = new FeedbackFragment();
         return fragment;
-    }
-
-    public FeedbackFragment() {
-        // Required empty public constructor
     }
 
     @Override
@@ -81,15 +81,23 @@ public class FeedbackFragment extends Fragment {
         mSubmitButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (mLock) { return; }
+                if (mLock) {
+                    return;
+                }
                 lockForm();
 
                 mValidationMessage.setVisibility(View.GONE);
 
                 String type = FeedbackManager.TYPE_FEEDBACK; // Default
-                if (mFeedbackTypeBug.isChecked()) { type = FeedbackManager.TYPE_BUG; }
-                if (mFeedbackTypeFeedback.isChecked()) { type = FeedbackManager.TYPE_FEEDBACK; }
-                if (mFeedbackTypeSuggestion.isChecked()) { type = FeedbackManager.TYPE_SUGGESTION; }
+                if (mFeedbackTypeBug.isChecked()) {
+                    type = FeedbackManager.TYPE_BUG;
+                }
+                if (mFeedbackTypeFeedback.isChecked()) {
+                    type = FeedbackManager.TYPE_FEEDBACK;
+                }
+                if (mFeedbackTypeSuggestion.isChecked()) {
+                    type = FeedbackManager.TYPE_SUGGESTION;
+                }
 
                 String name = mInputName.getText().toString();
                 String email = mInputEmail.getText().toString();
@@ -140,7 +148,9 @@ public class FeedbackFragment extends Fragment {
     }
 
     private void setButtonState() {
-        if (mSubmitButton == null) { return; }
+        if (mSubmitButton == null) {
+            return;
+        }
 
         if (validateInput()) {
             mSubmitButton.setEnabled(true);

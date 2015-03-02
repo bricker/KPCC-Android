@@ -37,18 +37,18 @@ public class ProgramsFragment extends Fragment
      */
     private ListAdapter mAdapter;
 
-    public static ProgramsFragment newInstance() {
-        ProgramsFragment fragment = new ProgramsFragment();
-        Bundle args = new Bundle();
-        fragment.setArguments(args);
-        return fragment;
-    }
-
     /**
      * Mandatory empty constructor for the fragment manager to instantiate the
      * fragment (e.g. upon screen orientation changes).
      */
     public ProgramsFragment() {
+    }
+
+    public static ProgramsFragment newInstance() {
+        ProgramsFragment fragment = new ProgramsFragment();
+        Bundle args = new Bundle();
+        fragment.setArguments(args);
+        return fragment;
     }
 
     @Override

@@ -22,36 +22,31 @@ import com.loopj.android.http.RequestParams;
 //       public void getCurrentEvent() { ... }
 //     }
 //   }
-public class BaseApiClient
-{
+public class BaseApiClient {
     public static final String API_ROOT = "http://www.scpr.org/api/v3/";
 
     protected String mEndpoint;
     protected AsyncHttpClient client = new AsyncHttpClient();
 
 
-    public BaseApiClient(String endpoint)
-    {
+    public BaseApiClient(String endpoint) {
         mEndpoint = endpoint;
     }
 
 
     public void get(
-    String relativePath, RequestParams params, AsyncHttpResponseHandler responseHandler)
-    {
+            String relativePath, RequestParams params, AsyncHttpResponseHandler responseHandler) {
         client.get(getAbsoluteUrl(relativePath), params, responseHandler);
     }
 
 
     public void getCollection(
-    RequestParams params, AsyncHttpResponseHandler responseHandler)
-    {
+            RequestParams params, AsyncHttpResponseHandler responseHandler) {
         client.get(getAbsoluteUrl(""), params, responseHandler);
     }
 
 
-    private String getAbsoluteUrl(String relativePath)
-    {
+    private String getAbsoluteUrl(String relativePath) {
         return API_ROOT + mEndpoint + "/" + relativePath;
     }
 

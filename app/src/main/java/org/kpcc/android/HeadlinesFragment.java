@@ -25,6 +25,10 @@ public class HeadlinesFragment extends Fragment {
     private boolean mDidBrowse = false;
     private LinearLayout mProgressBar;
 
+    public HeadlinesFragment() {
+        // Required empty public constructor
+    }
+
     /**
      * Use this factory method to create a new instance of
      * this fragment.
@@ -34,10 +38,6 @@ public class HeadlinesFragment extends Fragment {
     public static HeadlinesFragment newInstance() {
         HeadlinesFragment fragment = new HeadlinesFragment();
         return fragment;
-    }
-
-    public HeadlinesFragment() {
-        // Required empty public constructor
     }
 
     @Override

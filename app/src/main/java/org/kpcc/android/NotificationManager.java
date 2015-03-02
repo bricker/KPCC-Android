@@ -15,20 +15,9 @@ import com.parse.ParsePushBroadcastReceiver;
 public class NotificationManager
         implements SharedPreferences.OnSharedPreferenceChangeListener {
 
-    private static NotificationManager INSTANCE = null;
     public static final String TAG = "NotificationManager";
     public static final String CHANNEL_LISTEN_LIVE = "sandbox_listenLive";
-
-    public static NotificationManager getInstance() {
-        return INSTANCE;
-    }
-
-    public static void setupInstance(Application application) {
-        if (INSTANCE == null) {
-            INSTANCE = new NotificationManager(application);
-        }
-    }
-
+    private static NotificationManager INSTANCE = null;
 
     protected NotificationManager(Application application) {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(application);
@@ -39,6 +28,15 @@ public class NotificationManager
         }
     }
 
+    public static NotificationManager getInstance() {
+        return INSTANCE;
+    }
+
+    public static void setupInstance(Application application) {
+        if (INSTANCE == null) {
+            INSTANCE = new NotificationManager(application);
+        }
+    }
 
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences,
                                           String key) {

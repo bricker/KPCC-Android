@@ -31,6 +31,10 @@ public class LiveFragment extends Fragment {
     private Button mPlayButton;
     private Button mStopButton;
 
+    public LiveFragment() {
+        // Required empty public constructor
+    }
+
     /**
      * Use this factory method to create a new instance of
      * this fragment.
@@ -40,10 +44,6 @@ public class LiveFragment extends Fragment {
     public static LiveFragment newInstance() {
         LiveFragment fragment = new LiveFragment();
         return fragment;
-    }
-
-    public LiveFragment() {
-        // Required empty public constructor
     }
 
     @Override

@@ -19,15 +19,12 @@ import java.io.UnsupportedEncodingException;
  */
 public class FeedbackManager {
     public final static String TAG = "kpcc.FeedbackManager";
-    private static FeedbackManager INSTANCE = null;
-
     public final static String TYPE_BUG = "bug";
     public final static String TYPE_SUGGESTION = "suggestion";
     public final static String TYPE_FEEDBACK = "feedback";
     public final static String DESC_BUG = "Bug";
     public final static String DESC_SUGGESTION = "Suggestion";
     public final static String DESC_FEEDBACK = "General Feedback";
-
     private final static String CONTENT_TYPE = "application/json";
     private final static String DESK_ROOT = "https://kpcc.desk.com/api/v2/";
     private final static String ENDPOINT_CUSTOMERS_CREATE = "customers";
@@ -41,13 +38,12 @@ public class FeedbackManager {
     private final static String LABEL = "Android Feedback";
     private final static String DEFAULT_USER = "/api/v2/users/21318558";
     private final static String DEFAULT_GROUP = "/api/v2/groups/346862";
-
     private final static String TEMPLATE_SUBJECT = "%s for KPCC Android from %s";
     private final static String TEMPLATE_BODY = "%s\n\n%s\n\n" +
             "Android Version: %s\n" +
             "Device: %s %s %s\n" +
             "App Version: %s (%s)";
-
+    private static FeedbackManager INSTANCE = null;
     private AsyncHttpClient client = new AsyncHttpClient();
 
     protected FeedbackManager() {
@@ -58,7 +54,7 @@ public class FeedbackManager {
         // The setBasicAuth method doesn't build the header correctly for this, so we have
         // to do it manually.
         client.addHeader("Authorization", "Basic " +
-            Base64.encodeToString((email + ":" + password).getBytes(), Base64.NO_WRAP)
+                        Base64.encodeToString((email + ":" + password).getBytes(), Base64.NO_WRAP)
         );
 
         client.addHeader("Content-Type", CONTENT_TYPE);
@@ -70,6 +66,7 @@ public class FeedbackManager {
             INSTANCE = new FeedbackManager();
         }
     }
+
     public static FeedbackManager getInstance() {
         return INSTANCE;
     }
@@ -97,10 +94,10 @@ public class FeedbackManager {
                             // The API documentation specifies that emails are unique, so we
                             // can safely just get the first result.
                             customerId = String.valueOf(response
-                                    .getJSONObject("_embedded")
-                                    .getJSONArray("entries")
-                                    .getJSONObject(0)
-                                    .getInt("id")
+                                            .getJSONObject("_embedded")
+                                            .getJSONArray("entries")
+                                            .getJSONObject(0)
+                                            .getInt("id")
                             );
 
                         } catch (JSONException e) {
@@ -334,11 +331,13 @@ public class FeedbackManager {
 
     private static interface CustomerResponseCallback {
         public void onSuccess(String customerId);
+
         public void onFailure();
     }
 
     public static interface FeedbackCallback {
         public void onSuccess();
+
         public void onFailure();
     }
 }

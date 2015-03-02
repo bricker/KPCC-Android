@@ -55,19 +55,19 @@ public class EpisodesFragment extends Fragment implements AbsListView.OnItemClic
     private Program mProgram;
     private ArrayList<Episode> mEpisodes = new ArrayList<>();
 
+    /**
+     * Mandatory empty constructor for the fragment manager to instantiate the
+     * fragment (e.g. upon screen orientation changes).
+     */
+    public EpisodesFragment() {
+    }
+
     public static EpisodesFragment newInstance(String programSlug) {
         EpisodesFragment fragment = new EpisodesFragment();
         Bundle args = new Bundle();
         args.putString(ARG_PROGRAM_SLUG, programSlug);
         fragment.setArguments(args);
         return fragment;
-    }
-
-    /**
-     * Mandatory empty constructor for the fragment manager to instantiate the
-     * fragment (e.g. upon screen orientation changes).
-     */
-    public EpisodesFragment() {
     }
 
     @Override
@@ -89,7 +89,7 @@ public class EpisodesFragment extends Fragment implements AbsListView.OnItemClic
                 try {
                     JSONArray jsonEpisodes = response.getJSONArray(Episode.PLURAL_KEY);
 
-                    for (int i=0; i < jsonEpisodes.length(); i++) {
+                    for (int i = 0; i < jsonEpisodes.length(); i++) {
                         Episode episode = Episode.buildFromJson(jsonEpisodes.getJSONObject(i));
 
                         // Don't show the episode if there is no audio.

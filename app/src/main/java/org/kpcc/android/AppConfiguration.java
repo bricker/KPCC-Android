@@ -15,16 +15,6 @@ public class AppConfiguration {
 
     private Properties props;
 
-    public static void setupInstance(Context context) {
-        if (INSTANCE == null) {
-            INSTANCE = new AppConfiguration(context);
-        }
-    }
-
-    public static AppConfiguration getInstance() {
-        return INSTANCE;
-    }
-
     // If keys.properties is missing or can't be read, you'll get a big ol' IOException.
     protected AppConfiguration(Context context) {
         props = new Properties();
@@ -37,6 +27,16 @@ public class AppConfiguration {
         } catch (IOException e) {
             Log.d(TAG, "keys.properties couldn't be read.");
         }
+    }
+
+    public static void setupInstance(Context context) {
+        if (INSTANCE == null) {
+            INSTANCE = new AppConfiguration(context);
+        }
+    }
+
+    public static AppConfiguration getInstance() {
+        return INSTANCE;
     }
 
     public String getConfig(String config) {

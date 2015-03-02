@@ -9,7 +9,8 @@ public class Navigation {
     // We're declaring the size statically so we can use native Array.
     private NavigationItem[] mNavigationItems = new NavigationItem[6];
 
-    protected Navigation() { }
+    protected Navigation() {
+    }
 
     public static Navigation getInstance() {
         if (instance == null) {
@@ -36,6 +37,10 @@ public class Navigation {
     }
 
 
+    public static interface NavigationItemSelectedCallback {
+        public void perform(FragmentManager fm);
+    }
+
     public static class NavigationItem {
         private int mTitleId;
         private NavigationItemSelectedCallback mCallback;
@@ -54,9 +59,5 @@ public class Navigation {
             FragmentManager fm = activity.getSupportFragmentManager();
             mCallback.perform(fm);
         }
-    }
-
-    public static interface NavigationItemSelectedCallback {
-        public void perform(FragmentManager fm);
     }
 }

@@ -10,8 +10,7 @@ import java.util.ArrayList;
 import java.util.Date;
 
 public class Episode extends Entity
-        implements Comparable<Episode>
-{
+        implements Comparable<Episode> {
     public final static String PLURAL_KEY = "episodes";
     public final static String ENDPOINT = PLURAL_KEY;
 
@@ -24,12 +23,10 @@ public class Episode extends Entity
     private Audio mAudio;
     private ArrayList<Segment> mSegments = new ArrayList<>();
 
-    public static Episode buildFromJson(JSONObject jsonEpisode)
-    {
+    public static Episode buildFromJson(JSONObject jsonEpisode) {
         Episode episode = new Episode();
 
-        try
-        {
+        try {
             episode.setTitle(jsonEpisode.getString(PROP_TITLE));
             episode.setAirDate(parseISODate(jsonEpisode.getString(PROP_AIR_DATE)));
             // URL is unique so we'll use it as ID too.
@@ -75,52 +72,48 @@ public class Episode extends Entity
         return episode;
     }
 
-    public String getTitle()
-    {
+    public String getTitle() {
         return mTitle;
     }
 
-    public void setTitle(String title)
-    {
+    public void setTitle(String title) {
         mTitle = title;
     }
 
 
-    public Date getAirDate()
-    {
+    public Date getAirDate() {
         return mAirDate;
     }
 
-    public void setAirDate(Date airDate)
-    {
+    public void setAirDate(Date airDate) {
         mAirDate = airDate;
     }
 
 
-    public String getPublicUrl()
-    {
+    public String getPublicUrl() {
         return mPublicUrl;
     }
 
-    public void setPublicUrl(String publicUrl)
-    {
+    public void setPublicUrl(String publicUrl) {
         mPublicUrl = publicUrl;
     }
 
 
-    public Audio getAudio()
-    {
+    public Audio getAudio() {
         return mAudio;
     }
 
-    public void setAudio(Audio audio)
-    {
+    public void setAudio(Audio audio) {
         mAudio = audio;
     }
 
-    public ArrayList<Segment> getSegments() { return mSegments; }
+    public ArrayList<Segment> getSegments() {
+        return mSegments;
+    }
 
-    public void addSegment(Segment segment) { mSegments.add(segment); }
+    public void addSegment(Segment segment) {
+        mSegments.add(segment);
+    }
 
     @Override
     public int compareTo(@NonNull Episode otherEpisode) {

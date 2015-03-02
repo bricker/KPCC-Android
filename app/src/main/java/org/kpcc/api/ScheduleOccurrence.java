@@ -8,16 +8,12 @@ import org.json.JSONObject;
 import java.util.Date;
 
 
-public class ScheduleOccurrence extends Entity
-{
+public class ScheduleOccurrence extends Entity {
     public final static String ENDPOINT = "schedule";
-    public final static String SINGULAR_KEY = "schedule_occurrence";
-    public final static String CURRENT_ENDPOINT = "current";
-
     // API Client
     public final static ApiClient Client = new ApiClient(ENDPOINT);
-
-
+    public final static String SINGULAR_KEY = "schedule_occurrence";
+    public final static String CURRENT_ENDPOINT = "current";
     private String mTitle;
     private Date mStartsAt;
     private Date mEndsAt;
@@ -25,21 +21,20 @@ public class ScheduleOccurrence extends Entity
     private Program mProgram;
 
 
-    public static ScheduleOccurrence buildFromJson(JSONObject jsonSchedule)
-    {
+    public static ScheduleOccurrence buildFromJson(JSONObject jsonSchedule) {
         ScheduleOccurrence schedule = new ScheduleOccurrence();
 
-        try
-        {
+        try {
             schedule.setTitle(jsonSchedule.getString(PROP_TITLE));
             schedule.setStartsAt(parseISODateTime(jsonSchedule.getString(PROP_STARTS_AT)));
             schedule.setEndsAt(parseISODateTime(jsonSchedule.getString(PROP_ENDS_AT)));
             schedule.setSoftStartsAt(parseISODateTime(jsonSchedule.getString(PROP_SOFT_STARTS_AT)));
 
-            if (jsonSchedule.has(Program.SINGULAR_KEY))
-            { schedule.setProgram(Program.buildFromJson(jsonSchedule.getJSONObject(Program.SINGULAR_KEY))); }
+            if (jsonSchedule.has(Program.SINGULAR_KEY)) {
+                schedule.setProgram(Program.buildFromJson(jsonSchedule.getJSONObject(Program.SINGULAR_KEY)));
+            }
 
-        } catch(JSONException e) {
+        } catch (JSONException e) {
             // TODO: Handle error
             e.printStackTrace();
         }
@@ -48,35 +43,29 @@ public class ScheduleOccurrence extends Entity
     }
 
 
-    public String getTitle()
-    {
+    public String getTitle() {
         return mTitle;
     }
 
-    public void setTitle(String title)
-    {
+    public void setTitle(String title) {
         mTitle = title;
     }
 
 
-    public Date getStartsAt()
-    {
+    public Date getStartsAt() {
         return mStartsAt;
     }
 
-    public void setStartsAt(Date startsAt)
-    {
+    public void setStartsAt(Date startsAt) {
         mStartsAt = startsAt;
     }
 
 
-    public Date getEndsAt()
-    {
+    public Date getEndsAt() {
         return mEndsAt;
     }
 
-    public void setEndsAt(Date endsAt)
-    {
+    public void setEndsAt(Date endsAt) {
         mEndsAt = endsAt;
     }
 
@@ -90,23 +79,21 @@ public class ScheduleOccurrence extends Entity
     }
 
 
-    public Program getProgram()
-    {
+    public Program getProgram() {
         return mProgram;
     }
 
-    public void setProgram(Program program)
-    {
+    public void setProgram(Program program) {
         mProgram = program;
     }
 
 
-    public static class ApiClient extends BaseApiClient
-    {
-        public ApiClient(String endpoint) { super(endpoint); }
+    public static class ApiClient extends BaseApiClient {
+        public ApiClient(String endpoint) {
+            super(endpoint);
+        }
 
-        public void getCurrent(AsyncHttpResponseHandler handler)
-        {
+        public void getCurrent(AsyncHttpResponseHandler handler) {
             get(CURRENT_ENDPOINT, null, handler);
         }
     }
