@@ -1,7 +1,5 @@
 package org.kpcc.android;
 
-import android.app.DownloadManager;
-import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.util.Log;
@@ -9,20 +7,16 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
-import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
-import com.android.volley.toolbox.ImageLoader;
 import com.android.volley.toolbox.NetworkImageView;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.kpcc.api.ScheduleOccurrence;
 
-import java.io.File;
-import java.io.IOException;
 import java.util.Date;
 
 
@@ -71,8 +65,6 @@ public class LiveFragment extends Fragment {
 
         mTitle = (TextView) view.findViewById(R.id.live_title);
         mStatus = (TextView) view.findViewById(R.id.live_status);
-        mPlayButton = (Button) view.findViewById(R.id.play_button);
-        mStopButton = (Button) view.findViewById(R.id.stop_button);
         mBackground = (NetworkImageView) view.findViewById(R.id.background);
 
         ScheduleOccurrence.Client.getCurrent(new Response.Listener<JSONObject>() {
@@ -117,14 +109,14 @@ public class LiveFragment extends Fragment {
             audioButtonManager.toggleStopped();
         }
 
-        mPlayButton.setOnClickListener(new View.OnClickListener() {
+        audioButtonManager.getPlayButton().setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 activity.getStreamManager().playLiveStream(activity, audioButtonManager);
             }
         });
 
-        mStopButton.setOnClickListener(new View.OnClickListener() {
+        audioButtonManager.getStopButton().setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 activity.getStreamManager().stop(audioButtonManager);

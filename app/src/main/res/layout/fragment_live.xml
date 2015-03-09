@@ -1,27 +1,44 @@
-<RelativeLayout
+<FrameLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    tools:context="org.kpcc.android.LiveFragment">
+    tools:context="org.kpcc.android.LiveFragment"
+    android:background="@android:color/black">
 
     <include layout="@layout/program_background" />
 
-    <TextView
-        android:id="@+id/live_status"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/on_now" />
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="250dp"
+        android:layout_gravity="bottom">
 
-    <TextView
-        android:id="@+id/live_title"
-        android:layout_below="@id/live_status"
-        android:layout_above="@id/audio_buttons"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/kpcc_live" />
+        <TextView
+            android:id="@+id/live_status"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_horizontal"
+            android:textColor="@color/kpccOrange"
+            android:textSize="16sp"
+            android:paddingBottom="12dp"
+            android:text="@string/on_now" />
 
-    <include layout="@layout/audio_button" />
+        <TextView
+            android:id="@+id/live_title"
+            android:layout_below="@id/live_status"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_horizontal"
+            android:textColor="@android:color/white"
+            android:textSize="30sp"
+            android:paddingBottom="20dp"
+            android:text="@string/kpcc_live" />
 
-</RelativeLayout>
+        <include layout="@layout/audio_button"
+                 android:layout_width="match_parent"
+                 android:layout_height="wrap_content"
+                 android:layout_gravity="center_horizontal"
+                 android:layout_below="@id/live_title" />
+    </RelativeLayout>
+</FrameLayout>

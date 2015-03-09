@@ -43,4 +43,5 @@
 
     <string name="pref_title_push_notifications">Push Notifications</string>
     <string name="pref_desc_push_notifications">Receive alerts when breaking news events are happening.</string>
+    <string name="pref_fallback_ad_uuid">Fallback Ad UUID</string>
 </resources>

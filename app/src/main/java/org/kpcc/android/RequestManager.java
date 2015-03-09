@@ -4,19 +4,11 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.support.v4.util.LruCache;
 
-import com.android.volley.AuthFailureError;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
-import com.android.volley.Response;
 import com.android.volley.toolbox.ImageLoader;
-import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.NetworkImageView;
 import com.android.volley.toolbox.Volley;
-
-import org.json.JSONObject;
-
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * Created by rickb014 on 3/1/15.

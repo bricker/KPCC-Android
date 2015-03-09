@@ -3,20 +3,14 @@ package org.kpcc.android;
 import android.util.Base64;
 import android.util.Log;
 
-import com.android.volley.AuthFailureError;
-import com.android.volley.Request;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
-import com.android.volley.toolbox.JsonObjectRequest;
 
-import org.apache.http.entity.StringEntity;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.UnsupportedEncodingException;
 import java.util.HashMap;
-import java.util.Map;
 
 /**
  * Created by rickb014 on 2/22/15.

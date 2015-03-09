@@ -103,8 +103,6 @@ public class EpisodeFragment extends Fragment {
         TextView title = (TextView) view.findViewById(R.id.episode_title);
         TextView date = (TextView) view.findViewById(R.id.air_date);
 
-        mPlayButton = (Button) view.findViewById((R.id.play_button));
-        mPauseButton = (Button) view.findViewById((R.id.pause_button));
         mBackground = (NetworkImageView) view.findViewById(R.id.background);
         RequestManager.getInstance().setBackgroundImage(mBackground, mProgram.getSlug());
 
@@ -120,14 +118,14 @@ public class EpisodeFragment extends Fragment {
             audioButtonManager.toggleStopped();
         }
 
-        mPlayButton.setOnClickListener(new View.OnClickListener() {
+        audioButtonManager.getPlayButton().setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 activity.getStreamManager().playEpisode(mAudioUrl, activity, audioButtonManager);
             }
         });
 
-        mPauseButton.setOnClickListener(new View.OnClickListener() {
+        audioButtonManager.getPauseButton().setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 activity.getStreamManager().pause(audioButtonManager);
@@ -135,7 +133,7 @@ public class EpisodeFragment extends Fragment {
         });
 
         // Start the episode right away.
-        mPlayButton.callOnClick();
+        audioButtonManager.clickPlay();
 
         return view;
     }
