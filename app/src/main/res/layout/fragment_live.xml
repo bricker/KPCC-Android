@@ -4,25 +4,24 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    tools:context="org.kpcc.android.LiveFragment"
-    android:background="@android:color/black">
+    tools:context="org.kpcc.android.LiveFragment">
 
     <include layout="@layout/program_background" />
 
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="250dp"
-        android:layout_gravity="bottom">
+        android:layout_gravity="bottom"
+        style="@style/static_content_wrapper">
 
         <TextView
             android:id="@+id/live_status"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:gravity="center_horizontal"
-            android:textColor="@color/kpccOrange"
-            android:textSize="16sp"
             android:paddingBottom="12dp"
-            android:text="@string/on_now" />
+            android:text="@string/live"
+            style="@style/text_header_small" />
 
         <TextView
             android:id="@+id/live_title"
@@ -32,13 +31,13 @@
             android:gravity="center_horizontal"
             android:textColor="@android:color/white"
             android:textSize="30sp"
-            android:paddingBottom="20dp"
-            android:text="@string/kpcc_live" />
+            android:paddingBottom="20dp"/>
 
-        <include layout="@layout/audio_button"
-                 android:layout_width="match_parent"
-                 android:layout_height="wrap_content"
-                 android:layout_gravity="center_horizontal"
-                 android:layout_below="@id/live_title" />
+        <include
+            layout="@layout/audio_button"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_below="@id/live_title" />
     </RelativeLayout>
 </FrameLayout>

@@ -1,62 +1,95 @@
-<RelativeLayout
+<FrameLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:orientation="vertical"
     tools:context="org.kpcc.android.EpisodeFragment"
-    android:orientation="vertical">
+    android:background="@android:color/black">
 
     <include layout="@layout/program_background" />
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/program_title"
-        android:id="@+id/program_title"/>
-
-    <TextView
-        android:id="@+id/episode_title"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="@string/episode" />
-
-    <TextView
-        android:id="@+id/air_date"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="@string/date" />
-
     <LinearLayout
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal">
-        <TextView
-            android:id="@+id/audio_current_time"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="@string/audio_current_time" />
+        android:layout_gravity="top"
+        android:orientation="vertical"
+        style="@style/static_content_wrapper">
 
         <TextView
-            android:id="@+id/time_separator"
+            android:id="@+id/program_title"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/time_separator"
-            android:paddingLeft="5dp"
-            android:paddingRight="5dp" />
+            android:gravity="start"
+            android:textColor="@android:color/white"
+            android:textSize="16sp" />
+
+        <include layout="@layout/horizontal_rule" />
 
         <TextView
-            android:id="@+id/audio_total_time"
+            android:id="@+id/episode_title"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/audio_total_time" />
+            android:gravity="start"
+            android:textColor="@android:color/white"
+            android:textSize="20sp"
+            android:paddingBottom="20dp" />
+
+        <TextView
+            android:id="@+id/air_date"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="start"
+            android:textAppearance="@style/text_date" />
+
     </LinearLayout>
 
-    <TextView
-        android:id="@+id/audio_url"
+    <!-- The specific height is to make the play buttons align in live stream and episode player -->
+    <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="@string/audio" />
+        android:layout_height="203dp"
+        android:layout_gravity="bottom"
+        style="@style/static_content_wrapper">
 
-    <include layout="@layout/audio_button" />
+        <LinearLayout
+            android:id="@+id/audio_time"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="start"
+            android:paddingBottom="20dp"
+            android:orientation="horizontal">
 
-</RelativeLayout>
+            <TextView
+                android:id="@+id/audio_current_time"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@android:color/white"
+                android:textSize="16sp"
+                android:text="@string/audio_default_time" />
+
+            <TextView
+                android:id="@+id/time_separator"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@android:color/white"
+                android:textSize="16sp"
+                android:paddingLeft="5dp"
+                android:paddingRight="5dp"
+                android:text="@string/time_separator" />
+
+            <TextView
+                android:id="@+id/audio_total_time"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@android:color/white"
+                android:textSize="16sp" />
+
+        </LinearLayout>
+
+        <include layout="@layout/audio_button"
+                 android:layout_width="match_parent"
+                 android:layout_height="wrap_content"
+                 android:layout_gravity="center_horizontal"
+                 android:layout_below="@id/audio_time" />
+    </RelativeLayout>
+</FrameLayout>

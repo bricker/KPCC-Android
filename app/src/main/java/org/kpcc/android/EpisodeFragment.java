@@ -100,13 +100,15 @@ public class EpisodeFragment extends Fragment {
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_episode, container, false);
 
-        TextView title = (TextView) view.findViewById(R.id.episode_title);
+        TextView program_title = (TextView) view.findViewById(R.id.program_title);
+        TextView episode_title = (TextView) view.findViewById(R.id.episode_title);
         TextView date = (TextView) view.findViewById(R.id.air_date);
 
         mBackground = (NetworkImageView) view.findViewById(R.id.background);
         RequestManager.getInstance().setBackgroundImage(mBackground, mProgram.getSlug());
 
-        title.setText(mEpisodeTitle);
+        program_title.setText(mProgram.getTitle());
+        episode_title.setText(mEpisodeTitle);
         date.setText(mEpisodeDate);
 
         final AudioButtonManager audioButtonManager = new AudioButtonManager(activity, view);

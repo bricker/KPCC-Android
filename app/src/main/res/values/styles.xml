@@ -1,13 +1,59 @@
 <resources>
-    <color name="kpccOrange">#FFFF8C26</color>
-
     <!-- Base application theme. -->
     <style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">
         <!--<item name="android:windowBackground">@android:color/black</item>-->
         <!--<item name="actionBarStyle">@style/ActionBar</item>-->
+        <item name="android:windowBackground">@android:color/black</item>
     </style>
 
     <style name="ActionBar" parent="ThemeOverlay.AppCompat.Dark.ActionBar">
-        <item name="background">@color/kpccOrange</item>
+        <item name="background">@color/kpcc_orange</item>
+    </style>
+
+    <style name="static_content_wrapper">
+        <item name="android:layout_marginTop">@dimen/page_padding_vertical</item>
+        <item name="android:layout_marginRight">@dimen/page_padding_horizontal</item>
+        <item name="android:layout_marginBottom">@dimen/page_padding_vertical</item>
+        <item name="android:layout_marginLeft">@dimen/page_padding_horizontal</item>
+    </style>
+    <!--
+        For list views, we don't want top padding on the page, so the list scrolls right into
+        the activity bar
+    -->
+    <style name="list_view">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">match_parent</item>
+        <item name="android:paddingTop">0dp</item>
+        <item name="android:paddingRight">@dimen/page_padding_horizontal</item>
+        <item name="android:paddingBottom">0dp</item>
+        <item name="android:paddingLeft">@dimen/page_padding_horizontal</item>
+        <item name="android:divider">@color/horizontal_rule</item>
+        <item name="android:dividerHeight">1dp</item>
+    </style>
+
+    <style name="text_list_item">
+        <item name="android:textColor">@android:color/white</item>
+        <item name="android:textSize">18sp</item>
+    </style>
+
+    <style name="text_date">
+        <item name="android:textColor">@color/light_gray</item>
+        <item name="android:textSize">16sp</item>
+    </style>
+
+    <style name="text_header_small">
+        <item name="android:textColor">@color/kpcc_orange</item>
+        <item name="android:textSize">16sp</item>
+        <item name="android:textAllCaps">true</item>
+    </style>
+
+    <style name="background_image">
+        <item name="android:scaleType">centerCrop</item>
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">match_parent</item>
+    </style>
+
+    <style name="background_image_blurred" parent="background_image">
+        <item name="android:alpha">0.3</item>
     </style>
 </resources>

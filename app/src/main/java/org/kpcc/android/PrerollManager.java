@@ -22,6 +22,7 @@ import java.util.UUID;
  * Created by rickb014 on 3/3/15.
  */
 public class PrerollManager {
+    private final static long PREROLL_THRESHOLD = 600L;
     public final static String TRITON_BASE = "http://cmod.live.streamtheworld.com/ondemand/ars";
     public final static String AD_TYPE = "preroll";
     public final static String AD_STID = "83153";

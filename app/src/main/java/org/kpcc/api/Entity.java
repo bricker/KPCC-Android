@@ -4,6 +4,7 @@ package org.kpcc.api;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Locale;
 
 public abstract class Entity {
     public final static String PROP_TITLE = "title";
@@ -20,15 +21,19 @@ public abstract class Entity {
 
     public static String ISO_DATETIME_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSSZ";
     public static String ISO_DATE_FORMAT = "yyyy-MM-dd";
+    public static String HUMAN_DATE_FORMAT = "MMMM d, yyyy";
 
     protected static Date parseISODateTime(String isoDateString) {
-        return parseDate(new SimpleDateFormat(ISO_DATETIME_FORMAT), isoDateString);
+        return parseDate(new SimpleDateFormat(ISO_DATETIME_FORMAT, Locale.US), isoDateString);
     }
 
     protected static Date parseISODate(String isoDateString) {
-        return parseDate(new SimpleDateFormat(ISO_DATE_FORMAT), isoDateString);
+        return parseDate(new SimpleDateFormat(ISO_DATE_FORMAT, Locale.US), isoDateString);
     }
 
+    protected static String parseHumanDate(Date date) {
+        return new SimpleDateFormat(HUMAN_DATE_FORMAT, Locale.US).format(date);
+    }
 
     private static Date parseDate(SimpleDateFormat sdf, String isoDateString) {
         Date isoDate = null;

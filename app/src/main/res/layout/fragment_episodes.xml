@@ -1,22 +1,38 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-             xmlns:tools="http://schemas.android.com/tools"
-             android:layout_width="match_parent"
-             android:layout_height="match_parent"
-             tools:context="org.kpcc.android.EpisodesFragment">
+<FrameLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="org.kpcc.android.EpisodesFragment">
 
-    <include layout="@layout/program_background" />
+    <include
+        layout="@layout/program_background"
+        style="@style/background_image_blurred" />
 
-    <ListView
-        android:id="@android:id/list"
+    <!-- Don't use static_content_wrapper here or the padding will get nested -->
+    <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"/>
+        android:layout_height="300dp"
+        android:layout_gravity="bottom">
 
-    <TextView
-        android:id="@android:id/empty"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:gravity="center"/>
+        <TextView
+            android:id="@+id/recent_episodes"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            style="@style/text_header_small"
+            android:paddingBottom="12dp"
+            android:layout_marginRight="@dimen/page_padding_horizontal"
+            android:layout_marginLeft="@dimen/page_padding_horizontal"
+            android:text="@string/recent_episodes" />
 
-    <include layout="@layout/progress_spinner" />
+        <ListView
+            android:id="@android:id/list"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_below="@+id/recent_episodes"
+            style="@style/list_view" />
+
+        <include layout="@layout/progress_spinner" />
+    </RelativeLayout>
 </FrameLayout>

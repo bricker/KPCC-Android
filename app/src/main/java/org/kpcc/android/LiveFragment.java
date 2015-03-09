@@ -74,17 +74,26 @@ public class LiveFragment extends Fragment {
                     JSONObject jsonSchedule = response.getJSONObject(ScheduleOccurrence.SINGULAR_KEY);
                     ScheduleOccurrence schedule = ScheduleOccurrence.buildFromJson(jsonSchedule);
 
-                    mTitle.setText(schedule.getTitle());
+                    // It may be null, if nothing is on right now according to the API.
+                    // The stream will still play and we'll show some default info.
+                    if (schedule != null) {
+                        mTitle.setText(schedule.getTitle());
 
-                    // If we're before this occurrence's 'soft start', then say "up next".
-                    // Otherwise, set "On Now".
-                    if (new Date().getTime() < schedule.getSoftStartsAt().getTime()) {
-                        mStatus.setText(R.string.up_next);
+                        // If we're before this occurrence's 'soft start', then say "up next".
+                        // Otherwise, set "On Now".
+                        Date softStartsAt = schedule.getSoftStartsAt();
+                        if (softStartsAt != null && new Date().getTime() < softStartsAt.getTime()) {
+                            mStatus.setText(R.string.up_next);
+                        } else {
+                            mStatus.setText(R.string.on_now);
+                        }
+
+                        RequestManager.getInstance().setBackgroundImage(mBackground, schedule.getProgramSlug());
                     } else {
-                        mStatus.setText(R.string.on_now);
+                        RequestManager.getInstance().setDefaultBackgroundImage(mBackground);
                     }
 
-                    RequestManager.getInstance().setBackgroundImage(mBackground, schedule.getProgramSlug());
+
 
                 } catch (JSONException e) {
                     Log.d(TAG, "JSON Error");

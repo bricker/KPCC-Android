@@ -117,17 +117,21 @@ public class EpisodesFragment extends Fragment implements AbsListView.OnItemClic
                     mAdapter = (new ArrayAdapter<Episode>(getActivity(), R.layout.list_item_episode, mEpisodes) {
                         @Override
                         public View getView(int position, View convertView, ViewGroup parent) {
-                            View v = convertView;
+                            View view = convertView;
 
-                            if (v == null) {
+                            if (view == null) {
                                 LayoutInflater inflater = (LayoutInflater) getContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-                                v = inflater.inflate(R.layout.list_item_program, null);
+                                view = inflater.inflate(R.layout.list_item_episode, null);
                             }
-                            Episode episode = mEpisodes.get(position);
-                            TextView title = (TextView) v.findViewById(android.R.id.text1);
-                            title.setText(episode.getTitle());
 
-                            return v;
+                            Episode episode = mEpisodes.get(position);
+                            TextView title = (TextView) view.findViewById(R.id.episode_title);
+                            TextView date = (TextView) view.findViewById(R.id.air_date);
+
+                            title.setText(episode.getTitle());
+                            date.setText(episode.getFormattedAirDate());
+
+                            return view;
                         }
                     });
 
@@ -184,7 +188,7 @@ public class EpisodesFragment extends Fragment implements AbsListView.OnItemClic
         FragmentManager fragmentManager = getActivity().getSupportFragmentManager();
         fragmentManager.beginTransaction()
                 .replace(R.id.container, EpisodeFragment.newInstance(
-                        mProgram.getSlug(), episode.getTitle(), String.valueOf(episode.getAirDate()),
+                        mProgram.getSlug(), episode.getTitle(), episode.getFormattedAirDate(),
                         audio.getUrl(), audio.getFilesizeBytes(), audio.getDurationSeconds()))
                 .addToBackStack(null)
                 .commit();

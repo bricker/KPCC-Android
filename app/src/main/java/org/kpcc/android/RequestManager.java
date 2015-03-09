@@ -15,6 +15,7 @@ import com.android.volley.toolbox.Volley;
  */
 public class RequestManager {
     private static RequestManager INSTANCE = null;
+    private final static String GENERIC_SLUG = "generic";
 
     private RequestQueue mRequestQueue;
     private ImageLoader mImageLoader;
@@ -51,7 +52,17 @@ public class RequestManager {
 
     public void setBackgroundImage(NetworkImageView view, String slug) {
         view.setErrorImageResId(R.drawable.tile_generic);
-        view.setImageUrl(ProgramsManager.buildTileUrl(slug), mImageLoader);
+
+        if (slug.equals(GENERIC_SLUG)) {
+            // We bundle this with the app, no need to make a request.
+            view.setBackgroundResource(R.drawable.tile_generic);
+        } else {
+            view.setImageUrl(ProgramsManager.buildTileUrl(slug), mImageLoader);
+        }
+    }
+
+    public void setDefaultBackgroundImage(NetworkImageView view) {
+        setBackgroundImage(view, GENERIC_SLUG);
     }
 
     public RequestQueue getRequestQueue() {

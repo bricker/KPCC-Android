@@ -17,9 +17,8 @@ import java.io.IOException;
 public class StreamManager extends Service {
 
     public static final String TAG = "kpcc.StreamManager";
-    public final static String LIVESTREAM_URL = "http://live.scpr.org/kpcclive";
-    public final static String LIVESTREAM_NOPREROLL_URL = LIVESTREAM_URL + "?preskip=true";
-    private final static long PREROLL_THRESHOLD = 600L;
+    public final static String LIVESTREAM_URL = "http://live.scpr.org/kpcclive?preskio=true";
+
     private final IBinder mBinder = new LocalBinder();
     private MediaPlayer mAudioPlayer = null;
     private String mCurrentAudioUrl = null;
@@ -94,22 +93,6 @@ public class StreamManager extends Service {
         mCurrentAudioUrl = LIVESTREAM_URL;
     }
 
-    public void startForPause(AudioButtonManager audioButtonManager) {
-        if (mAudioPlayer == null) {
-            return;
-        }
-        audioButtonManager.togglePlayingForPause();
-        mAudioPlayer.start();
-    }
-
-    public void startForStop(AudioButtonManager audioButtonManager) {
-        if (mAudioPlayer == null) {
-            return;
-        }
-        audioButtonManager.togglePlayingForStop();
-        mAudioPlayer.start();
-    }
-
     public boolean isPlaying(String audioUrl) {
         return (mAudioPlayer != null) &&
                 (mCurrentAudioUrl != null) &&
@@ -117,37 +100,41 @@ public class StreamManager extends Service {
     }
 
     public void pause(AudioButtonManager audioButtonManager) {
-        if (mAudioPlayer == null) {
-            return;
-        }
-        mAudioPlayer.pause();
+        audioButtonManager.togglePaused();
 
-        if (audioButtonManager != null) {
-            audioButtonManager.togglePaused();
+        if (mAudioPlayer != null) {
+            mAudioPlayer.pause();
         }
     }
 
     public void stop(AudioButtonManager audioButtonManager) {
-        if (mAudioPlayer == null) {
-            return;
-        }
-        mAudioPlayer.stop();
         mCurrentAudioUrl = null;
+        audioButtonManager.toggleStopped();
 
-        if (audioButtonManager != null) {
-            audioButtonManager.toggleStopped();
+        if (mAudioPlayer != null) {
+            mAudioPlayer.stop();
         }
     }
 
     public void release() {
-        if (mAudioPlayer == null) {
-            return;
-        }
-        mAudioPlayer.release();
-        mAudioPlayer = null;
         mCurrentAudioUrl = null;
+
+        if (mAudioPlayer != null) {
+            mAudioPlayer.release();
+            mAudioPlayer = null;
+        }
     }
 
+
+    private void startForPause(AudioButtonManager audioButtonManager) {
+        audioButtonManager.togglePlayingForPause();
+        mAudioPlayer.start();
+    }
+
+    private void startForStop(AudioButtonManager audioButtonManager) {
+        audioButtonManager.togglePlayingForStop();
+        mAudioPlayer.start();
+    }
 
     private void setupAudioPlayer() {
         if (mAudioPlayer == null) {

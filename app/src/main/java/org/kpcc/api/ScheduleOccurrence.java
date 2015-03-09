@@ -21,6 +21,10 @@ public class ScheduleOccurrence extends Entity {
 
 
     public static ScheduleOccurrence buildFromJson(JSONObject jsonSchedule) {
+        if (jsonSchedule.length() == 0) {
+            return null;
+        }
+
         ScheduleOccurrence schedule = new ScheduleOccurrence();
 
         try {

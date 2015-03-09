@@ -6,9 +6,7 @@
 
     <com.android.volley.toolbox.NetworkImageView
         android:id="@+id/background"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
         android:contentDescription="@string/programs"
-        android:scaleType="centerCrop"/>
+        style="@style/background_image" />
 
 </RelativeLayout>

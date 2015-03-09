@@ -10,6 +10,7 @@ import android.view.ViewGroup;
 import android.widget.AbsListView;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.ImageView;
 import android.widget.ListAdapter;
 import android.widget.TextView;
 
@@ -59,18 +60,32 @@ public class ProgramsFragment extends Fragment
                 R.layout.list_item_program, ProgramsManager.ALL_PROGRAMS) {
             @Override
             public View getView(int position, View convertView, ViewGroup parent) {
-                View v = convertView;
+                View view = convertView;
 
-                if (v == null) {
+                if (view == null) {
                     LayoutInflater inflater = (LayoutInflater) getContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-                    v = inflater.inflate(R.layout.list_item_program, null);
+                    view = inflater.inflate(R.layout.list_item_program, null);
                 }
 
                 Program program = ProgramsManager.ALL_PROGRAMS.get(position);
-                TextView title = (TextView) v.findViewById(android.R.id.text1);
+                TextView title = (TextView) view.findViewById(R.id.program_title);
+                ImageView avatar = (ImageView) view.findViewById(R.id.program_avatar);
+                ImageView arrow = (ImageView) view.findViewById(R.id.arrow);
+
                 title.setText(program.getTitle());
 
-                return v;
+                String underscoreSlug = program.getSlug().replace("-", "_");
+                int resId = getResources().getIdentifier(
+                        "program_avatar_" + underscoreSlug,
+                        "drawable",
+                        getActivity().getApplicationContext().getPackageName());
+
+                if (resId == 0) {
+                    // TODO: Build placeholder avatar.
+                } else {
+                    avatar.setImageResource(resId);
+                }
+                return view;
             }
         });
     }

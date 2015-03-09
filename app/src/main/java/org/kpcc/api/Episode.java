@@ -19,6 +19,7 @@ public class Episode extends Entity
 
     private String mTitle;
     private Date mAirDate;
+    private String mFormattedAirDate;
     private String mPublicUrl;
     private Audio mAudio;
     private ArrayList<Segment> mSegments = new ArrayList<>();
@@ -89,6 +90,14 @@ public class Episode extends Entity
         mAirDate = airDate;
     }
 
+
+    public String getFormattedAirDate() {
+        if (mFormattedAirDate == null && getAirDate() != null) {
+            mFormattedAirDate = parseHumanDate(getAirDate());
+        }
+
+        return mFormattedAirDate;
+    }
 
     public String getPublicUrl() {
         return mPublicUrl;
