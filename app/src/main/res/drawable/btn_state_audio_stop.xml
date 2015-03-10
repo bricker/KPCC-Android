@@ -3,9 +3,9 @@
           android:enterFadeDuration="@android:integer/config_shortAnimTime"
           android:exitFadeDuration="@android:integer/config_shortAnimTime">
 
-    <item android:drawable="@drawable/audio_btn_pause_pressed"
+    <item android:drawable="@drawable/audio_btn_stop_pressed"
           android:state_pressed="true"/>
 
-    <item android:drawable="@drawable/ic_audio_btn_pause_normal" />
+    <item android:drawable="@drawable/ic_audio_btn_stop_normal" />
 
 </selector>
