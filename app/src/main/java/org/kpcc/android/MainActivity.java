@@ -47,7 +47,7 @@ public class MainActivity extends ActionBarActivity
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        Navigation.getInstance().addItem(0, R.string.kpcc_live,
+        Navigation.getInstance().addItem(0, R.string.kpcc_live, R.drawable.menu_antenna,
                 new Navigation.NavigationItemSelectedCallback() {
                     public void perform(FragmentManager fm) {
                         fm.beginTransaction()
@@ -57,7 +57,7 @@ public class MainActivity extends ActionBarActivity
                 }
         );
 
-        Navigation.getInstance().addItem(1, R.string.programs,
+        Navigation.getInstance().addItem(1, R.string.programs, R.drawable.menu_microphone,
                 new Navigation.NavigationItemSelectedCallback() {
                     public void perform(FragmentManager fm) {
                         fm.beginTransaction()
@@ -67,7 +67,7 @@ public class MainActivity extends ActionBarActivity
                 }
         );
 
-        Navigation.getInstance().addItem(2, R.string.headlines,
+        Navigation.getInstance().addItem(2, R.string.headlines, R.drawable.menu_glasses,
                 new Navigation.NavigationItemSelectedCallback() {
                     public void perform(FragmentManager fm) {
                         fm.beginTransaction()
@@ -77,7 +77,7 @@ public class MainActivity extends ActionBarActivity
                 }
         );
 
-        Navigation.getInstance().addItem(3, R.string.donate,
+        Navigation.getInstance().addItem(3, R.string.donate, R.drawable.menu_heart_plus,
                 new Navigation.NavigationItemSelectedCallback() {
                     public void perform(FragmentManager fm) {
                         Uri uri = Uri.parse(DONATE_URL);
@@ -90,7 +90,7 @@ public class MainActivity extends ActionBarActivity
                 }
         );
 
-        Navigation.getInstance().addItem(4, R.string.feedback,
+        Navigation.getInstance().addItem(4, R.string.feedback, R.drawable.menu_feedback,
                 new Navigation.NavigationItemSelectedCallback() {
                     public void perform(FragmentManager fm) {
                         fm.beginTransaction()
@@ -100,7 +100,7 @@ public class MainActivity extends ActionBarActivity
                 }
         );
 
-        Navigation.getInstance().addItem(5, R.string.settings,
+        Navigation.getInstance().addItem(5, R.string.settings, R.drawable.menu_settings,
                 new Navigation.NavigationItemSelectedCallback() {
                     public void perform(FragmentManager fm) {
                         fm.beginTransaction()

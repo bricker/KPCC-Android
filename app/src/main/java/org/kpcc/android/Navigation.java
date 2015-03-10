@@ -24,8 +24,8 @@ public class Navigation {
         return mNavigationItems;
     }
 
-    public void addItem(int idx, int titleId, NavigationItemSelectedCallback callback) {
-        mNavigationItems[idx] = new NavigationItem(titleId, callback);
+    public void addItem(int idx, int titleId, int iconId, NavigationItemSelectedCallback callback) {
+        mNavigationItems[idx] = new NavigationItem(titleId, iconId, callback);
     }
 
     public NavigationItem getItem(int idx) {
@@ -43,15 +43,20 @@ public class Navigation {
 
     public static class NavigationItem {
         private int mTitleId;
+        private int mIconId;
         private NavigationItemSelectedCallback mCallback;
 
-        protected NavigationItem(int titleId, NavigationItemSelectedCallback callback) {
+        protected NavigationItem(int titleId, int iconId, NavigationItemSelectedCallback callback) {
             mTitleId = titleId;
+            mIconId = iconId;
             mCallback = callback;
         }
 
         public int getTitleId() {
             return mTitleId;
+        }
+        public int getIconId() {
+            return mIconId;
         }
 
         public void performCallback(Context context) {

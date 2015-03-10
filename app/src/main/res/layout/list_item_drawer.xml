@@ -1,22 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- We're not using paddingStart or paddingEnd because we need to support API 16 -->
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_height="match_parent"
     android:layout_width="match_parent"
-    android:minHeight="60dp"
+    android:minHeight="70dp"
     android:orientation="horizontal">
 
     <ImageView
-        android:id="@+id/program_avatar"
-        android:layout_width="35dp"
-        android:layout_height="35dp"
+        android:id="@+id/icon"
+        android:layout_width="30dp"
+        android:layout_height="30dp"
         android:contentDescription="@null"
-        android:layout_marginRight="15dp"
+        android:layout_marginRight="20dp"
+        android:scaleType="fitCenter"
         android:layout_gravity="center_vertical" />
 
     <TextView
-        android:id="@+id/program_title"
+        android:id="@+id/title"
         android:layout_width="0dp"
         android:layout_height="match_parent"
         android:gravity="center_vertical"

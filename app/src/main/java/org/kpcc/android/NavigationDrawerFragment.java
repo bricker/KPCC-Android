@@ -1,16 +1,16 @@
 package org.kpcc.android;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
-import android.support.v4.app.ActionBarDrawerToggle;
 import android.support.v4.app.Fragment;
-import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBarActivity;
+import android.support.v7.app.ActionBarDrawerToggle;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -19,7 +19,9 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.ImageView;
 import android.widget.ListView;
+import android.widget.TextView;
 
 /**
  * Fragment used for managing interactions for and presentation of a navigation drawer.
@@ -86,8 +88,10 @@ public class NavigationDrawerFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
+
         mDrawerListView = (ListView) inflater.inflate(
                 R.layout.fragment_navigation_drawer, container, false);
+
         mDrawerListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
@@ -95,20 +99,27 @@ public class NavigationDrawerFragment extends Fragment {
             }
         });
 
-        // Get the navigation titles
-        String[] titles = new String[Navigation.getInstance().getSize()];
-        int i = 0;
-        for (Navigation.NavigationItem item : Navigation.getInstance().getItems()) {
-            titles[i] = getString(item.getTitleId());
-            i++;
-        }
+        mDrawerListView.setAdapter(new ArrayAdapter<Navigation.NavigationItem>(getActivity(),
+                R.layout.list_item_drawer, Navigation.getInstance().getItems()) {
+            @Override
+            public View getView(int position, View convertView, ViewGroup parent) {
+                View view = convertView;
 
-        mDrawerListView.setAdapter(new ArrayAdapter<String>(
-                getActionBar().getThemedContext(),
-                android.R.layout.simple_list_item_activated_1,
-                android.R.id.text1,
-                titles
-        ));
+                if (view == null) {
+                    LayoutInflater inflater = (LayoutInflater) getContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+                    view = inflater.inflate(R.layout.list_item_drawer, null);
+                }
+
+                Navigation.NavigationItem item = Navigation.getInstance().getItem(position);
+                ImageView icon = (ImageView) view.findViewById(R.id.icon);
+                TextView title = (TextView) view.findViewById(R.id.title);
+
+                title.setText(item.getTitleId());
+                icon.setImageResource(item.getIconId());
+
+                return view;
+            }
+        });
 
         mDrawerListView.setItemChecked(mCurrentSelectedPosition, true);
         return mDrawerListView;
@@ -128,10 +139,6 @@ public class NavigationDrawerFragment extends Fragment {
         mFragmentContainerView = getActivity().findViewById(fragmentId);
         mDrawerLayout = drawerLayout;
 
-        // set a custom shadow that overlays the main content when the drawer opens
-        mDrawerLayout.setDrawerShadow(R.drawable.drawer_shadow, GravityCompat.START);
-        // set up the drawer's list view with items and click listener
-
         ActionBar actionBar = getActionBar();
         actionBar.setDisplayHomeAsUpEnabled(true);
         actionBar.setHomeButtonEnabled(true);
@@ -141,26 +148,38 @@ public class NavigationDrawerFragment extends Fragment {
         mDrawerToggle = new ActionBarDrawerToggle(
                 getActivity(),                    /* host Activity */
                 mDrawerLayout,                    /* DrawerLayout object */
-                R.drawable.ic_drawer,             /* nav drawer image to replace 'Up' caret */
                 R.string.navigation_drawer_open,  /* "open drawer" description for accessibility */
                 R.string.navigation_drawer_close  /* "close drawer" description for accessibility */
         ) {
             @Override
-            public void onDrawerClosed(View drawerView) {
-                mAnalyticsManager.logEvent("menuClosed");
+            public void onDrawerSlide(View drawerView, float slideOffset) {
+                View wrapper = mDrawerLayout.findViewById(R.id.content_wrapper);
+                View background = mDrawerLayout.findViewById(R.id.background_image);
 
+                if (wrapper != null) {
+                    wrapper.setAlpha(1.0f - slideOffset);
+                }
+
+                if (background != null) {
+                    background.setAlpha(1.0f - slideOffset / 2);
+                }
+
+                super.onDrawerSlide(drawerView, slideOffset);
+            }
+
+            @Override
+            public void onDrawerClosed(View drawerView) {
                 super.onDrawerClosed(drawerView);
                 if (!isAdded()) {
                     return;
                 }
 
                 getActivity().supportInvalidateOptionsMenu(); // calls onPrepareOptionsMenu()
+                mAnalyticsManager.logEvent("menuClosed");
             }
 
             @Override
             public void onDrawerOpened(View drawerView) {
-                mAnalyticsManager.logEvent("menuOpened");
-
                 super.onDrawerOpened(drawerView);
                 if (!isAdded()) {
                     return;
@@ -176,6 +195,7 @@ public class NavigationDrawerFragment extends Fragment {
                 }
 
                 getActivity().supportInvalidateOptionsMenu(); // calls onPrepareOptionsMenu()
+                mAnalyticsManager.logEvent("menuOpened");
             }
         };
 

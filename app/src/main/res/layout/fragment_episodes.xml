@@ -12,6 +12,7 @@
 
     <!-- Don't use static_content_wrapper here or the padding will get nested -->
     <RelativeLayout
+        android:id="@+id/content_wrapper"
         android:layout_width="match_parent"
         android:layout_height="300dp"
         android:layout_gravity="bottom">
