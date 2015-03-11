@@ -105,7 +105,7 @@ public class EpisodeFragment extends Fragment {
         TextView date = (TextView) view.findViewById(R.id.air_date);
 
         mBackground = (NetworkImageView) view.findViewById(R.id.background);
-        RequestManager.getInstance().setBackgroundImage(mBackground, mProgram.getSlug());
+        BackgroundImageManager.getInstance().setBackgroundImage(mBackground, mProgram.getSlug());
 
         program_title.setText(mProgram.getTitle());
         episode_title.setText(mEpisodeTitle);

@@ -171,7 +171,7 @@ public class EpisodesFragment extends Fragment implements AbsListView.OnItemClic
         mListView = (AbsListView) view.findViewById(android.R.id.list);
         mProgressBar = (LinearLayout) view.findViewById(R.id.progress_layout);
         mBackground = (NetworkImageView) view.findViewById(R.id.background);
-        RequestManager.getInstance().setBackgroundImage(mBackground, mProgram.getSlug());
+        BackgroundImageManager.getInstance().setBackgroundImage(mBackground, mProgram.getSlug());
 
         // Set OnItemClickListener so we can be notified on item clicks
         mListView.setOnItemClickListener(this);

@@ -1,42 +1,35 @@
 package org.kpcc.android;
 
-import android.content.Context;
 import android.graphics.Bitmap;
 import android.support.v4.util.LruCache;
 
-import com.android.volley.Request;
-import com.android.volley.RequestQueue;
 import com.android.volley.toolbox.ImageLoader;
 import com.android.volley.toolbox.NetworkImageView;
-import com.android.volley.toolbox.Volley;
 
 /**
  * Created by rickb014 on 3/1/15.
  */
-public class RequestManager {
-    private static RequestManager INSTANCE = null;
+public class BackgroundImageManager {
+    private static BackgroundImageManager INSTANCE = null;
     private final static String GENERIC_SLUG = "generic";
 
-    private RequestQueue mRequestQueue;
     private ImageLoader mImageLoader;
 
-    public static void setupInstance(Context context) {
+    public static void setupInstance() {
         if (INSTANCE == null) {
-            INSTANCE = new RequestManager(context);
+            INSTANCE = new BackgroundImageManager();
         }
     }
 
-    public static RequestManager getInstance() {
+    public static BackgroundImageManager getInstance() {
         return INSTANCE;
     }
 
-    private RequestManager(Context context) {
-        mRequestQueue = Volley.newRequestQueue(context.getApplicationContext());
-
-        mImageLoader = new ImageLoader(mRequestQueue,
+    private BackgroundImageManager() {
+        mImageLoader = new ImageLoader(HttpRequest.Manager.getInstance().getRequestQueue(),
                 new ImageLoader.ImageCache() {
-                    private final LruCache<String, Bitmap>
-                            cache = new LruCache<String, Bitmap>(20);
+                    // There are 66 programs right now. We don't need to cache all of the images.
+                    private final LruCache<String, Bitmap> cache = new LruCache<>(50);
 
                     @Override
                     public Bitmap getBitmap(String url) {
@@ -63,18 +56,6 @@ public class RequestManager {
 
     public void setDefaultBackgroundImage(NetworkImageView view) {
         setBackgroundImage(view, GENERIC_SLUG);
-    }
-
-    public RequestQueue getRequestQueue() {
-        return mRequestQueue;
-    }
-
-    public <T> void addToRequestQueue(Request<T> req) {
-        mRequestQueue.add(req);
-    }
-
-    public ImageLoader getImageLoader() {
-        return mImageLoader;
     }
 
 }

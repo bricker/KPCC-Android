@@ -75,7 +75,6 @@ public class LiveFragment extends Fragment {
                     ScheduleOccurrence schedule = ScheduleOccurrence.buildFromJson(jsonSchedule);
 
                     // It may be null, if nothing is on right now according to the API.
-                    // The stream will still play and we'll show some default info.
                     if (schedule != null) {
                         mTitle.setText(schedule.getTitle());
 
@@ -88,9 +87,10 @@ public class LiveFragment extends Fragment {
                             mStatus.setText(R.string.on_now);
                         }
 
-                        RequestManager.getInstance().setBackgroundImage(mBackground, schedule.getProgramSlug());
+                        BackgroundImageManager.getInstance().setBackgroundImage(mBackground, schedule.getProgramSlug());
                     } else {
-                        RequestManager.getInstance().setDefaultBackgroundImage(mBackground);
+                        mStatus.setText(R.string.live);
+                        BackgroundImageManager.getInstance().setDefaultBackgroundImage(mBackground);
                     }
 
 

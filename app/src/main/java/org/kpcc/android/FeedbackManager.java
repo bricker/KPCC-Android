@@ -78,7 +78,7 @@ public class FeedbackManager {
         params.put("email", customerEmail);
 
         Log.d(TAG, "searchCustomer sending request...");
-        HttpRequest.get(
+        HttpRequest.JsonRequest.get(
                 getAbsoluteUrl(ENDPOINT_CUSTOMERS_SEARCH), params, mHeaders,
                 new Response.Listener<JSONObject>() {
                     @Override
@@ -157,7 +157,7 @@ public class FeedbackManager {
             }
 
             Log.d(TAG, "createOrFindCustomer sending request...");
-            HttpRequest.post(
+            HttpRequest.JsonRequest.post(
                     getAbsoluteUrl(ENDPOINT_CUSTOMERS_CREATE), params, mHeaders,
                     new Response.Listener<JSONObject>() {
                         @Override
@@ -283,7 +283,7 @@ public class FeedbackManager {
                     String path = String.format(ENDPOINT_CUSTOMERS_CASES, customerId);
 
                     Log.d(TAG, "sendFeedback sending request...");
-                    HttpRequest.post(
+                    HttpRequest.JsonRequest.post(
                             getAbsoluteUrl(path), params, mHeaders,
                             new Response.Listener<JSONObject>() {
                                 @Override

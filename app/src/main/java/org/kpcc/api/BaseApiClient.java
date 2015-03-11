@@ -2,15 +2,11 @@ package org.kpcc.api;
 
 import android.net.Uri;
 
-import com.android.volley.Request;
 import com.android.volley.Response;
-import com.android.volley.toolbox.JsonObjectRequest;
 
 import org.json.JSONObject;
 import org.kpcc.android.HttpRequest;
-import org.kpcc.android.RequestManager;
 
-import java.util.HashMap;
 import java.util.Map;
 
 // Provides basic functionality for retrieving data from the API.
@@ -46,7 +42,7 @@ public class BaseApiClient {
                     Response.Listener<JSONObject> listener,
                     Response.ErrorListener errorListener) {
 
-        HttpRequest.get(buildUrl(relativePath, params), null, null, listener, errorListener);
+        HttpRequest.JsonRequest.get(buildUrl(relativePath, params), null, null, listener, errorListener);
     }
 
 
@@ -54,7 +50,7 @@ public class BaseApiClient {
                               Response.Listener<JSONObject> listener,
                               Response.ErrorListener errorListener) {
 
-        HttpRequest.get(buildUrl("", params), null, null, listener, errorListener);
+        HttpRequest.JsonRequest.get(buildUrl("", params), null, null, listener, errorListener);
     }
 
 

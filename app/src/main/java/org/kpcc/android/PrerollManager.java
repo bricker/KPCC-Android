@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.AsyncTask;
+import android.util.Xml;
 
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
@@ -11,34 +12,33 @@ import com.google.android.gms.ads.identifier.AdvertisingIdClient;
 import com.google.android.gms.common.GooglePlayServicesNotAvailableException;
 import com.google.android.gms.common.GooglePlayServicesRepairableException;
 
-import org.json.JSONObject;
+import org.xmlpull.v1.XmlPullParser;
+import org.xmlpull.v1.XmlPullParserException;
 
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
+import java.io.StringReader;
 import java.util.UUID;
 
 /**
  * Created by rickb014 on 3/3/15.
  */
 public class PrerollManager {
+    private final static PrerollManager INSTANCE = new PrerollManager();
+
     private final static long PREROLL_THRESHOLD = 600L;
-    public final static String TRITON_BASE = "http://cmod.live.streamtheworld.com/ondemand/ars";
-    public final static String AD_TYPE = "preroll";
-    public final static String AD_STID = "83153";
-    public final static String AD_FMT = "vast";
+    public final static String TRITON_BASE = "http://cmod.live.streamtheworld.com/ondemand/ars?type=preroll&stid=83153&lsid=%s:%s";
 
-    public PrerollManager() {}
+    private PrerollCallbackListener mCallback;
 
-    public void getPreroll(Context context) {
+    protected PrerollManager() {}
+
+    public static PrerollManager getInstance() {
+        return INSTANCE;
+    }
+
+    public void getPrerollData(Context context, PrerollCallbackListener callback) {
+        mCallback = callback;
         new PrerollAsync().execute(context);
-
-        try {
-            AdvertisingIdClient.Info adIdInfo = AdvertisingIdClient.getAdvertisingIdInfo(context);
-            adIdInfo.getId();
-        } catch (GooglePlayServicesNotAvailableException | GooglePlayServicesRepairableException | IOException e) {
-            // TODO: Handle Errors
-        }
     }
 
     private class PrerollAsync extends AsyncTask<Context, Void, AdvertisingIdClient.Info> {
@@ -68,38 +68,208 @@ public class PrerollManager {
                         id = UUID.randomUUID().toString();
                         SharedPreferences.Editor editor = sharedPref.edit();
                         editor.putString(activity.getString(R.string.pref_fallback_ad_uuid), id);
-                        editor.commit();
+                        editor.apply();
                     }
                 } else {
                     type = "gaid";
                 }
 
-                Map<String, String> params = new HashMap<>();
-                params.put("type", AD_TYPE);
-                params.put("stid", AD_STID);
-                params.put("fmt", AD_FMT);
-                params.put("lsid", type + ":" + id);
+                String url = String.format(TRITON_BASE, type, id);
 
-
-                HttpRequest.get(TRITON_BASE, params, null, new Response.Listener<JSONObject>() {
+                HttpRequest.XmlRequest.get(url, new Response.Listener<String>() {
                     @Override
-                    public void onResponse(JSONObject response) {
-                        return;
+                    public void onResponse(String response) {
+                        XmlParser parser = new XmlParser(response);
+                        mCallback.onPrerollResponse(parser.getPrerollData());
                     }
                 }, new Response.ErrorListener() {
                     @Override
                     public void onErrorResponse(VolleyError error) {
-                        // TODO: Handle Errors
+                        // No Preroll will be played.
+                        mCallback.onPrerollResponse(null);
                     }
                 });
             }
 
             return adIdInfo;
         }
+    }
 
-        @Override
-        protected void onPostExecute(AdvertisingIdClient.Info result) {
+    public abstract static class PrerollCallbackListener {
+        abstract public void onPrerollResponse(PrerollData prerollData);
+    }
 
+    public static class PrerollData {
+        private String mAudioUrl;
+        private Integer mAudioDuration; // Seconds
+        private String mAssetUrl;
+        private String mAssetClickUrl;
+        private Integer mAssetWidth;
+        private Integer mAssetHeight;
+
+        public void setAudioUrl(String audioUrl) {
+            mAudioUrl = audioUrl;
+        }
+
+        public String getAudioUrl() {
+            return mAudioUrl;
+        }
+
+        public Integer getAudioDuration() {
+            return mAudioDuration;
+        }
+
+        public void setAudioDuration(Integer audioDuration) {
+            mAudioDuration = audioDuration;
+        }
+
+        public void setAssetUrl(String assetUrl) {
+            mAssetUrl = assetUrl;
+        }
+
+        public String getAssetUrl() {
+            return mAssetUrl;
+        }
+
+        public String getAssetClickUrl() {
+            return mAssetClickUrl;
+        }
+
+        public void setAssetClickUrl(String assetClickUrl) {
+            mAssetClickUrl = assetClickUrl;
+        }
+
+        public Integer getAssetWidth() {
+            return mAssetWidth;
+        }
+
+        public void setAssetWidth(Integer assetWidth) {
+            mAssetWidth = assetWidth;
+        }
+
+        public Integer getAssetHeight() {
+            return mAssetHeight;
+        }
+
+        public void setAssetHeight(Integer assetHeight) {
+            mAssetHeight = assetHeight;
+        }
+    }
+
+    private static class XmlParser {
+        private String mData;
+
+        public XmlParser(String data) {
+            mData = data;
+        }
+
+        public PrerollData getPrerollData() {
+            PrerollData prerollData = new PrerollData();
+
+            try {
+                XmlPullParser parser = Xml.newPullParser();
+                parser.setFeature(XmlPullParser.FEATURE_PROCESS_NAMESPACES, false);
+                parser.setInput(new StringReader(mData));
+
+                while (parser.next() != XmlPullParser.END_DOCUMENT) {
+                    if (parser.getEventType() != XmlPullParser.START_TAG) {
+                        continue;
+                    }
+
+                    String name = parser.getName();
+                    switch (name) {
+                        case "VAST":
+                            continue;
+                        case "Ad":
+                            continue;
+                        case "InLine":
+                            continue;
+                        case "AdSystem":
+                            continue;
+                        case "AdTitle":
+                            continue;
+                        case "Impression":
+                            continue;
+                        case "Creatives":
+                            continue;
+                        case "Creative":
+                            continue;
+                        case "Linear":
+                            continue;
+                        case "MediaFiles":
+                            continue;
+                        case "Duration":
+                            if (prerollData.getAudioDuration() != null) { continue; }
+                            String durationString = readText(parser);
+                            String[] segments = durationString.split(":");
+                            int duration = 0;
+                            duration += Integer.valueOf(segments[0]) * 60 * 60; // hours
+                            duration += Integer.valueOf(segments[1]) * 60; // minutes
+                            duration += Integer.valueOf(segments[2].split("\\.")[0]); // seconds
+                            prerollData.setAudioDuration(duration);
+                            continue;
+                        case "MediaFile":
+                            if (prerollData.getAudioUrl() != null) { continue; }
+                            String type = parser.getAttributeValue(null, "type");
+                            if (type != null && type.matches("audio.+")) {
+                                prerollData.setAudioUrl(readText(parser));
+                            }
+                            continue;
+                        case "CompanionAds":
+                            continue;
+                        case "Companion":
+                            if (prerollData.getAssetUrl() != null) { continue; }
+                            String width = parser.getAttributeValue(null, "width");
+                            String height = parser.getAttributeValue(null, "height");
+                            if (width != null) {
+                                prerollData.setAssetWidth(Integer.valueOf(width));
+                            }
+                            if (height != null) {
+                                prerollData.setAssetHeight(Integer.valueOf(height));
+                            }
+                            continue;
+                        case "StaticResource":
+                            if (prerollData.getAssetUrl() != null) { continue; }
+                            String creativeType = parser.getAttributeValue(null, "creativeType");
+                            if (creativeType != null && creativeType.matches("image.+")) {
+                                prerollData.setAssetUrl(readText(parser));
+                            }
+                            continue;
+                        case "TrackingEvents":
+                            continue;
+                        case "Tracking":
+                            continue;
+                        case "CompanionClickThrough":
+                            if (prerollData.getAssetClickUrl() != null) { continue; }
+                            prerollData.setAssetClickUrl(readText(parser));
+                            continue;
+                        case "AltText":
+                            continue;
+                        case "HTMLResource":
+                            continue;
+                        case "IFrameResource":
+                            continue;
+                        default: // implicit continue
+                    }
+                }
+
+            } catch (XmlPullParserException | IOException e) {
+                String string = e.toString();
+                return null; // Preroll will just be skipped
+            }
+
+            return prerollData;
+        }
+
+        private String readText(XmlPullParser parser) throws XmlPullParserException, IOException {
+            String result = "";
+
+            if (parser.next() == XmlPullParser.TEXT) {
+                result = parser.getText().trim();
+                parser.nextTag();
+            }
+
+            return result;
         }
     }
 }

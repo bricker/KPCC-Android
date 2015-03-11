@@ -21,7 +21,6 @@
             android:layout_height="wrap_content"
             android:gravity="center_horizontal"
             android:paddingBottom="12dp"
-            android:text="@string/live"
             style="@style/text_header_small" />
 
         <TextView

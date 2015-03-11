@@ -17,10 +17,12 @@ import java.io.IOException;
 public class StreamManager extends Service {
 
     public static final String TAG = "kpcc.StreamManager";
-    public final static String LIVESTREAM_URL = "http://live.scpr.org/kpcclive?preskio=true";
+    // We get preroll directly from Triton so we always use the skip-preroll url.
+    public final static String LIVESTREAM_URL = "http://live.scpr.org/kpcclive?preskip=true";
 
     private final IBinder mBinder = new LocalBinder();
     private MediaPlayer mAudioPlayer = null;
+    private MediaPlayer mPrerollPlayer = null;
     private String mCurrentAudioUrl = null;
 
     public void playEpisode(String audioUrl,
@@ -72,23 +74,59 @@ public class StreamManager extends Service {
         audioButtonManager.toggleLoading();
         setupAudioPlayer();
 
-        mAudioPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
+        mAudioPlayer.reset();
+        mPrerollPlayer.reset();
+
+        PrerollManager.getInstance().getPrerollData(context, new PrerollManager.PrerollCallbackListener() {
             @Override
-            public void onPrepared(MediaPlayer mp) {
-                // TODO: Preroll
-                startForStop(audioButtonManager);
+            public void onPrerollResponse(PrerollManager.PrerollData prerollData) {
+                try {
+                    mAudioPlayer.setDataSource(LIVESTREAM_URL);
+                    mAudioPlayer.prepareAsync(); // We're playing live stream no matter what.
+                } catch (IOException e) {
+                    // TODO: Handle errors
+                    e.printStackTrace();
+                }
+
+                if (prerollData == null || prerollData.getAudioUrl() == null) {
+                    mAudioPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
+                        @Override
+                        public void onPrepared(MediaPlayer mp) {
+                            startForStop(audioButtonManager);
+                        }
+                    });
+
+                } else {
+                    if (prerollData.getAssetUrl() != null) {
+                        // TODO: Show Asset
+                    }
+
+                    try {
+                        mPrerollPlayer.setDataSource(prerollData.getAudioUrl());
+                        mPrerollPlayer.prepareAsync();
+                    } catch (IOException e) {
+                        // TODO: Handle errors
+                        e.printStackTrace();
+                    }
+
+                    mPrerollPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
+                        @Override
+                        public void onPrepared(MediaPlayer mp) {
+                            // TODO: Some kind of button change?
+                            mPrerollPlayer.start();
+                            mPrerollPlayer.setNextMediaPlayer(mAudioPlayer);
+                        }
+                    });
+
+                    mPrerollPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+                        @Override
+                        public void onCompletion(MediaPlayer mp) {
+                            audioButtonManager.togglePlayingForStop();
+                        }
+                    });
+                }
             }
         });
-
-        mAudioPlayer.reset();
-
-        try {
-            mAudioPlayer.setDataSource(LIVESTREAM_URL);
-            mAudioPlayer.prepareAsync();
-        } catch (IOException e) {
-            // TODO: Handle errors
-            e.printStackTrace();
-        }
 
         mCurrentAudioUrl = LIVESTREAM_URL;
     }
@@ -125,7 +163,6 @@ public class StreamManager extends Service {
         }
     }
 
-
     private void startForPause(AudioButtonManager audioButtonManager) {
         audioButtonManager.togglePlayingForPause();
         mAudioPlayer.start();
@@ -133,7 +170,6 @@ public class StreamManager extends Service {
 
     private void startForStop(AudioButtonManager audioButtonManager) {
         audioButtonManager.togglePlayingForStop();
-        mAudioPlayer.start();
     }
 
     private void setupAudioPlayer() {
@@ -142,6 +178,19 @@ public class StreamManager extends Service {
             mAudioPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
 
             mAudioPlayer.setOnErrorListener(new MediaPlayer.OnErrorListener() {
+                @Override
+                public boolean onError(MediaPlayer mp, int what, int extra) {
+                    Log.d(TAG, "Got an error: " + what);
+                    return false;
+                }
+            });
+        }
+
+        if (mPrerollPlayer == null) {
+            mPrerollPlayer = new MediaPlayer();
+            mPrerollPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
+
+            mPrerollPlayer.setOnErrorListener(new MediaPlayer.OnErrorListener() {
                 @Override
                 public boolean onError(MediaPlayer mp, int what, int extra) {
                     Log.d(TAG, "Got an error: " + what);
