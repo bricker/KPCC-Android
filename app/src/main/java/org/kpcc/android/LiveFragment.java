@@ -94,7 +94,6 @@ public class LiveFragment extends Fragment {
                     }
 
 
-
                 } catch (JSONException e) {
                     Log.d(TAG, "JSON Error");
                     // TODO: Handle failures

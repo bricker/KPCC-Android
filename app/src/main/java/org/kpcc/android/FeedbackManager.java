@@ -16,8 +16,6 @@ import java.util.HashMap;
  * Created by rickb014 on 2/22/15.
  */
 public class FeedbackManager {
-    private static FeedbackManager INSTANCE = null;
-
     public final static String TAG = "kpcc.FeedbackManager";
     public final static String TYPE_BUG = "bug";
     public final static String TYPE_SUGGESTION = "suggestion";
@@ -43,7 +41,7 @@ public class FeedbackManager {
             "Android Version: %s\n" +
             "Device: %s %s %s\n" +
             "App Version: %s (%s)";
-
+    private static FeedbackManager INSTANCE = null;
     private HashMap<String, String> mHeaders = new HashMap<>();
 
     protected FeedbackManager() {
@@ -320,11 +318,13 @@ public class FeedbackManager {
 
     private static interface CustomerResponseCallback {
         public void onSuccess(String customerId);
+
         public void onFailure();
     }
 
     public static interface FeedbackCallback {
         public void onSuccess();
+
         public void onFailure();
     }
 }

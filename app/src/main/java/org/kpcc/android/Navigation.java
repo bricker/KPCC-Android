@@ -55,6 +55,7 @@ public class Navigation {
         public int getTitleId() {
             return mTitleId;
         }
+
         public int getIconId() {
             return mIconId;
         }

@@ -10,20 +10,9 @@ import com.android.volley.toolbox.NetworkImageView;
  * Created by rickb014 on 3/1/15.
  */
 public class BackgroundImageManager {
-    private static BackgroundImageManager INSTANCE = null;
     private final static String GENERIC_SLUG = "generic";
-
+    private static BackgroundImageManager INSTANCE = null;
     private ImageLoader mImageLoader;
-
-    public static void setupInstance() {
-        if (INSTANCE == null) {
-            INSTANCE = new BackgroundImageManager();
-        }
-    }
-
-    public static BackgroundImageManager getInstance() {
-        return INSTANCE;
-    }
 
     private BackgroundImageManager() {
         mImageLoader = new ImageLoader(HttpRequest.Manager.getInstance().getRequestQueue(),
@@ -41,6 +30,16 @@ public class BackgroundImageManager {
                         cache.put(url, bitmap);
                     }
                 });
+    }
+
+    public static void setupInstance() {
+        if (INSTANCE == null) {
+            INSTANCE = new BackgroundImageManager();
+        }
+    }
+
+    public static BackgroundImageManager getInstance() {
+        return INSTANCE;
     }
 
     public void setBackgroundImage(NetworkImageView view, String slug) {

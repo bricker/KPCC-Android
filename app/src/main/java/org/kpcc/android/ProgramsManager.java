@@ -15,15 +15,10 @@ import java.util.Collections;
 import java.util.HashMap;
 
 public class ProgramsManager {
-    private static ProgramsManager INSTANCE = null;
-
     public static final String TAG = "ProgramsManager";
-    public static ArrayList<Program> ALL_PROGRAMS = new ArrayList<Program>();
     public static final String PROGRAM_TILE_URL = "http://media.scpr.org/iphone/program-images/program_tile_%s@2x.jpg";
-
-    public static String buildTileUrl(String slug) {
-        return String.format(ProgramsManager.PROGRAM_TILE_URL, slug);
-    }
+    public static ArrayList<Program> ALL_PROGRAMS = new ArrayList<Program>();
+    private static ProgramsManager INSTANCE = null;
 
     protected ProgramsManager() {
         HashMap<String, String> params = new HashMap<>();
@@ -56,6 +51,10 @@ public class ProgramsManager {
                 Log.d(TAG, "programs failure");
             }
         });
+    }
+
+    public static String buildTileUrl(String slug) {
+        return String.format(ProgramsManager.PROGRAM_TILE_URL, slug);
     }
 
     public static ProgramsManager getInstance() {

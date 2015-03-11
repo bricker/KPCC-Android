@@ -41,6 +41,10 @@ public class HttpRequest {
         private static Manager INSTANCE = null;
         private static RequestQueue mRequestQueue;
 
+        protected Manager(Context context) {
+            mRequestQueue = Volley.newRequestQueue(context.getApplicationContext());
+        }
+
         public static void setupInstance(Context context) {
             if (INSTANCE == null) {
                 INSTANCE = new Manager(context);
@@ -49,10 +53,6 @@ public class HttpRequest {
 
         public static Manager getInstance() {
             return INSTANCE;
-        }
-
-        protected Manager(Context context) {
-            mRequestQueue = Volley.newRequestQueue(context.getApplicationContext());
         }
 
         public <T> void addToRequestQueue(Request<T> req) {
@@ -79,6 +79,18 @@ public class HttpRequest {
         private Response.Listener<JSONObject> mListener;
         private Map<String, String> mHeaders;
 
+        public JsonRequest(int method,
+                           String url,
+                           Map<String, String> headers,
+                           Response.Listener<JSONObject> responseListener,
+                           Response.ErrorListener errorListener) {
+
+            super(method, url, errorListener);
+
+            mListener = responseListener;
+            mHeaders = headers == null ? new HashMap<String, String>() : headers;
+        }
+
         public static void get(String url,
                                Map<String, String> params,
                                Map<String, String> headers,
@@ -98,18 +110,6 @@ public class HttpRequest {
 
             JsonObjectRequestWithHeaders req = new JsonObjectRequestWithHeaders(headers, Request.Method.POST, url, params, responseListener, errorListener);
             HttpRequest.Manager.getInstance().addToRequestQueue(req);
-        }
-
-        public JsonRequest(int method,
-                           String url,
-                           Map<String, String> headers,
-                           Response.Listener<JSONObject> responseListener,
-                           Response.ErrorListener errorListener) {
-
-            super(method, url, errorListener);
-
-            mListener = responseListener;
-            mHeaders = headers == null ? new HashMap<String, String>() : headers;
         }
 
         @Override
