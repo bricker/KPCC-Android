@@ -1,98 +1,109 @@
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-             xmlns:tools="http://schemas.android.com/tools"
-             android:layout_width="match_parent"
-             android:layout_height="match_parent"
-             tools:context="org.kpcc.android.FeedbackFragment"
-             android:orientation="vertical">
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="org.kpcc.android.FeedbackFragment"
+    android:orientation="vertical"
+    android:id="@+id/content_wrapper">
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textAppearance="?android:attr/textAppearanceMedium"
-        android:text="@string/feedback_header_reason"
-        android:id="@+id/header1"/>
+    <include layout="@layout/generic_background_blurred" />
 
-    <RadioGroup
-        android:layout_width="fill_parent"
-        android:layout_height="111dp">
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        style="@style/static_content_wrapper">
 
-        <RadioButton
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            style="@style/text_header_small"
+            android:text="@string/feedback_header_reason"
+            android:id="@+id/header1"/>
+
+        <RadioGroup
+            android:layout_width="fill_parent"
+            android:layout_height="111dp">
+
+            <RadioButton
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/feedback_type_bug"
+                android:id="@+id/feedbackTypeBug"
+                android:checked="true"/>
+
+            <RadioButton
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/feedback_type_suggestion"
+                android:id="@+id/feedbackTypeSuggestion"
+                android:checked="false"/>
+
+            <RadioButton
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/feedback_type_feedback"
+                android:id="@+id/feedbackTypeFeedback"
+                android:checked="false"/>
+
+        </RadioGroup>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            style="@style/text_header_small"
+            android:text="@string/feedback_header_comments"
+            android:id="@+id/header2"/>
+
+        <EditText
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/feedback_type_bug"
-            android:id="@+id/feedbackTypeBug"
-            android:checked="true"/>
+            android:inputType="textLongMessage"
+            android:id="@+id/inputComments"/>
 
-        <RadioButton
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            style="@style/text_header_small"
+            android:text="@string/feedback_header_details"
+            android:id="@+id/header3"/>
+
+        <EditText
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/feedback_type_suggestion"
-            android:id="@+id/feedbackTypeSuggestion"
-            android:checked="false"/>
+            android:inputType="textPersonName"
+            android:hint="@string/feedback_hint_name"
+            android:ems="10"
+            android:id="@+id/inputName"/>
 
-        <RadioButton
+        <EditText
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/feedback_type_feedback"
-            android:id="@+id/feedbackTypeFeedback"
-            android:checked="false"/>
+            android:inputType="textEmailAddress"
+            android:ems="10"
+            android:id="@+id/inputEmail"
+            android:hint="@string/feedback_hint_email"/>
 
-    </RadioGroup>
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/feedback_submit"
+            android:id="@+id/submitButton"
+            android:layout_gravity="center_horizontal"
+            android:enabled="false" />
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textAppearance="?android:attr/textAppearanceMedium"
-        android:text="@string/feedback_header_comments"
-        android:id="@+id/header2"/>
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/feedback_validation_message"
+            android:id="@+id/validationMessage"
+            android:visibility="gone" />
 
-    <EditText
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:inputType="textLongMessage"
-        android:id="@+id/inputComments"/>
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/feedback_app_version"
+            android:id="@+id/appVersion"/>
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textAppearance="?android:attr/textAppearanceMedium"
-        android:text="@string/feedback_header_details"
-        android:id="@+id/header3"/>
-
-    <EditText
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:inputType="textPersonName"
-        android:hint="@string/feedback_hint_name"
-        android:ems="10"
-        android:id="@+id/inputName"/>
-
-    <EditText
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:inputType="textEmailAddress"
-        android:ems="10"
-        android:id="@+id/inputEmail"
-        android:hint="@string/feedback_hint_email"/>
-
-    <Button
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/feedback_submit"
-        android:id="@+id/submitButton"
-        android:layout_gravity="center_horizontal"
-        android:enabled="false" />
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/feedback_validation_message"
-        android:id="@+id/validationMessage"
-        android:visibility="gone" />
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/feedback_app_version"
-        android:id="@+id/appVersion"/>
+    </LinearLayout>
 </LinearLayout>

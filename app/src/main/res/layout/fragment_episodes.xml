@@ -6,9 +6,7 @@
     android:layout_height="match_parent"
     tools:context="org.kpcc.android.EpisodesFragment">
 
-    <include
-        layout="@layout/program_background"
-        style="@style/background_image_blurred" />
+    <include layout="@layout/program_background" />
 
     <!-- Don't use static_content_wrapper here or the padding will get nested -->
     <RelativeLayout

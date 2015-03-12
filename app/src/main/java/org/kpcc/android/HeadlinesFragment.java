@@ -52,8 +52,7 @@ public class HeadlinesFragment extends Fragment {
         View v = inflater.inflate(R.layout.fragment_headlines, container, false);
         final MainActivity activity = (MainActivity) getActivity();
 
-        WebView browser = (WebView) v.findViewById(R.id.shortlist);
-
+        WebView browser = (WebView) v.findViewById(R.id.content_wrapper);
         mProgressBar = (LinearLayout) v.findViewById(R.id.progress_layout);
 
         // TODO: Handle back button. This would have to be handled in the Activity and checked if this is the current fragment.

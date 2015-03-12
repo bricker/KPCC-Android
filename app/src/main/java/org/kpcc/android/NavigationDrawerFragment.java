@@ -154,14 +154,24 @@ public class NavigationDrawerFragment extends Fragment {
             @Override
             public void onDrawerSlide(View drawerView, float slideOffset) {
                 View wrapper = mDrawerLayout.findViewById(R.id.content_wrapper);
-                View background = mDrawerLayout.findViewById(R.id.background_image);
+                View background = mDrawerLayout.findViewById(R.id.background_image_blurred);
 
                 if (wrapper != null) {
                     wrapper.setAlpha(1.0f - slideOffset);
                 }
 
-                if (background != null) {
-                    background.setAlpha(1.0f - slideOffset / 2);
+                // For blurred backgrounds, we want to bump the alpha up to 1 because:
+                // 1. If we don't, it's too dark
+                // 2. The navigation drawer lowers the alpha so it'll even out.
+                if (background != null && background.getAlpha() >= 0.3f) {
+                    float alpha = slideOffset;
+                    if (alpha < 0.3f) {
+                        alpha = 0.3f;
+                    }
+
+                    if (alpha >= 0.3f) {
+                        background.setAlpha(alpha);
+                    }
                 }
 
                 super.onDrawerSlide(drawerView, slideOffset);

@@ -96,7 +96,7 @@ public class ProgramsFragment extends Fragment
         View view = inflater.inflate(R.layout.fragment_programs, container, false);
 
         // Set the adapter
-        mListView = (AbsListView) view.findViewById(android.R.id.list);
+        mListView = (AbsListView) view.findViewById(R.id.content_wrapper);
         mListView.setAdapter(mAdapter);
 
         // Set OnItemClickListener so we can be notified on item clicks

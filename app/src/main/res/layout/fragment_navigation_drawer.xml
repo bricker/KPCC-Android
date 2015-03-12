@@ -4,5 +4,5 @@
     android:id="@android:id/list"
     android:choiceMode="singleChoice"
     style="@style/list_view"
-    android:background="@android:color/transparent"
+    android:background="@color/transparent_black"
     tools:context=".NavigationDrawerFragment" />

@@ -4,6 +4,7 @@
         <!--<item name="android:windowBackground">@android:color/black</item>-->
         <!--<item name="actionBarStyle">@style/ActionBar</item>-->
         <item name="android:windowBackground">@android:color/black</item>
+
     </style>
 
     <style name="ActionBar" parent="ThemeOverlay.AppCompat.Dark.ActionBar">
@@ -29,6 +30,7 @@
         <item name="android:paddingLeft">@dimen/page_padding_horizontal</item>
         <item name="android:divider">@color/horizontal_rule</item>
         <item name="android:dividerHeight">1dp</item>
+        <item name="android:background">@color/transparent_black</item>
     </style>
 
     <style name="text_list_item">
