@@ -31,6 +31,7 @@ public class FeedbackFragment extends Fragment {
     }
 
     public static FeedbackFragment newInstance() {
+        // TODO: Remove this if unneeded
         FeedbackFragment fragment = new FeedbackFragment();
         return fragment;
     }
@@ -57,6 +58,21 @@ public class FeedbackFragment extends Fragment {
         mInputName = (EditText) v.findViewById(R.id.inputName);
         mInputEmail = (EditText) v.findViewById(R.id.inputEmail);
         mValidationMessage = (TextView) v.findViewById(R.id.validationMessage);
+
+        // Override the button and put it on the right.
+        View.OnClickListener listener = new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mFeedbackTypeBug.setCompoundDrawablesWithIntrinsicBounds(0,0,android.R.color.transparent,0);
+                mFeedbackTypeSuggestion.setCompoundDrawablesWithIntrinsicBounds(0,0,android.R.color.transparent,0);
+                mFeedbackTypeFeedback.setCompoundDrawablesWithIntrinsicBounds(0,0,android.R.color.transparent,0);
+                ((RadioButton) v).setCompoundDrawablesWithIntrinsicBounds(0,0,R.drawable.ic_check,0);
+            }
+        };
+
+        mFeedbackTypeBug.setOnClickListener(listener);
+        mFeedbackTypeSuggestion.setOnClickListener(listener);
+        mFeedbackTypeFeedback.setOnClickListener(listener);
 
         TextWatcher validator = new TextWatcher() {
             @Override

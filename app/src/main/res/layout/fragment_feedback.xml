@@ -1,17 +1,18 @@
-<LinearLayout
+<FrameLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context="org.kpcc.android.FeedbackFragment"
-    android:orientation="vertical"
-    android:id="@+id/content_wrapper">
+    android:orientation="vertical">
 
     <include layout="@layout/generic_background_blurred" />
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:id="@+id/content_wrapper"
         style="@style/static_content_wrapper">
 
         <TextView
@@ -19,34 +20,53 @@
             android:layout_height="wrap_content"
             style="@style/text_header_small"
             android:text="@string/feedback_header_reason"
-            android:id="@+id/header1"/>
+            android:id="@+id/header1"
+            android:background="@color/transparent_black"/>
+
+        <include
+            layout="@layout/horizontal_rule" />
 
         <RadioGroup
-            android:layout_width="fill_parent"
-            android:layout_height="111dp">
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="20dp">
 
             <RadioButton
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
                 android:text="@string/feedback_type_bug"
                 android:id="@+id/feedbackTypeBug"
-                android:checked="true"/>
+                android:checked="true"
+                android:drawableRight="@drawable/ic_check"
+                style="@style/check_radio_button" />
+
+            <include
+                layout="@layout/horizontal_rule"
+                android:layout_height="1dp"
+                android:layout_width="match_parent" />
 
             <RadioButton
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
                 android:text="@string/feedback_type_suggestion"
                 android:id="@+id/feedbackTypeSuggestion"
-                android:checked="false"/>
+                android:checked="false"
+                style="@style/check_radio_button" />
+
+            <include
+                layout="@layout/horizontal_rule"
+                android:layout_height="1dp"
+                android:layout_width="match_parent" />
 
             <RadioButton
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
                 android:text="@string/feedback_type_feedback"
                 android:id="@+id/feedbackTypeFeedback"
-                android:checked="false"/>
+                android:checked="false"
+                style="@style/check_radio_button" />
 
         </RadioGroup>
+
+        <include
+            layout="@layout/horizontal_rule"
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginBottom="20dp" />
 
         <TextView
             android:layout_width="wrap_content"
@@ -55,11 +75,24 @@
             android:text="@string/feedback_header_comments"
             android:id="@+id/header2"/>
 
+        <include
+            layout="@layout/horizontal_rule"
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginBottom="10dp" />
+
         <EditText
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:inputType="textLongMessage"
-            android:id="@+id/inputComments"/>
+            android:id="@+id/inputComments"
+            android:text="@string/feedback_placeholder_comments"/>
+
+        <include
+            layout="@layout/horizontal_rule"
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginBottom="20dp" />
 
         <TextView
             android:layout_width="wrap_content"
@@ -68,29 +101,56 @@
             android:text="@string/feedback_header_details"
             android:id="@+id/header3"/>
 
-        <EditText
+        <include
+            layout="@layout/horizontal_rule"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:inputType="textPersonName"
-            android:hint="@string/feedback_hint_name"
-            android:ems="10"
-            android:id="@+id/inputName"/>
+            android:layout_height="1dp"
+            android:layout_marginBottom="10dp" />
 
-        <EditText
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:inputType="textEmailAddress"
-            android:ems="10"
-            android:id="@+id/inputEmail"
-            android:hint="@string/feedback_hint_email"/>
+            android:orientation="vertical"
+            android:layout_marginLeft="20dp">
+
+            <EditText
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="textPersonName"
+                android:hint="@string/feedback_hint_name"
+                android:ems="10"
+                android:id="@+id/inputName" />
+
+            <include
+                layout="@layout/horizontal_rule"
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginBottom="10dp" />
+
+            <EditText
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="textEmailAddress"
+                android:ems="10"
+                android:id="@+id/inputEmail"
+                android:hint="@string/feedback_hint_email"/>
+
+        </LinearLayout>
+
+        <include
+            layout="@layout/horizontal_rule"
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginBottom="20dp" />
 
         <Button
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
             android:text="@string/feedback_submit"
             android:id="@+id/submitButton"
             android:layout_gravity="center_horizontal"
-            android:enabled="false" />
+            android:enabled="false"
+            android:background="@color/dark_gray" />
 
         <TextView
             android:layout_width="wrap_content"
@@ -106,4 +166,4 @@
             android:id="@+id/appVersion"/>
 
     </LinearLayout>
-</LinearLayout>
+</FrameLayout>
