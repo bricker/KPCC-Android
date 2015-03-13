@@ -3,6 +3,8 @@ package org.kpcc.android;
 import android.app.Application;
 import android.preference.PreferenceManager;
 
+import uk.co.chrisjenx.calligraphy.CalligraphyConfig;
+
 /**
  * Created by rickb014 on 2/15/15.
  */
@@ -23,6 +25,11 @@ public class KPCCApplication extends Application {
 
         super.onCreate();
 
+        CalligraphyConfig.initDefault(new CalligraphyConfig.Builder()
+                        .setDefaultFontPath("fonts/FreigSanProMed.otf")
+                        .setFontAttrId(R.attr.fontPath)
+                        .build()
+        );
         PreferenceManager.setDefaultValues(this, R.xml.preferences, true);
     }
 }
