@@ -25,6 +25,8 @@ public class FeedbackFragment extends Fragment {
     private EditText mInputName;
     private EditText mInputEmail;
     private TextView mValidationMessage;
+    private TextView mSuccessMessage;
+    private TextView mErrorMessage;
 
     public FeedbackFragment() {
         // Required empty public constructor
@@ -58,6 +60,8 @@ public class FeedbackFragment extends Fragment {
         mInputName = (EditText) v.findViewById(R.id.inputName);
         mInputEmail = (EditText) v.findViewById(R.id.inputEmail);
         mValidationMessage = (TextView) v.findViewById(R.id.validationMessage);
+        mSuccessMessage = (TextView) v.findViewById(R.id.successMessage);
+        mErrorMessage = (TextView) v.findViewById(R.id.errorMessage);
 
         // Override the button and put it on the right.
         View.OnClickListener listener = new View.OnClickListener() {
@@ -103,6 +107,8 @@ public class FeedbackFragment extends Fragment {
                 lockForm();
 
                 mValidationMessage.setVisibility(View.GONE);
+                mSuccessMessage.setVisibility(View.GONE);
+                mErrorMessage.setVisibility(View.GONE);
 
                 String type = FeedbackManager.TYPE_FEEDBACK; // Default
                 if (mFeedbackTypeBug.isChecked()) {
@@ -130,14 +136,15 @@ public class FeedbackFragment extends Fragment {
                             @Override
                             public void onSuccess() {
                                 unlockForm();
-                                // TODO: Display success message.
+                                mSubmitButton.setVisibility(View.GONE);
+                                mSuccessMessage.setVisibility(View.VISIBLE);
                                 Log.d(TAG, "Success");
                             }
 
                             @Override
                             public void onFailure() {
                                 unlockForm();
-                                // TODO: Handle failures
+                                mErrorMessage.setVisibility(View.VISIBLE);
                                 Log.d(TAG, "Failure");
                             }
                         }

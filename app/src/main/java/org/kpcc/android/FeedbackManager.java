@@ -102,20 +102,20 @@ public class FeedbackManager {
 
                         } catch (JSONException e) {
                             Log.d(TAG, "JSON Error 1");
-                            // TODO: Handle Errors
+                            responseHandler.onFailure();
                         }
 
                         if (!customerId.isEmpty()) {
                             responseHandler.onSuccess(customerId);
                         } else {
                             Log.d(TAG, "Customer ID is empty");
-                            // TODO: Handle Errors
+                            responseHandler.onFailure();
                         }
                     }
                 }, new Response.ErrorListener() {
                     @Override
                     public void onErrorResponse(VolleyError error) {
-                        // TODO: Handle Errors
+                        responseHandler.onFailure();
                     }
                 }
         );
@@ -167,7 +167,7 @@ public class FeedbackManager {
                                 customerId = String.valueOf(response.getInt("id"));
                             } catch (JSONException e) {
                                 Log.d(TAG, "JSON Error 2");
-                                // TODO: Handle Errors
+                                responseHandler.onFailure();
                             }
 
                             if (!customerId.isEmpty()) {
@@ -175,6 +175,7 @@ public class FeedbackManager {
                                 responseHandler.onSuccess(customerId);
                             } else {
                                 Log.d(TAG, "Unhandled scenario.");
+                                responseHandler.onFailure();
                             }
                         }
                     }, new Response.ErrorListener() {
@@ -190,6 +191,7 @@ public class FeedbackManager {
                                 searchCustomer(customerEmail, responseHandler);
                             } else {
                                 Log.d(TAG, "Unhandled error response.");
+                                responseHandler.onFailure();
                             }
                         }
                     }
@@ -302,13 +304,13 @@ public class FeedbackManager {
                 @Override
                 public void onFailure() {
                     Log.d(TAG, "Customer Response failure");
-                    // TODO: Handle Errors
+                    callback.onFailure();
                 }
             });
 
         } catch (JSONException e) {
             Log.d(TAG, "JSON Error 4");
-            // TODO: Handle JSONException
+            callback.onFailure();
         }
     }
 

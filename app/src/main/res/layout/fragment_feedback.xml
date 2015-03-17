@@ -86,7 +86,7 @@
             android:layout_height="wrap_content"
             android:inputType="textLongMessage"
             android:id="@+id/inputComments"
-            android:text="@string/feedback_placeholder_comments"/>
+            android:hint="@string/feedback_placeholder_comments"/>
 
         <include
             layout="@layout/horizontal_rule"
@@ -155,6 +155,20 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:text="@string/feedback_success_message"
+            android:id="@+id/successMessage"
+            android:visibility="gone" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/feedback_error_message"
+            android:id="@+id/errorMessage"
+            android:visibility="gone" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
             android:text="@string/feedback_validation_message"
             android:id="@+id/validationMessage"
             android:visibility="gone" />
@@ -162,7 +176,6 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/feedback_app_version"
             android:id="@+id/appVersion"/>
 
     </LinearLayout>
