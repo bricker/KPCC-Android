@@ -77,16 +77,17 @@ public class StreamManager extends Service {
         mAudioPlayer.reset();
         mPrerollPlayer.reset();
 
+        try {
+            mAudioPlayer.setDataSource(LIVESTREAM_URL);
+        } catch (IOException e) {
+            // TODO: Handle errors
+            e.printStackTrace();
+        }
+
         PrerollManager.getInstance().getPrerollData(context, new PrerollManager.PrerollCallbackListener() {
             @Override
             public void onPrerollResponse(PrerollManager.PrerollData prerollData) {
-                try {
-                    mAudioPlayer.setDataSource(LIVESTREAM_URL);
-                    mAudioPlayer.prepareAsync(); // We're playing live stream no matter what.
-                } catch (IOException e) {
-                    // TODO: Handle errors
-                    e.printStackTrace();
-                }
+                mAudioPlayer.prepareAsync();
 
                 if (prerollData == null || prerollData.getAudioUrl() == null) {
                     mAudioPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
@@ -95,7 +96,6 @@ public class StreamManager extends Service {
                             startForStop(audioButtonManager);
                         }
                     });
-
                 } else {
                     if (prerollData.getAssetUrl() != null) {
                         // TODO: Show Asset
@@ -170,6 +170,7 @@ public class StreamManager extends Service {
 
     private void startForStop(AudioButtonManager audioButtonManager) {
         audioButtonManager.togglePlayingForStop();
+        mAudioPlayer.start();
     }
 
     private void setupAudioPlayer() {
