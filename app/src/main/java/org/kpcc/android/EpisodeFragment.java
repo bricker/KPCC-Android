@@ -7,6 +7,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.android.volley.toolbox.NetworkImageView;
@@ -103,6 +104,13 @@ public class EpisodeFragment extends Fragment {
         TextView program_title = (TextView) view.findViewById(R.id.program_title);
         TextView episode_title = (TextView) view.findViewById(R.id.episode_title);
         TextView date = (TextView) view.findViewById(R.id.air_date);
+        final ProgressBar progressBar = (ProgressBar) view.findViewById(R.id.progress_bar);
+        final TextView currentTime = (TextView) view.findViewById(R.id.audio_current_time);
+
+        progressBar.setMax(mAudioDuration);
+
+        TextView totalTime = (TextView) view.findViewById(R.id.audio_total_time);
+        totalTime.setText(StreamManager.getTimeFormat(mAudioDuration));
 
         mBackground = (NetworkImageView) view.findViewById(R.id.background);
         BackgroundImageManager.getInstance().setBackgroundImage(mBackground, mProgram.getSlug());
@@ -123,7 +131,8 @@ public class EpisodeFragment extends Fragment {
         audioButtonManager.getPlayButton().setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                activity.getStreamManager().playEpisode(mAudioUrl, activity, audioButtonManager);
+                activity.getStreamManager().playEpisode(mAudioUrl,
+                        activity, audioButtonManager, progressBar, currentTime);
             }
         });
 

@@ -56,17 +56,25 @@
             android:layout_gravity="bottom"
             style="@style/static_content_wrapper">
 
+            <ProgressBar
+                android:id="@+id/progress_bar"
+                android:layout_width="match_parent"
+                android:layout_height="2dp"
+                android:layout_marginBottom="2dp"
+                style="@android:style/Widget.ProgressBar.Horizontal" />
+
             <LinearLayout
                 android:id="@+id/audio_time"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:gravity="start"
-                android:paddingBottom="20dp"
-                android:orientation="horizontal">
+                android:paddingBottom="18dp"
+                android:orientation="horizontal"
+                android:layout_below="@id/progress_bar">
 
                 <TextView
                     android:id="@+id/audio_current_time"
-                    android:layout_width="wrap_content"
+                    android:layout_width="70dp"
                     android:layout_height="wrap_content"
                     android:textColor="@android:color/white"
                     android:textSize="16sp"
