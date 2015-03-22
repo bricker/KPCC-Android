@@ -9,14 +9,12 @@ import android.widget.ProgressBar;
  * Created by rickb014 on 3/1/15.
  */
 public class AudioButtonManager {
-    private MainActivity mActivity;
     private ImageButton mPlayButton;
     private ImageButton mPauseButton;
     private ImageButton mStopButton;
     private ProgressBar mLoadingInd;
 
-    public AudioButtonManager(Context context, View view) {
-        mActivity = (MainActivity) context;
+    public AudioButtonManager(View view) {
         mPlayButton = (ImageButton) view.findViewById(R.id.play_button);
         mPauseButton = (ImageButton) view.findViewById(R.id.pause_button);
         mStopButton = (ImageButton) view.findViewById(R.id.stop_button);

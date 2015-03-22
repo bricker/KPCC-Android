@@ -108,13 +108,13 @@ public class EpisodeFragment extends Fragment {
         totalTime.setText(StreamManager.getTimeFormat(mAudioDuration));
 
         mBackground = (NetworkImageView) view.findViewById(R.id.background);
-        BackgroundImageManager.getInstance().setBackgroundImage(mBackground, mProgram.getSlug());
+        NetworkImageManager.getInstance().setBackgroundImage(mBackground, mProgram.getSlug());
 
         program_title.setText(mProgram.getTitle());
         episode_title.setText(mEpisodeTitle);
         date.setText(mEpisodeDate);
 
-        final AudioButtonManager audioButtonManager = new AudioButtonManager(activity, view);
+        final AudioButtonManager audioButtonManager = new AudioButtonManager(view);
 
         StreamManager streamManager = activity.getStreamManager();
         if (streamManager != null && streamManager.isPlaying(mAudioUrl)) {

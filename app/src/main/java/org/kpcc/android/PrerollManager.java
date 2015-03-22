@@ -2,12 +2,16 @@ package org.kpcc.android;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.util.Xml;
+import android.view.View;
 
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
+import com.android.volley.toolbox.NetworkImageView;
 import com.google.android.gms.ads.identifier.AdvertisingIdClient;
 import com.google.android.gms.common.GooglePlayServicesNotAvailableException;
 import com.google.android.gms.common.GooglePlayServicesRepairableException;
@@ -25,7 +29,11 @@ import java.util.UUID;
 public class PrerollManager {
     public final static String TRITON_BASE = "http://cmod.live.streamtheworld.com/ondemand/ars?type=preroll&stid=83153&lsid=%s:%s";
     private final static PrerollManager INSTANCE = new PrerollManager();
-    private final static long PREROLL_THRESHOLD = 600L;
+    public final static long PREROLL_THRESHOLD = 1000*60*60*4; // 4 hours
+    public final static long INSTALL_GRACE = 1000*60*10; // 10 minutes
+    public final static String PREF_FALLBACK_AD_ID = "fallback_ad_id";
+    public static long LAST_PREROLL_PLAY = 0;
+
     private PrerollCallbackListener mCallback;
 
     protected PrerollManager() {
@@ -33,6 +41,26 @@ public class PrerollManager {
 
     public static PrerollManager getInstance() {
         return INSTANCE;
+    }
+
+    public void showPrerollAsset(final Context context,
+                                 NetworkImageView adView,
+                                 final PrerollData prerollData) {
+
+        NetworkImageManager.getInstance().setPrerollImage(adView, prerollData.getAssetUrl());
+
+        adView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Uri uri = Uri.parse(prerollData.getAssetClickUrl());
+                Intent intent = new Intent(Intent.ACTION_VIEW, uri);
+
+                if (intent.resolveActivity(context.getPackageManager()) != null) {
+                    context.startActivity(intent);
+                }
+            }
+        });
+
     }
 
     public void getPrerollData(Context context, PrerollCallbackListener callback) {
@@ -238,7 +266,7 @@ public class PrerollManager {
             try {
                 adIdInfo = AdvertisingIdClient.getAdvertisingIdInfo(context);
             } catch (GooglePlayServicesNotAvailableException | GooglePlayServicesRepairableException | IOException e) {
-                // TODO: Handle Errors
+                // ad info will be null and no preroll will play.
             }
 
             if (adIdInfo != null) {
@@ -249,13 +277,11 @@ public class PrerollManager {
                     type = "app";
 
                     SharedPreferences sharedPref = activity.getPreferences(Context.MODE_PRIVATE);
-                    id = sharedPref.getString(activity.getString(R.string.pref_fallback_ad_uuid), "");
+                    id = sharedPref.getString(PREF_FALLBACK_AD_ID, "");
 
                     if (id.isEmpty()) {
                         id = UUID.randomUUID().toString();
-                        SharedPreferences.Editor editor = sharedPref.edit();
-                        editor.putString(activity.getString(R.string.pref_fallback_ad_uuid), id);
-                        editor.apply();
+                        sharedPref.edit().putString(PREF_FALLBACK_AD_ID, id).apply();
                     }
                 } else {
                     type = "gaid";

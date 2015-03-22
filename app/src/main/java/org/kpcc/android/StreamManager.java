@@ -3,14 +3,19 @@ package org.kpcc.android;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
+import android.net.Uri;
 import android.os.Binder;
 import android.os.Handler;
 import android.os.IBinder;
 import android.util.Log;
+import android.view.View;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+
+import com.android.volley.toolbox.NetworkImageView;
 
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
@@ -24,11 +29,13 @@ public class StreamManager extends Service {
     public static final String TAG = "kpcc.StreamManager";
     // We get preroll directly from Triton so we always use the skip-preroll url.
     public final static String LIVESTREAM_URL = "http://live.scpr.org/kpcclive?preskip=true";
+    private final static String PREF_USER_PLAYED_LIVESTREAM = "live_stream_played";
 
     private final IBinder mBinder = new LocalBinder();
     private MediaPlayer mAudioPlayer = null;
     private MediaPlayer mPrerollPlayer = null;
     private String mCurrentAudioUrl = null;
+    private boolean mIsPlayingPreroll = false;
 
     public static String getTimeFormat(int seconds) {
         return String.format("%02d:%02d:%02d",
@@ -53,7 +60,8 @@ public class StreamManager extends Service {
         // have been paused.
         if (mCurrentAudioUrl != null && mCurrentAudioUrl.equals(audioUrl)) {
             // Same audio was paused; continue playing.
-            startForPause(audioButtonManager);
+            audioButtonManager.togglePlayingForPause();
+            mAudioPlayer.start();
             return;
         }
 
@@ -72,7 +80,8 @@ public class StreamManager extends Service {
         mAudioPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
             @Override
             public void onPrepared(MediaPlayer mp) {
-                startForPause(audioButtonManager);
+                audioButtonManager.togglePlayingForPause();
+                mAudioPlayer.start();
                 progressObserver.start();
                 new Thread(progressObserver).start();
             }
@@ -80,6 +89,7 @@ public class StreamManager extends Service {
 
         // At this point we know we're going to be setting the data source so we can safely
         // reset no matter what.
+        // This will also stop any other currently playing streams.
         mAudioPlayer.reset();
 
         try {
@@ -93,8 +103,10 @@ public class StreamManager extends Service {
         mCurrentAudioUrl = audioUrl;
     }
 
-    public void playLiveStream(Context context, final AudioButtonManager audioButtonManager) {
-        MainActivity activity = (MainActivity) context;
+    public void playLiveStream(final Context context,
+                               final AudioButtonManager audioButtonManager,
+                               final NetworkImageView adView) {
+        final MainActivity activity = (MainActivity) context;
         if (!activity.streamIsBound()) return;
 
         audioButtonManager.toggleLoading();
@@ -110,51 +122,87 @@ public class StreamManager extends Service {
             e.printStackTrace();
         }
 
-        PrerollManager.getInstance().getPrerollData(context, new PrerollManager.PrerollCallbackListener() {
-            @Override
-            public void onPrerollResponse(PrerollManager.PrerollData prerollData) {
-                mAudioPlayer.prepareAsync();
+        mCurrentAudioUrl = LIVESTREAM_URL;
+        mAudioPlayer.prepareAsync();
 
-                if (prerollData == null || prerollData.getAudioUrl() == null) {
-                    mAudioPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
-                        @Override
-                        public void onPrepared(MediaPlayer mp) {
-                            startForStop(audioButtonManager);
+        // If they just installed the app (less than 10 minutes ago), and have never played the live
+        // stream, don't play preroll.
+        // Otherwise do the normal preroll flow.
+        final long now = System.currentTimeMillis();
+        SharedPreferences sharedPref = activity.getPreferences(Context.MODE_PRIVATE);
+
+        boolean hasPlayedLiveStream = sharedPref.getBoolean(PREF_USER_PLAYED_LIVESTREAM, false);
+        boolean installedRecently = KPCCApplication.INSTALLATION_TIME > (now - PrerollManager.INSTALL_GRACE);
+        boolean heardPrerollRecently = PrerollManager.LAST_PREROLL_PLAY > (now - PrerollManager.PREROLL_THRESHOLD);
+
+        if ((!hasPlayedLiveStream && installedRecently) || heardPrerollRecently) {
+            // Skipping Preroll
+            setPreparedListenerForLiveStream(audioButtonManager);
+        } else {
+            // Normal preroll flow (preroll still may not play, based on Triton response)
+            PrerollManager.getInstance().getPrerollData(context, new PrerollManager.PrerollCallbackListener() {
+                @Override
+                public void onPrerollResponse(final PrerollManager.PrerollData prerollData) {
+                    if (prerollData == null || prerollData.getAudioUrl() == null) {
+                        setPreparedListenerForLiveStream(audioButtonManager);
+                    } else {
+                        if (prerollData.getAssetUrl() != null) {
+                            PrerollManager.getInstance().showPrerollAsset(context, adView, prerollData);
                         }
-                    });
-                } else {
-                    if (prerollData.getAssetUrl() != null) {
-                        // TODO: Show Asset
+
+                        try {
+                            mPrerollPlayer.setDataSource(prerollData.getAudioUrl());
+                            mPrerollPlayer.prepareAsync();
+                        } catch (IOException e) {
+                            // TODO: Handle errors
+                        }
+
+                        mPrerollPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
+                            @Override
+                            public void onPrepared(MediaPlayer mp) {
+                                PrerollManager.LAST_PREROLL_PLAY = now;
+                                activity.getNavigationDrawerFragment().disableDrawer();
+                                mIsPlayingPreroll = true;
+                                audioButtonManager.togglePlayingForPause();
+                                mPrerollPlayer.start();
+                                mPrerollPlayer.setNextMediaPlayer(mAudioPlayer);
+                            }
+                        });
+
+                        mPrerollPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+                            @Override
+                            public void onCompletion(MediaPlayer mp) {
+                                activity.getNavigationDrawerFragment().enableDrawer();
+                                mIsPlayingPreroll = false;
+                                adView.setVisibility(View.GONE);
+                                audioButtonManager.togglePlayingForStop();
+                            }
+                        });
                     }
-
-                    try {
-                        mPrerollPlayer.setDataSource(prerollData.getAudioUrl());
-                        mPrerollPlayer.prepareAsync();
-                    } catch (IOException e) {
-                        // TODO: Handle errors
-                        e.printStackTrace();
-                    }
-
-                    mPrerollPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
-                        @Override
-                        public void onPrepared(MediaPlayer mp) {
-                            // TODO: Some kind of button change?
-                            mPrerollPlayer.start();
-                            mPrerollPlayer.setNextMediaPlayer(mAudioPlayer);
-                        }
-                    });
-
-                    mPrerollPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
-                        @Override
-                        public void onCompletion(MediaPlayer mp) {
-                            audioButtonManager.togglePlayingForStop();
-                        }
-                    });
                 }
+            });
+        }
+
+        if (!hasPlayedLiveStream) {
+            sharedPref.edit().putBoolean(PREF_USER_PLAYED_LIVESTREAM, true).apply();
+        }
+    }
+
+    private void setPreparedListenerForLiveStream(final AudioButtonManager audioButtonManager) {
+        mAudioPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
+            @Override
+            public void onPrepared(MediaPlayer mp) {
+                audioButtonManager.togglePlayingForStop();
+                mAudioPlayer.start();
             }
         });
+    }
 
-        mCurrentAudioUrl = LIVESTREAM_URL;
+    public boolean isPlayingPreroll() {
+        // We don't want to check the state of mPrerollPlayer here, because if it's paused
+        // it will be false. We want to check, rather, if the user is in middle of listening to
+        // preroll, whether or not they have paused it.
+        return mIsPlayingPreroll;
     }
 
     public boolean isPlaying(String audioUrl) {
@@ -168,6 +216,22 @@ public class StreamManager extends Service {
 
         if (mAudioPlayer != null) {
             mAudioPlayer.pause();
+        }
+    }
+
+    public void resumePreroll(AudioButtonManager audioButtonManager) {
+        audioButtonManager.togglePlayingForPause();
+
+        if (mPrerollPlayer != null) {
+            mPrerollPlayer.start();
+        }
+    }
+
+    public void pausePreroll(AudioButtonManager audioButtonManager) {
+        audioButtonManager.togglePaused();
+
+        if (mPrerollPlayer != null) {
+            mPrerollPlayer.pause();
         }
     }
 
@@ -189,16 +253,6 @@ public class StreamManager extends Service {
         }
     }
 
-    private void startForPause(AudioButtonManager audioButtonManager) {
-        audioButtonManager.togglePlayingForPause();
-        mAudioPlayer.start();
-    }
-
-    private void startForStop(AudioButtonManager audioButtonManager) {
-        audioButtonManager.togglePlayingForStop();
-        mAudioPlayer.start();
-    }
-
     private void setupAudioPlayer() {
         if (mAudioPlayer == null) {
             mAudioPlayer = new MediaPlayer();
@@ -207,7 +261,7 @@ public class StreamManager extends Service {
             mAudioPlayer.setOnErrorListener(new MediaPlayer.OnErrorListener() {
                 @Override
                 public boolean onError(MediaPlayer mp, int what, int extra) {
-                    Log.d(TAG, "Got an error: " + what);
+                    // TOOO: Handle audio errors
                     return false;
                 }
             });
@@ -220,7 +274,7 @@ public class StreamManager extends Service {
             mPrerollPlayer.setOnErrorListener(new MediaPlayer.OnErrorListener() {
                 @Override
                 public boolean onError(MediaPlayer mp, int what, int extra) {
-                    Log.d(TAG, "Got an error: " + what);
+                    // No preroll
                     return false;
                 }
             });
@@ -229,7 +283,6 @@ public class StreamManager extends Service {
 
     @Override
     public IBinder onBind(Intent intent) {
-        Log.d(TAG, "onBind");
         return mBinder;
     }
 

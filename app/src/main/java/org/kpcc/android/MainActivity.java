@@ -129,6 +129,16 @@ public class MainActivity extends ActionBarActivity
                 (DrawerLayout) findViewById(R.id.drawer_layout));
     }
 
+    public NavigationDrawerFragment getNavigationDrawerFragment() {
+        return mNavigationDrawerFragment;
+    }
+
+    // This gets called when we click a menu item. If a menu item is clicked, the internal
+    // back stack (for program and episode lists) should be cleared out.
+    private void clearFragmentBackStack(FragmentManager fm) {
+        fm.popBackStack(null, FragmentManager.POP_BACK_STACK_INCLUSIVE);
+    }
+
     @Override
     protected void attachBaseContext(Context newBase) {
         super.attachBaseContext(CalligraphyContextWrapper.wrap(newBase));

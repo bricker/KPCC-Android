@@ -1,7 +1,9 @@
 package org.kpcc.android;
 
+import android.app.Activity;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.support.v7.app.ActionBar;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -30,9 +32,8 @@ public class LiveFragment extends Fragment {
 
     private TextView mTitle;
     private TextView mStatus;
-    private Button mPlayButton;
-    private Button mStopButton;
     private NetworkImageView mBackground;
+    private NetworkImageView mAdView;
 
     public LiveFragment() {
         // Required empty public constructor
@@ -68,6 +69,7 @@ public class LiveFragment extends Fragment {
         mTitle = (TextView) view.findViewById(R.id.live_title);
         mStatus = (TextView) view.findViewById(R.id.live_status);
         mBackground = (NetworkImageView) view.findViewById(R.id.background);
+        mAdView = (NetworkImageView) view.findViewById(R.id.preroll_ad);
 
         ScheduleOccurrence.Client.getCurrent(new Response.Listener<JSONObject>() {
             @Override
@@ -89,10 +91,10 @@ public class LiveFragment extends Fragment {
                             mStatus.setText(R.string.on_now);
                         }
 
-                        BackgroundImageManager.getInstance().setBackgroundImage(mBackground, schedule.getProgramSlug());
+                        NetworkImageManager.getInstance().setBackgroundImage(mBackground, schedule.getProgramSlug());
                     } else {
                         mStatus.setText(R.string.live);
-                        BackgroundImageManager.getInstance().setDefaultBackgroundImage(mBackground);
+                        NetworkImageManager.getInstance().setDefaultBackgroundImage(mBackground);
                     }
 
 
@@ -110,7 +112,7 @@ public class LiveFragment extends Fragment {
             }
         });
 
-        final AudioButtonManager audioButtonManager = new AudioButtonManager(activity, view);
+        final AudioButtonManager audioButtonManager = new AudioButtonManager(view);
 
         StreamManager streamManager = activity.getStreamManager();
         if (streamManager != null && streamManager.isPlaying(StreamManager.LIVESTREAM_URL)) {
@@ -122,13 +124,28 @@ public class LiveFragment extends Fragment {
         audioButtonManager.getPlayButton().setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                activity.getStreamManager().playLiveStream(activity, audioButtonManager);
+                if (activity.getStreamManager().isPlayingPreroll()) {
+                    // Preroll was Paused - start it again.
+                    activity.getStreamManager().resumePreroll(audioButtonManager);
+                } else {
+                    // Preroll will be handled normally
+                    activity.getStreamManager().playLiveStream(activity, audioButtonManager, mAdView);
+                }
+            }
+        });
+
+        audioButtonManager.getPauseButton().setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // In this view, only Preroll can be paused.
+                activity.getStreamManager().pausePreroll(audioButtonManager);
             }
         });
 
         audioButtonManager.getStopButton().setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                // In this view, only the Stream can be stopped.
                 activity.getStreamManager().stop(audioButtonManager);
             }
         });
