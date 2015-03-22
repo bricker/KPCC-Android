@@ -39,17 +39,6 @@ public class LiveFragment extends Fragment {
         // Required empty public constructor
     }
 
-    /**
-     * Use this factory method to create a new instance of
-     * this fragment.
-     *
-     * @return A new instance of fragment LiveFragment.
-     */
-    public static LiveFragment newInstance() {
-        LiveFragment fragment = new LiveFragment();
-        return fragment;
-    }
-
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);

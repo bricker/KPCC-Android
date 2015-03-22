@@ -1,13 +1,12 @@
 package org.kpcc.android;
 
+import android.app.Activity;
 import android.os.Bundle;
 import android.support.v4.preference.PreferenceFragment;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
 
-/**
- * A simple {@link Fragment} subclass.
- * Use the {@link SettingsFragment#newInstance} factory method to
- * create an instance of this fragment.
- */
 public class SettingsFragment extends PreferenceFragment {
     public static final String PREF_KEY_PUSH_NOTIFICATIONS = "push_notifications";
 

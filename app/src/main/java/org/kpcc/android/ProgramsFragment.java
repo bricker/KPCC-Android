@@ -47,13 +47,6 @@ public class ProgramsFragment extends Fragment
     public ProgramsFragment() {
     }
 
-    public static ProgramsFragment newInstance() {
-        ProgramsFragment fragment = new ProgramsFragment();
-        Bundle args = new Bundle();
-        fragment.setArguments(args);
-        return fragment;
-    }
-
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
