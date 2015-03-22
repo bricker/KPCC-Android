@@ -4,7 +4,6 @@ import android.content.Context;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
-import android.support.v7.app.ActionBar;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -185,8 +184,8 @@ public class EpisodesFragment extends Fragment implements AbsListView.OnItemClic
         FragmentManager fragmentManager = getActivity().getSupportFragmentManager();
         fragmentManager.beginTransaction()
                 .replace(R.id.container, EpisodeFragment.newInstance(
-                        mProgram.getSlug(), episode.getTitle(), episode.getFormattedAirDate(),
-                        audio.getUrl(), audio.getFilesizeBytes(), audio.getDurationSeconds()),
+                                mProgram.getSlug(), episode.getTitle(), episode.getFormattedAirDate(),
+                                audio.getUrl(), audio.getFilesizeBytes(), audio.getDurationSeconds()),
                         STACK_TAG)
                 .addToBackStack(null)
                 .commit();

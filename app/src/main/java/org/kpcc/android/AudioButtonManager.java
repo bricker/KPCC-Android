@@ -1,6 +1,5 @@
 package org.kpcc.android;
 
-import android.content.Context;
 import android.view.View;
 import android.widget.ImageButton;
 import android.widget.ProgressBar;

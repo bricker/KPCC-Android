@@ -6,11 +6,9 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
-import android.net.Uri;
 import android.os.Binder;
 import android.os.Handler;
 import android.os.IBinder;
-import android.util.Log;
 import android.view.View;
 import android.widget.ProgressBar;
 import android.widget.TextView;
@@ -314,7 +312,7 @@ public class StreamManager extends Service {
 
         @Override
         public void run() {
-            while(mIsObserving.get()) {
+            while (mIsObserving.get()) {
                 try {
                     mHandler.post(new Runnable() {
                         @Override

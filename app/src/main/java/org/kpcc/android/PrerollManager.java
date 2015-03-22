@@ -28,10 +28,10 @@ import java.util.UUID;
  */
 public class PrerollManager {
     public final static String TRITON_BASE = "http://cmod.live.streamtheworld.com/ondemand/ars?type=preroll&stid=83153&lsid=%s:%s";
-    private final static PrerollManager INSTANCE = new PrerollManager();
-    public final static long PREROLL_THRESHOLD = 1000*60*60*4; // 4 hours
-    public final static long INSTALL_GRACE = 1000*60*10; // 10 minutes
+    public final static long PREROLL_THRESHOLD = 1000 * 60 * 60 * 4; // 4 hours
+    public final static long INSTALL_GRACE = 1000 * 60 * 10; // 10 minutes
     public final static String PREF_FALLBACK_AD_ID = "fallback_ad_id";
+    private final static PrerollManager INSTANCE = new PrerollManager();
     public static long LAST_PREROLL_PLAY = 0;
 
     private PrerollCallbackListener mCallback;

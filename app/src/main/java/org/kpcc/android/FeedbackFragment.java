@@ -65,10 +65,10 @@ public class FeedbackFragment extends Fragment {
         View.OnClickListener listener = new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mFeedbackTypeBug.setCompoundDrawablesWithIntrinsicBounds(0,0,android.R.color.transparent,0);
-                mFeedbackTypeSuggestion.setCompoundDrawablesWithIntrinsicBounds(0,0,android.R.color.transparent,0);
-                mFeedbackTypeFeedback.setCompoundDrawablesWithIntrinsicBounds(0,0,android.R.color.transparent,0);
-                ((RadioButton) v).setCompoundDrawablesWithIntrinsicBounds(0,0,R.drawable.ic_check,0);
+                mFeedbackTypeBug.setCompoundDrawablesWithIntrinsicBounds(0, 0, android.R.color.transparent, 0);
+                mFeedbackTypeSuggestion.setCompoundDrawablesWithIntrinsicBounds(0, 0, android.R.color.transparent, 0);
+                mFeedbackTypeFeedback.setCompoundDrawablesWithIntrinsicBounds(0, 0, android.R.color.transparent, 0);
+                ((RadioButton) v).setCompoundDrawablesWithIntrinsicBounds(0, 0, R.drawable.ic_check, 0);
             }
         };
 
