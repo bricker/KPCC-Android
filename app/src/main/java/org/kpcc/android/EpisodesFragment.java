@@ -160,10 +160,6 @@ public class EpisodesFragment extends Fragment implements AbsListView.OnItemClic
 
         String title = mProgram.getTitle();
         activity.setTitle(title);
-        ActionBar ab = activity.getSupportActionBar();
-        if (ab != null) {
-            ab.setTitle(title);
-        }
 
         View view = inflater.inflate(R.layout.fragment_episodes, container, false);
 

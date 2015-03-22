@@ -93,6 +93,10 @@ public class ProgramsFragment extends Fragment
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
+
+        Activity activity = getActivity();
+        activity.setTitle(R.string.programs);
+
         View view = inflater.inflate(R.layout.fragment_programs, container, false);
 
         // Set the adapter

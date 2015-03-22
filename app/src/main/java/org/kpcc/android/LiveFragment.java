@@ -60,6 +60,8 @@ public class LiveFragment extends Fragment {
 
         final MainActivity activity = (MainActivity) getActivity();
 
+        activity.setTitle(R.string.kpcc_live);
+
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_live, container, false);
 

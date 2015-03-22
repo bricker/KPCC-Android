@@ -15,16 +15,17 @@ public class SettingsFragment extends PreferenceFragment {
         // Required empty public constructor
     }
 
-    public static SettingsFragment newInstance() {
-        SettingsFragment fragment = new SettingsFragment();
-        Bundle args = new Bundle();
-        fragment.setArguments(args);
-        return fragment;
-    }
-
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         addPreferencesFromResource(R.xml.preferences);
+    }
+
+    @Override
+    public View onCreateView(LayoutInflater paramLayoutInflater, ViewGroup paramViewGroup, Bundle paramBundle) {
+        Activity activity = getActivity();
+        activity.setTitle(R.string.settings);
+
+        return super.onCreateView(paramLayoutInflater, paramViewGroup, paramBundle);
     }
 }

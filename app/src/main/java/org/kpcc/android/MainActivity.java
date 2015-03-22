@@ -115,6 +115,11 @@ public class MainActivity extends ActionBarActivity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        ActionBar ab = getSupportActionBar();
+        if (ab != null) {
+            ab.setDisplayShowTitleEnabled(true);
+        }
+
         mNavigationDrawerFragment = (NavigationDrawerFragment)
                 getSupportFragmentManager().findFragmentById(R.id.navigation_drawer);
 
@@ -135,11 +140,6 @@ public class MainActivity extends ActionBarActivity
 
         // update the main content by replacing fragments
         item.performCallback(this);
-
-        ActionBar ab = getSupportActionBar();
-        if (ab != null) {
-            ab.setTitle(item.getTitleId());
-        }
     }
 
     public StreamManager getStreamManager() {

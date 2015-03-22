@@ -91,12 +91,7 @@ public class EpisodeFragment extends Fragment {
                              Bundle savedInstanceState) {
 
         final MainActivity activity = (MainActivity) getActivity();
-
         activity.setTitle(R.string.programs);
-        ActionBar ab = activity.getSupportActionBar();
-        if (ab != null) {
-            ab.setTitle(R.string.programs);
-        }
 
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_episode, container, false);

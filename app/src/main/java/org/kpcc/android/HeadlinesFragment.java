@@ -51,6 +51,7 @@ public class HeadlinesFragment extends Fragment {
         // Inflate the layout for this fragment
         View v = inflater.inflate(R.layout.fragment_headlines, container, false);
         final MainActivity activity = (MainActivity) getActivity();
+        activity.setTitle(R.string.headlines);
 
         WebView browser = (WebView) v.findViewById(R.id.content_wrapper);
         mProgressBar = (LinearLayout) v.findViewById(R.id.progress_layout);
@@ -78,10 +79,6 @@ public class HeadlinesFragment extends Fragment {
 
                 if (mDidBrowse && !TextUtils.isEmpty(title)) {
                     activity.setTitle(title);
-                    ActionBar ab = activity.getSupportActionBar();
-                    if (ab != null) {
-                        ab.setTitle(title);
-                    }
                 }
             }
         });

@@ -184,7 +184,6 @@ public class NavigationDrawerFragment extends Fragment {
                     return;
                 }
 
-                getActivity().supportInvalidateOptionsMenu(); // calls onPrepareOptionsMenu()
                 mAnalyticsManager.logEvent("menuClosed");
             }
 
@@ -204,7 +203,6 @@ public class NavigationDrawerFragment extends Fragment {
                     sp.edit().putBoolean(PREF_USER_LEARNED_DRAWER, true).apply();
                 }
 
-                getActivity().supportInvalidateOptionsMenu(); // calls onPrepareOptionsMenu()
                 mAnalyticsManager.logEvent("menuOpened");
             }
         };
