@@ -40,6 +40,7 @@ import java.util.HashMap;
  */
 public class EpisodesFragment extends Fragment implements AbsListView.OnItemClickListener {
     public final static String TAG = "EpisodesFragment";
+    public final static String STACK_TAG = "episodesList";
     private static final String ARG_PROGRAM_SLUG = "program_slug";
 
     /**
@@ -185,7 +186,8 @@ public class EpisodesFragment extends Fragment implements AbsListView.OnItemClic
         fragmentManager.beginTransaction()
                 .replace(R.id.container, EpisodeFragment.newInstance(
                         mProgram.getSlug(), episode.getTitle(), episode.getFormattedAirDate(),
-                        audio.getUrl(), audio.getFilesizeBytes(), audio.getDurationSeconds()))
+                        audio.getUrl(), audio.getFilesizeBytes(), audio.getDurationSeconds()),
+                        STACK_TAG)
                 .addToBackStack(null)
                 .commit();
     }

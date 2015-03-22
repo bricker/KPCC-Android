@@ -1,5 +1,6 @@
 package org.kpcc.android;
 
+import android.app.Activity;
 import android.content.Context;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -26,6 +27,7 @@ public class ProgramsFragment extends Fragment
         implements AdapterView.OnItemClickListener {
 
     public final static String TAG = "ProgramsFragment";
+    public final static String STACK_TAG = "programsList";
 
     /**
      * The fragment's ListView/GridView.
@@ -115,7 +117,7 @@ public class ProgramsFragment extends Fragment
 
         FragmentManager fragmentManager = getActivity().getSupportFragmentManager();
         fragmentManager.beginTransaction()
-                .replace(R.id.container, EpisodesFragment.newInstance(program.getSlug()))
+                .replace(R.id.container, EpisodesFragment.newInstance(program.getSlug()), STACK_TAG)
                 .addToBackStack(null)
                 .commit();
     }
