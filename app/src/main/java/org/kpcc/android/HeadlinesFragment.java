@@ -4,6 +4,7 @@ import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v7.app.ActionBar;
 import android.text.TextUtils;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -45,7 +46,6 @@ public class HeadlinesFragment extends Fragment {
         WebView browser = (WebView) v.findViewById(R.id.content_wrapper);
         mProgressBar = (LinearLayout) v.findViewById(R.id.progress_layout);
 
-        // TODO: Handle back button. This would have to be handled in the Activity and checked if this is the current fragment.
         browser.setWebViewClient(new WebViewClient() {
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, String url) {
@@ -73,6 +73,27 @@ public class HeadlinesFragment extends Fragment {
         });
 
         browser.loadUrl(SHORTLIST_URL);
+
+        browser.setOnKeyListener(new View.OnKeyListener() {
+            @Override
+            public boolean onKey(View v, int keyCode, KeyEvent event) {
+                if (event.getAction() == KeyEvent.ACTION_DOWN) {
+                    WebView webView = (WebView) v;
+
+                    switch (keyCode) {
+                        case KeyEvent.KEYCODE_BACK:
+                            if (webView.canGoBack()) {
+                                webView.goBack();
+                                return true;
+                            }
+                            break;
+                    }
+                }
+
+                return false;
+            }
+        });
+
         return v;
     }
 }
