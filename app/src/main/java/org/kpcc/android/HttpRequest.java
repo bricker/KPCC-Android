@@ -38,7 +38,7 @@ public class HttpRequest {
     }
 
     public static class Manager {
-        private static Manager INSTANCE = null;
+        public static Manager instance = null;
         private static RequestQueue mRequestQueue;
 
         protected Manager(Context context) {
@@ -46,13 +46,9 @@ public class HttpRequest {
         }
 
         public static void setupInstance(Context context) {
-            if (INSTANCE == null) {
-                INSTANCE = new Manager(context);
+            if (instance == null) {
+                instance = new Manager(context);
             }
-        }
-
-        public static Manager getInstance() {
-            return INSTANCE;
         }
 
         public <T> void addToRequestQueue(Request<T> req) {
@@ -71,7 +67,7 @@ public class HttpRequest {
                                Response.ErrorListener errorListener) {
 
             StringRequest req = new StringRequest(Request.Method.GET, url, responseListener, errorListener);
-            HttpRequest.Manager.getInstance().addToRequestQueue(req);
+            HttpRequest.Manager.instance.addToRequestQueue(req);
         }
     }
 
@@ -99,7 +95,7 @@ public class HttpRequest {
 
             String queryUrl = HttpRequest.addQueryParams(url, params);
             JsonRequest req = new JsonRequest(Request.Method.GET, queryUrl, headers, responseListener, errorListener);
-            HttpRequest.Manager.getInstance().addToRequestQueue(req);
+            HttpRequest.Manager.instance.addToRequestQueue(req);
         }
 
         public static void post(String url,
@@ -109,7 +105,7 @@ public class HttpRequest {
                                 Response.ErrorListener errorListener) {
 
             JsonObjectRequestWithHeaders req = new JsonObjectRequestWithHeaders(headers, Request.Method.POST, url, params, responseListener, errorListener);
-            HttpRequest.Manager.getInstance().addToRequestQueue(req);
+            HttpRequest.Manager.instance.addToRequestQueue(req);
         }
 
         @Override

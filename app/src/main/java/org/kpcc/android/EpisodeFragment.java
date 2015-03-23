@@ -5,12 +5,13 @@ import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.android.volley.toolbox.NetworkImageView;
 
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.kpcc.api.Program;
 
 
@@ -26,18 +27,15 @@ public class EpisodeFragment extends Fragment {
     private static final String ARG_EPISODE_TITLE = "episodeTitle";
     private static final String ARG_EPISODE_DATE = "episodeDate";
     private static final String ARG_AUDIO_URL = "audioUrl";
-    private static final String ARG_AUDIO_FILESIZE = "audioFilesize";
     private static final String ARG_AUDIO_DURATION = "audioDuration";
 
     private Program mProgram;
     private String mEpisodeTitle;
     private String mEpisodeDate;
     private String mAudioUrl;
-    private int mAudioFilesize;
-    private int mAudioDuration;
-    private Button mPlayButton;
-    private Button mPauseButton;
+    private int mAudioDuration; // SECONDS
     private NetworkImageView mBackground;
+    private StreamManager.EpisodeStream mPlayer;
 
     public EpisodeFragment() {
         // Required empty public constructor
@@ -51,7 +49,7 @@ public class EpisodeFragment extends Fragment {
      */
     public static EpisodeFragment newInstance(
             String programSlug, String episodeTitle, String episodeDate,
-            String audioUrl, int audioFilesize, int audioDuration) {
+            String audioUrl, int audioDuration) {
         EpisodeFragment fragment = new EpisodeFragment();
         Bundle args = new Bundle();
         args.putString(ARG_PROGRAM_SLUG, programSlug);
@@ -63,7 +61,6 @@ public class EpisodeFragment extends Fragment {
         args.putString(ARG_EPISODE_TITLE, episodeTitle);
         args.putString(ARG_EPISODE_DATE, episodeDate);
         args.putString(ARG_AUDIO_URL, audioUrl);
-        args.putInt(ARG_AUDIO_FILESIZE, audioFilesize);
         args.putInt(ARG_AUDIO_DURATION, audioDuration);
 
         fragment.setArguments(args);
@@ -76,11 +73,10 @@ public class EpisodeFragment extends Fragment {
         Bundle args = getArguments();
 
         if (args != null) {
-            mProgram = ProgramsManager.getInstance().find(args.getString(ARG_PROGRAM_SLUG));
+            mProgram = ProgramsManager.instance.find(args.getString(ARG_PROGRAM_SLUG));
             mEpisodeTitle = args.getString(ARG_EPISODE_TITLE);
             mEpisodeDate = args.getString(ARG_EPISODE_DATE);
             mAudioUrl = args.getString(ARG_AUDIO_URL);
-            mAudioFilesize = args.getInt(ARG_AUDIO_FILESIZE);
             mAudioDuration = args.getInt(ARG_AUDIO_DURATION);
         }
     }
@@ -107,39 +103,107 @@ public class EpisodeFragment extends Fragment {
         totalTime.setText(StreamManager.getTimeFormat(mAudioDuration));
 
         mBackground = (NetworkImageView) view.findViewById(R.id.background);
-        NetworkImageManager.getInstance().setBackgroundImage(mBackground, mProgram.getSlug());
+        NetworkImageManager.instance.setBackgroundImage(mBackground, mProgram.slug);
 
-        program_title.setText(mProgram.getTitle());
+        program_title.setText(mProgram.title);
         episode_title.setText(mEpisodeTitle);
         date.setText(mEpisodeDate);
 
         final AudioButtonManager audioButtonManager = new AudioButtonManager(view);
+        boolean alreadyPlaying = false;
 
-        StreamManager streamManager = activity.getStreamManager();
-        if (streamManager != null && streamManager.isPlaying(mAudioUrl)) {
+        // TODO: Check if streamManager is null
+        StreamManager.EpisodeStream currentPlayer = activity.streamManager.currentEpisodePlayer;
+        if (currentPlayer != null && currentPlayer.audioUrl.equals(mAudioUrl) && currentPlayer.isPlaying()) {
+            mPlayer = currentPlayer;
+            alreadyPlaying = true;
             audioButtonManager.togglePlayingForPause();
-        } else {
-            audioButtonManager.toggleStopped();
+
+            // Audio should be released when next one starts, based on Audio Focus rules.
+        }
+
+        if (mPlayer == null) {
+            mPlayer = new StreamManager.EpisodeStream(mAudioUrl, activity, new EpisodeAudioCompletionCallback());
         }
 
         audioButtonManager.getPlayButton().setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                activity.getStreamManager().playEpisode(mAudioUrl,
-                        activity, audioButtonManager, progressBar, currentTime);
+                mPlayer.play();
+                logEpisodeStreamEvent(activity, AnalyticsManager.EVENT_ON_DEMAND_BEGAN);
             }
         });
 
         audioButtonManager.getPauseButton().setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                activity.getStreamManager().pause(audioButtonManager);
+                mPlayer.pause();
+                // The key discrepancy is for parity with the iOS app.
+                logEpisodeStreamEvent(activity, AnalyticsManager.EVENT_ON_DEMAND_PAUSED);
             }
         });
 
-        // Start the episode right away.
-        audioButtonManager.clickPlay();
+        mPlayer.setOnAudioEventListener(new StreamManager.EpisodeStream.AudioEventListener() {
+            @Override
+            public void onLoading() {
+                audioButtonManager.toggleLoading();
+            }
+
+            @Override
+            public void onPlay() {
+                audioButtonManager.togglePlayingForPause();
+            }
+
+            @Override
+            public void onPause() {
+                audioButtonManager.togglePaused();
+            }
+
+            @Override
+            public void onStop() {
+                audioButtonManager.toggleStopped();
+            }
+
+            @Override
+            public void onProgress(int progress) {
+                progressBar.setProgress(progress / 1000);
+                currentTime.setText(StreamManager.getTimeFormat(progress / 1000));
+            }
+        });
+
+        if (!alreadyPlaying) {
+            audioButtonManager.toggleStopped();
+            // Start the episode right away unless it's already playing.
+            audioButtonManager.clickPlay();
+        }
 
         return view;
+    }
+
+    private void logEpisodeStreamEvent(MainActivity activity, String key) {
+        JSONObject params = new JSONObject();
+
+        try {
+            params.put("programPublishedAt", mEpisodeDate);
+            params.put("programTitle", mProgram.title);
+            params.put("episodeTitle", mEpisodeTitle);
+            params.put("programLengthInSeconds", mAudioDuration); // Already seconds
+
+            if (key.equals(AnalyticsManager.EVENT_ON_DEMAND_PAUSED) && activity != null) {
+                params.put("playedDurationInSeconds", mPlayer.getCurrentPosition() / 1000);
+            }
+        } catch (JSONException e) {
+            // Nothing to do.
+        }
+
+        AnalyticsManager.instance.logEvent(key, params);
+    }
+
+
+    public class EpisodeAudioCompletionCallback {
+        public void onCompletion() {
+            logEpisodeStreamEvent(null, AnalyticsManager.EVENT_ON_DEMAND_COMPLETED);
+            // TODO Load the next episode
+        }
     }
 }

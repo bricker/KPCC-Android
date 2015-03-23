@@ -4,7 +4,6 @@ import android.content.Context;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -22,7 +21,6 @@ import com.android.volley.toolbox.NetworkImageView;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.kpcc.api.Audio;
 import org.kpcc.api.Episode;
 import org.kpcc.api.Program;
 import org.kpcc.api.Segment;
@@ -79,15 +77,14 @@ public class EpisodesFragment extends Fragment implements AbsListView.OnItemClic
 
         if (getArguments() != null) {
             String programSlug = getArguments().getString(ARG_PROGRAM_SLUG);
-            mProgram = ProgramsManager.getInstance().find(programSlug);
+            mProgram = ProgramsManager.instance.find(programSlug);
         }
 
         HashMap<String, String> params = new HashMap<>();
 
-        params.put("program", mProgram.getSlug());
+        params.put("program", mProgram.slug);
         params.put("limit", "8");
 
-        Log.d(TAG, params.toString());
         Episode.Client.getCollection(params, new Response.Listener<JSONObject>() {
             @Override
             public void onResponse(JSONObject response) {
@@ -98,13 +95,13 @@ public class EpisodesFragment extends Fragment implements AbsListView.OnItemClic
                         Episode episode = Episode.buildFromJson(jsonEpisodes.getJSONObject(i));
 
                         // Don't show the episode if there is no audio.
-                        if (episode.getAudio() != null) {
+                        if (episode.audio != null) {
                             mEpisodes.add(episode);
                         } else {
                             // If there was no episode but there are segments, use those as episodes.
-                            if (episode.getSegments().size() > 0) {
-                                for (Segment segment : episode.getSegments()) {
-                                    if (segment.getAudio() != null) {
+                            if (episode.segments.size() > 0) {
+                                for (Segment segment : episode.segments) {
+                                    if (segment.audio != null) {
                                         mEpisodes.add(Episode.buildFromSegment(segment));
                                     }
                                 }
@@ -128,8 +125,8 @@ public class EpisodesFragment extends Fragment implements AbsListView.OnItemClic
                             TextView title = (TextView) view.findViewById(R.id.episode_title);
                             TextView date = (TextView) view.findViewById(R.id.air_date);
 
-                            title.setText(episode.getTitle());
-                            date.setText(episode.getFormattedAirDate());
+                            title.setText(episode.title);
+                            date.setText(episode.formattedAirDate);
 
                             return view;
                         }
@@ -138,15 +135,12 @@ public class EpisodesFragment extends Fragment implements AbsListView.OnItemClic
                     setAdapter();
 
                 } catch (JSONException e) {
-                    Log.d(TAG, "JSON Error");
                     // TODO: Handle failures
-                    e.printStackTrace();
                 }
             }
         }, new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {
-                Log.d(TAG, "API Error");
                 // TODO: Handle failures
             }
         });
@@ -157,9 +151,7 @@ public class EpisodesFragment extends Fragment implements AbsListView.OnItemClic
                              Bundle savedInstanceState) {
 
         MainActivity activity = (MainActivity) getActivity();
-
-        String title = mProgram.getTitle();
-        activity.setTitle(title);
+        activity.setTitle(mProgram.title);
 
         View view = inflater.inflate(R.layout.fragment_episodes, container, false);
 
@@ -167,7 +159,7 @@ public class EpisodesFragment extends Fragment implements AbsListView.OnItemClic
         mListView = (AbsListView) view.findViewById(android.R.id.list);
         mProgressBar = (LinearLayout) view.findViewById(R.id.progress_layout);
         mBackground = (NetworkImageView) view.findViewById(R.id.background);
-        NetworkImageManager.getInstance().setBackgroundImage(mBackground, mProgram.getSlug());
+        NetworkImageManager.instance.setBackgroundImage(mBackground, mProgram.slug);
 
         // Set OnItemClickListener so we can be notified on item clicks
         mListView.setOnItemClickListener(this);
@@ -179,13 +171,12 @@ public class EpisodesFragment extends Fragment implements AbsListView.OnItemClic
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
         Episode episode = mEpisodes.get(position);
-        Audio audio = episode.getAudio();
 
         FragmentManager fragmentManager = getActivity().getSupportFragmentManager();
         fragmentManager.beginTransaction()
                 .replace(R.id.container, EpisodeFragment.newInstance(
-                                mProgram.getSlug(), episode.getTitle(), episode.getFormattedAirDate(),
-                                audio.getUrl(), audio.getFilesizeBytes(), audio.getDurationSeconds()),
+                                mProgram.slug, episode.title, episode.formattedAirDate,
+                                episode.audio.url, episode.audio.durationSeconds),
                         STACK_TAG)
                 .addToBackStack(null)
                 .commit();

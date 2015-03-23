@@ -6,26 +6,32 @@ import com.mixpanel.android.mpmetrics.MixpanelAPI;
 
 import org.json.JSONObject;
 
-/**
- * Created by rickb014 on 2/15/15.
- */
 public class AnalyticsManager {
     public static final String TAG = "AnalyticsManager";
-    private static final String MIXPANEL_TOKEN = AppConfiguration.getInstance().getConfig("mixpanel.token");
-    private static AnalyticsManager INSTANCE = null;
+    public final static String EVENT_PROGRAM_SELECTED = "programSelected";
+    public final static String EVENT_MENU_SELECTION_LIVE_STREAM = "menuSelectionLiveStream";
+    public final static String EVENT_MENU_SELECTION_PROGRAMS = "menuSelectionPrograms";
+    public final static String EVENT_MENU_SELECTION_HEADLINES = "menuSelectionHeadlines";
+    public final static String EVENT_MENU_SELECTION_DONATE = "menuSelectionDonate";
+    public final static String EVENT_MENU_SELECTION_FEEDBACK = "menuSelectionFeedback";
+    public final static String EVENT_MENU_SELECTION_SETTINGS = "menuSelectionSettings";
+    public final static String EVENT_LIVE_STREAM_PLAY = "liveStreamPlay";
+    public final static String EVENT_LIVE_STREAM_PAUSE = "liveStreamPause";
+    public final static String EVENT_ON_DEMAND_COMPLETED = "onDemandEpisodeCompleted";
+    public final static String EVENT_ON_DEMAND_BEGAN = "onDemandEpisodeBegan";
+    public final static String EVENT_ON_DEMAND_PAUSED = "onDemandAudioPaused";
+    public final static String EVENT_CLOSED_HEADLINES = "userClosedHeadlines";
+    private static final String MIXPANEL_TOKEN = AppConfiguration.instance.getConfig("mixpanel.token");
+    public static AnalyticsManager instance = null;
     private MixpanelAPI mMixpanelAPI;
 
     protected AnalyticsManager(Context context) {
         mMixpanelAPI = MixpanelAPI.getInstance(context, MIXPANEL_TOKEN);
     }
 
-    public static AnalyticsManager getInstance() {
-        return INSTANCE;
-    }
-
     public static void setupInstance(Context context) {
-        if (INSTANCE == null) {
-            INSTANCE = new AnalyticsManager(context);
+        if (instance == null) {
+            instance = new AnalyticsManager(context);
         }
     }
 

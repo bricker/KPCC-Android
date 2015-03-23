@@ -7,16 +7,13 @@ import android.view.View;
 import com.android.volley.toolbox.ImageLoader;
 import com.android.volley.toolbox.NetworkImageView;
 
-/**
- * Created by rickb014 on 3/1/15.
- */
 public class NetworkImageManager {
+    public final static NetworkImageManager instance = new NetworkImageManager();
     private final static String GENERIC_SLUG = "generic";
-    private static NetworkImageManager INSTANCE = null;
     private ImageLoader mImageLoader;
 
     private NetworkImageManager() {
-        mImageLoader = new ImageLoader(HttpRequest.Manager.getInstance().getRequestQueue(),
+        mImageLoader = new ImageLoader(HttpRequest.Manager.instance.getRequestQueue(),
                 new ImageLoader.ImageCache() {
                     // There are 66 programs right now. We don't need to cache all of the images.
                     private final LruCache<String, Bitmap> cache = new LruCache<>(50);
@@ -31,16 +28,6 @@ public class NetworkImageManager {
                         cache.put(url, bitmap);
                     }
                 });
-    }
-
-    public static void setupInstance() {
-        if (INSTANCE == null) {
-            INSTANCE = new NetworkImageManager();
-        }
-    }
-
-    public static NetworkImageManager getInstance() {
-        return INSTANCE;
     }
 
     public void setPrerollImage(NetworkImageView view, String url) {

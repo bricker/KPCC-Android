@@ -62,7 +62,7 @@ public class NavigationDrawerFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        mAnalyticsManager = AnalyticsManager.getInstance();
+        mAnalyticsManager = AnalyticsManager.instance;
 
         // Read in the flag indicating whether or not the user has demonstrated awareness of the
         // drawer. See PREF_USER_LEARNED_DRAWER for details.
@@ -100,7 +100,7 @@ public class NavigationDrawerFragment extends Fragment {
         });
 
         mDrawerListView.setAdapter(new ArrayAdapter<Navigation.NavigationItem>(getActivity(),
-                R.layout.list_item_drawer, Navigation.getInstance().getItems()) {
+                R.layout.list_item_drawer, Navigation.instance.navigationItems) {
             @Override
             public View getView(int position, View convertView, ViewGroup parent) {
                 View view = convertView;
@@ -110,12 +110,12 @@ public class NavigationDrawerFragment extends Fragment {
                     view = inflater.inflate(R.layout.list_item_drawer, null);
                 }
 
-                Navigation.NavigationItem item = Navigation.getInstance().getItem(position);
+                Navigation.NavigationItem item = Navigation.instance.navigationItems[position];
                 ImageView icon = (ImageView) view.findViewById(R.id.icon);
                 TextView title = (TextView) view.findViewById(R.id.title);
 
-                title.setText(item.getTitleId());
-                icon.setImageResource(item.getIconId());
+                title.setText(item.titleId);
+                icon.setImageResource(item.iconId);
 
                 return view;
             }

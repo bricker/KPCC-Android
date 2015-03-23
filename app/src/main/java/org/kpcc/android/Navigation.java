@@ -4,66 +4,46 @@ import android.content.Context;
 import android.support.v4.app.FragmentManager;
 
 public class Navigation {
-    private static Navigation instance = null;
+    public static Navigation instance = new Navigation();
 
     // We're declaring the size statically so we can use native Array.
-    private NavigationItem[] mNavigationItems = new NavigationItem[6];
+    public NavigationItem[] navigationItems = new NavigationItem[6];
 
     protected Navigation() {
     }
 
-    public static Navigation getInstance() {
-        if (instance == null) {
-            instance = new Navigation();
-        }
-
-        return instance;
+    public void addItem(int idx, int titleId, int iconId,
+                        String analyticsKey, NavigationItemSelectedCallback callback) {
+        navigationItems[idx] = new NavigationItem(titleId, iconId, analyticsKey, callback);
     }
-
-    public NavigationItem[] getItems() {
-        return mNavigationItems;
-    }
-
-    public void addItem(int idx, int titleId, int iconId, NavigationItemSelectedCallback callback) {
-        mNavigationItems[idx] = new NavigationItem(titleId, iconId, callback);
-    }
-
-    public NavigationItem getItem(int idx) {
-        return mNavigationItems[idx];
-    }
-
-    public int getSize() {
-        return mNavigationItems.length;
-    }
-
 
     public static interface NavigationItemSelectedCallback {
         public void perform(FragmentManager fm);
     }
 
     public static class NavigationItem {
-        private int mTitleId;
-        private int mIconId;
-        private NavigationItemSelectedCallback mCallback;
+        public int titleId;
+        public int iconId;
+        private String analyticsKey;
+        private NavigationItemSelectedCallback callback;
 
-        protected NavigationItem(int titleId, int iconId, NavigationItemSelectedCallback callback) {
-            mTitleId = titleId;
-            mIconId = iconId;
-            mCallback = callback;
-        }
-
-        public int getTitleId() {
-            return mTitleId;
-        }
-
-        public int getIconId() {
-            return mIconId;
+        protected NavigationItem(int titleId, int iconId,
+                                 String analyticsKey, NavigationItemSelectedCallback callback) {
+            this.titleId = titleId;
+            this.iconId = iconId;
+            this.analyticsKey = analyticsKey;
+            this.callback = callback;
         }
 
         public void performCallback(Context context) {
             MainActivity activity = ((MainActivity) context);
             FragmentManager fm = activity.getSupportFragmentManager();
-            mCallback.perform(fm);
+            logMenuItemSelection();
+            callback.perform(fm);
+        }
+
+        private void logMenuItemSelection() {
+            AnalyticsManager.instance.logEvent(analyticsKey);
         }
     }
 }

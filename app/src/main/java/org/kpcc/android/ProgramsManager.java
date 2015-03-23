@@ -1,7 +1,5 @@
 package org.kpcc.android;
 
-import android.util.Log;
-
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 
@@ -17,8 +15,8 @@ import java.util.HashMap;
 public class ProgramsManager {
     public static final String TAG = "ProgramsManager";
     public static final String PROGRAM_TILE_URL = "http://media.scpr.org/iphone/program-images/program_tile_%s@2x.jpg";
+    public final static ProgramsManager instance = new ProgramsManager();
     public static ArrayList<Program> ALL_PROGRAMS = new ArrayList<Program>();
-    private static ProgramsManager INSTANCE = null;
 
     protected ProgramsManager() {
         HashMap<String, String> params = new HashMap<>();
@@ -27,9 +25,6 @@ public class ProgramsManager {
         Program.Client.getCollection(params, new Response.Listener<JSONObject>() {
             @Override
             public void onResponse(JSONObject response) {
-                Log.d(TAG, "programs success");
-                // TODO: Download images too
-
                 try {
                     JSONArray jsonPrograms = response.getJSONArray(Program.PLURAL_KEY);
 
@@ -41,14 +36,12 @@ public class ProgramsManager {
                     Collections.sort(ALL_PROGRAMS);
                 } catch (JSONException e) {
                     // TODO: Handle errors
-                    Log.e(TAG, "ERROR");
                 }
             }
         }, new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {
                 // TODO: Handle response errors
-                Log.d(TAG, "programs failure");
             }
         });
     }
@@ -57,21 +50,11 @@ public class ProgramsManager {
         return String.format(ProgramsManager.PROGRAM_TILE_URL, slug);
     }
 
-    public static ProgramsManager getInstance() {
-        return INSTANCE;
-    }
-
-    public static void setupInstance() {
-        if (INSTANCE == null) {
-            INSTANCE = new ProgramsManager();
-        }
-    }
-
     public Program find(String slug) {
         Program foundProgram = null;
 
         for (Program program : ALL_PROGRAMS) {
-            if (program.getSlug().equals(slug)) {
+            if (program.slug.equals(slug)) {
                 foundProgram = program;
                 break;
             }

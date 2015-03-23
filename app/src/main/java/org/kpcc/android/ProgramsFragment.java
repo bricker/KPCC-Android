@@ -15,6 +15,8 @@ import android.widget.ImageView;
 import android.widget.ListAdapter;
 import android.widget.TextView;
 
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.kpcc.api.Program;
 
 /**
@@ -67,9 +69,9 @@ public class ProgramsFragment extends Fragment
                 ImageView avatar = (ImageView) view.findViewById(R.id.program_avatar);
                 ImageView arrow = (ImageView) view.findViewById(R.id.arrow);
 
-                title.setText(program.getTitle());
+                title.setText(program.title);
 
-                String underscoreSlug = program.getSlug().replace("-", "_");
+                String underscoreSlug = program.slug.replace("-", "_");
                 int resId = getResources().getIdentifier(
                         "program_avatar_" + underscoreSlug,
                         "drawable",
@@ -108,9 +110,19 @@ public class ProgramsFragment extends Fragment
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
         Program program = ProgramsManager.ALL_PROGRAMS.get(position);
 
+        JSONObject params = new JSONObject();
+
+        try {
+            params.put("programTitle", program.title);
+        } catch (JSONException e) {
+            // No params
+        }
+
+        AnalyticsManager.instance.logEvent(AnalyticsManager.EVENT_PROGRAM_SELECTED, params);
+
         FragmentManager fragmentManager = getActivity().getSupportFragmentManager();
         fragmentManager.beginTransaction()
-                .replace(R.id.container, EpisodesFragment.newInstance(program.getSlug()), STACK_TAG)
+                .replace(R.id.container, EpisodesFragment.newInstance(program.slug), STACK_TAG)
                 .addToBackStack(null)
                 .commit();
     }

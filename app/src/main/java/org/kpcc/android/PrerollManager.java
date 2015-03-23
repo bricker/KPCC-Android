@@ -2,16 +2,12 @@ package org.kpcc.android;
 
 import android.app.Activity;
 import android.content.Context;
-import android.content.Intent;
 import android.content.SharedPreferences;
-import android.net.Uri;
 import android.os.AsyncTask;
 import android.util.Xml;
-import android.view.View;
 
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
-import com.android.volley.toolbox.NetworkImageView;
 import com.google.android.gms.ads.identifier.AdvertisingIdClient;
 import com.google.android.gms.common.GooglePlayServicesNotAvailableException;
 import com.google.android.gms.common.GooglePlayServicesRepairableException;
@@ -23,44 +19,17 @@ import java.io.IOException;
 import java.io.StringReader;
 import java.util.UUID;
 
-/**
- * Created by rickb014 on 3/3/15.
- */
 public class PrerollManager {
     public final static String TRITON_BASE = "http://cmod.live.streamtheworld.com/ondemand/ars?type=preroll&stid=83153&lsid=%s:%s";
     public final static long PREROLL_THRESHOLD = 1000 * 60 * 60 * 4; // 4 hours
     public final static long INSTALL_GRACE = 1000 * 60 * 10; // 10 minutes
     public final static String PREF_FALLBACK_AD_ID = "fallback_ad_id";
-    private final static PrerollManager INSTANCE = new PrerollManager();
+    public final static PrerollManager instance = new PrerollManager();
     public static long LAST_PREROLL_PLAY = 0;
 
     private PrerollCallbackListener mCallback;
 
     protected PrerollManager() {
-    }
-
-    public static PrerollManager getInstance() {
-        return INSTANCE;
-    }
-
-    public void showPrerollAsset(final Context context,
-                                 NetworkImageView adView,
-                                 final PrerollData prerollData) {
-
-        NetworkImageManager.getInstance().setPrerollImage(adView, prerollData.getAssetUrl());
-
-        adView.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Uri uri = Uri.parse(prerollData.getAssetClickUrl());
-                Intent intent = new Intent(Intent.ACTION_VIEW, uri);
-
-                if (intent.resolveActivity(context.getPackageManager()) != null) {
-                    context.startActivity(intent);
-                }
-            }
-        });
-
     }
 
     public void getPrerollData(Context context, PrerollCallbackListener callback) {
@@ -73,60 +42,10 @@ public class PrerollManager {
     }
 
     public static class PrerollData {
-        private String mAudioUrl;
-        private Integer mAudioDuration; // Seconds
-        private String mAssetUrl;
-        private String mAssetClickUrl;
-        private Integer mAssetWidth;
-        private Integer mAssetHeight;
-
-        public String getAudioUrl() {
-            return mAudioUrl;
-        }
-
-        public void setAudioUrl(String audioUrl) {
-            mAudioUrl = audioUrl;
-        }
-
-        public Integer getAudioDuration() {
-            return mAudioDuration;
-        }
-
-        public void setAudioDuration(Integer audioDuration) {
-            mAudioDuration = audioDuration;
-        }
-
-        public String getAssetUrl() {
-            return mAssetUrl;
-        }
-
-        public void setAssetUrl(String assetUrl) {
-            mAssetUrl = assetUrl;
-        }
-
-        public String getAssetClickUrl() {
-            return mAssetClickUrl;
-        }
-
-        public void setAssetClickUrl(String assetClickUrl) {
-            mAssetClickUrl = assetClickUrl;
-        }
-
-        public Integer getAssetWidth() {
-            return mAssetWidth;
-        }
-
-        public void setAssetWidth(Integer assetWidth) {
-            mAssetWidth = assetWidth;
-        }
-
-        public Integer getAssetHeight() {
-            return mAssetHeight;
-        }
-
-        public void setAssetHeight(Integer assetHeight) {
-            mAssetHeight = assetHeight;
-        }
+        public String audioUrl;
+        public Integer audioDuration; // Seconds
+        public String assetUrl;
+        public String assetClickUrl;
     }
 
     private static class XmlParser {
@@ -151,28 +70,8 @@ public class PrerollManager {
 
                     String name = parser.getName();
                     switch (name) {
-                        case "VAST":
-                            continue;
-                        case "Ad":
-                            continue;
-                        case "InLine":
-                            continue;
-                        case "AdSystem":
-                            continue;
-                        case "AdTitle":
-                            continue;
-                        case "Impression":
-                            continue;
-                        case "Creatives":
-                            continue;
-                        case "Creative":
-                            continue;
-                        case "Linear":
-                            continue;
-                        case "MediaFiles":
-                            continue;
                         case "Duration":
-                            if (prerollData.getAudioDuration() != null) {
+                            if (prerollData.audioDuration != null) {
                                 continue;
                             }
                             String durationString = readText(parser);
@@ -181,56 +80,31 @@ public class PrerollManager {
                             duration += Integer.valueOf(segments[0]) * 60 * 60; // hours
                             duration += Integer.valueOf(segments[1]) * 60; // minutes
                             duration += Integer.valueOf(segments[2].split("\\.")[0]); // seconds
-                            prerollData.setAudioDuration(duration);
+                            prerollData.audioDuration = duration;
                             continue;
                         case "MediaFile":
-                            if (prerollData.getAudioUrl() != null) {
+                            if (prerollData.audioUrl != null) {
                                 continue;
                             }
                             String type = parser.getAttributeValue(null, "type");
                             if (type != null && type.matches("audio.+")) {
-                                prerollData.setAudioUrl(readText(parser));
-                            }
-                            continue;
-                        case "CompanionAds":
-                            continue;
-                        case "Companion":
-                            if (prerollData.getAssetUrl() != null) {
-                                continue;
-                            }
-                            String width = parser.getAttributeValue(null, "width");
-                            String height = parser.getAttributeValue(null, "height");
-                            if (width != null) {
-                                prerollData.setAssetWidth(Integer.valueOf(width));
-                            }
-                            if (height != null) {
-                                prerollData.setAssetHeight(Integer.valueOf(height));
+                                prerollData.audioUrl = readText(parser);
                             }
                             continue;
                         case "StaticResource":
-                            if (prerollData.getAssetUrl() != null) {
+                            if (prerollData.assetUrl != null) {
                                 continue;
                             }
                             String creativeType = parser.getAttributeValue(null, "creativeType");
                             if (creativeType != null && creativeType.matches("image.+")) {
-                                prerollData.setAssetUrl(readText(parser));
+                                prerollData.assetUrl = readText(parser);
                             }
-                            continue;
-                        case "TrackingEvents":
-                            continue;
-                        case "Tracking":
                             continue;
                         case "CompanionClickThrough":
-                            if (prerollData.getAssetClickUrl() != null) {
+                            if (prerollData.assetClickUrl != null) {
                                 continue;
                             }
-                            prerollData.setAssetClickUrl(readText(parser));
-                            continue;
-                        case "AltText":
-                            continue;
-                        case "HTMLResource":
-                            continue;
-                        case "IFrameResource":
+                            prerollData.assetClickUrl = readText(parser);
                             continue;
                         default: // implicit continue
                     }

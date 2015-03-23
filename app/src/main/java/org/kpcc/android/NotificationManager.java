@@ -9,15 +9,12 @@ import android.preference.PreferenceManager;
 import com.parse.ParsePush;
 import com.parse.ParsePushBroadcastReceiver;
 
-/**
- * Created by rickb014 on 2/15/15.
- */
 public class NotificationManager
         implements SharedPreferences.OnSharedPreferenceChangeListener {
 
     public static final String TAG = "NotificationManager";
     public static final String CHANNEL_LISTEN_LIVE = "sandbox_listenLive";
-    private static NotificationManager INSTANCE = null;
+    private static NotificationManager instance = null;
 
     protected NotificationManager(Application application) {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(application);
@@ -28,13 +25,9 @@ public class NotificationManager
         }
     }
 
-    public static NotificationManager getInstance() {
-        return INSTANCE;
-    }
-
     public static void setupInstance(Application application) {
-        if (INSTANCE == null) {
-            INSTANCE = new NotificationManager(application);
+        if (instance == null) {
+            instance = new NotificationManager(application);
         }
     }
 

@@ -12,10 +12,9 @@ import org.json.JSONObject;
 
 import java.util.HashMap;
 
-/**
- * Created by rickb014 on 2/22/15.
- */
 public class FeedbackManager {
+    public static final FeedbackManager instance = new FeedbackManager();
+
     public final static String TAG = "kpcc.FeedbackManager";
     public final static String TYPE_BUG = "bug";
     public final static String TYPE_SUGGESTION = "suggestion";
@@ -41,13 +40,12 @@ public class FeedbackManager {
             "Android Version: %s\n" +
             "Device: %s %s %s\n" +
             "App Version: %s (%s)";
-    private static FeedbackManager INSTANCE = null;
     private HashMap<String, String> mHeaders = new HashMap<>();
 
     protected FeedbackManager() {
         // Currently using bricker88@gmail.com account.
-        String email = AppConfiguration.getInstance().getConfig("desk.email");
-        String password = AppConfiguration.getInstance().getConfig("desk.password");
+        String email = AppConfiguration.instance.getConfig("desk.email");
+        String password = AppConfiguration.instance.getConfig("desk.password");
 
         // The setBasicAuth method doesn't build the header correctly for this, so we have
         // to do it manually.
@@ -57,16 +55,6 @@ public class FeedbackManager {
 
         mHeaders.put("Content-Type", CONTENT_TYPE);
         mHeaders.put("Accept", CONTENT_TYPE);
-    }
-
-    public static void setupInstance() {
-        if (INSTANCE == null) {
-            INSTANCE = new FeedbackManager();
-        }
-    }
-
-    public static FeedbackManager getInstance() {
-        return INSTANCE;
     }
 
     private void searchCustomer(final String customerEmail,

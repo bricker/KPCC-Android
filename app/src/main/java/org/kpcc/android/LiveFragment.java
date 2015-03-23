@@ -2,7 +2,6 @@ package org.kpcc.android;
 
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -17,28 +16,22 @@ import org.json.JSONObject;
 import org.kpcc.api.ScheduleOccurrence;
 
 import java.util.Date;
+import java.util.concurrent.TimeUnit;
 
 
-/**
- * A simple {@link Fragment} subclass.
- * Use the {@link LiveFragment#newInstance} factory method to
- * create an instance of this fragment.
- */
 public class LiveFragment extends Fragment {
     public final static String TAG = "LiveFragment";
+    private static long PLAY_START = 0;
 
     private TextView mTitle;
     private TextView mStatus;
     private NetworkImageView mBackground;
     private NetworkImageView mAdView;
+    private String mScheduleTitle;
+    private StreamManager.LiveStream mPlayer;
 
     public LiveFragment() {
         // Required empty public constructor
-    }
-
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
     }
 
     @Override
@@ -66,56 +59,71 @@ public class LiveFragment extends Fragment {
 
                     // It may be null, if nothing is on right now according to the API.
                     if (schedule != null) {
-                        mTitle.setText(schedule.getTitle());
+                        mScheduleTitle = schedule.title;
+                        mTitle.setText(schedule.title);
 
                         // If we're before this occurrence's 'soft start', then say "up next".
                         // Otherwise, set "On Now".
-                        Date softStartsAt = schedule.getSoftStartsAt();
+                        Date softStartsAt = schedule.softStartsAt;
                         if (softStartsAt != null && new Date().getTime() < softStartsAt.getTime()) {
                             mStatus.setText(R.string.up_next);
                         } else {
                             mStatus.setText(R.string.on_now);
                         }
 
-                        NetworkImageManager.getInstance().setBackgroundImage(mBackground, schedule.getProgramSlug());
+                        NetworkImageManager.instance.setBackgroundImage(mBackground, schedule.programSlug);
                     } else {
                         mStatus.setText(R.string.live);
-                        NetworkImageManager.getInstance().setDefaultBackgroundImage(mBackground);
+                        NetworkImageManager.instance.setDefaultBackgroundImage(mBackground);
                     }
 
 
                 } catch (JSONException e) {
-                    Log.d(TAG, "JSON Error");
                     // TODO: Handle failures
-                    e.printStackTrace();
                 }
             }
         }, new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {
-                Log.d(TAG, "API Error");
                 // TODO: Handle failures
             }
         });
 
         final AudioButtonManager audioButtonManager = new AudioButtonManager(view);
+        final StreamManager sm = activity.streamManager;
+        boolean alreadyPlaying = false;
 
-        StreamManager streamManager = activity.getStreamManager();
-        if (streamManager != null && streamManager.isPlaying(StreamManager.LIVESTREAM_URL)) {
-            audioButtonManager.togglePlayingForStop();
-        } else {
+        if (sm != null) {
+            StreamManager.LiveStream currentPlayer = sm.currentLivePlayer;
+
+            if (currentPlayer != null && currentPlayer.isPlaying()) {
+                mPlayer = currentPlayer;
+
+                alreadyPlaying = true;
+                audioButtonManager.togglePlayingForStop();
+            }
+        }
+
+        if (!alreadyPlaying) {
             audioButtonManager.toggleStopped();
         }
 
         audioButtonManager.getPlayButton().setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (activity.getStreamManager().isPlayingPreroll()) {
+                if (sm != null && sm.currentPrerollPlayer != null) {
                     // Preroll was Paused - start it again.
-                    activity.getStreamManager().resumePreroll(audioButtonManager);
+                    activity.streamManager.currentPrerollPlayer.start();
                 } else {
+                    // We should always set a new mPlayer here. If the play button was clicked,
+                    // either it was handled by the preroll case above or the previous
+                    // stream was destroyed.
+                    mPlayer = new StreamManager.LiveStream(activity, audioButtonManager, mAdView);
+
                     // Preroll will be handled normally
-                    activity.getStreamManager().playLiveStream(activity, audioButtonManager, mAdView);
+                    mPlayer.playWithPrerollAttempt();
+                    PLAY_START = System.currentTimeMillis();
+                    logLiveStreamEvent(AnalyticsManager.EVENT_LIVE_STREAM_PLAY);
                 }
             }
         });
@@ -123,19 +131,45 @@ public class LiveFragment extends Fragment {
         audioButtonManager.getPauseButton().setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                // In this view, only Preroll can be paused.
-                activity.getStreamManager().pausePreroll(audioButtonManager);
+                if (activity.streamManager.currentPrerollPlayer != null) {
+                    // In this view, only Preroll can be paused.
+                    activity.streamManager.currentPrerollPlayer.pause();
+                }
             }
         });
 
         audioButtonManager.getStopButton().setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                // In this view, only the Stream can be stopped.
-                activity.getStreamManager().stop(audioButtonManager);
+                if (activity.streamManager.currentLivePlayer != null) {
+                    // In this view, only the Stream can be stopped.
+                    // We want to release it immediately too.
+                    activity.streamManager.currentLivePlayer.stop();
+                    logLiveStreamEvent(AnalyticsManager.EVENT_LIVE_STREAM_PAUSE);
+                }
             }
         });
 
         return view;
+    }
+
+
+    private void logLiveStreamEvent(String key) {
+        JSONObject params = new JSONObject();
+
+        try {
+            params.put("programTitle", mScheduleTitle);
+
+            if (key.equals(AnalyticsManager.EVENT_LIVE_STREAM_PAUSE)) {
+                if (PLAY_START != 0) {
+                    long seconds = TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis() - PLAY_START);
+                    params.put("sessionLengthInSeconds", seconds);
+                }
+            }
+        } catch (JSONException e) {
+            // No program title will be sent.
+        }
+
+        AnalyticsManager.instance.logEvent(key, params);
     }
 }

@@ -129,7 +129,7 @@ public class FeedbackFragment extends Fragment {
                     return;
                 }
 
-                FeedbackManager.getInstance().sendFeedback(type, comments, name, email,
+                FeedbackManager.instance.sendFeedback(type, comments, name, email,
                         new FeedbackManager.FeedbackCallback() {
                             @Override
                             public void onSuccess() {

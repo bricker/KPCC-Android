@@ -21,27 +21,25 @@ public class MainActivity extends ActionBarActivity
 
     public final static String TAG = "kpcc.MainActivity";
     private static final String DONATE_URL = "https://scprcontribute.publicradio.org/contribute.php";
-
+    public StreamManager streamManager;
     /**
      * Fragment managing the behaviors, interactions and presentation of the navigation drawer.
      */
     private NavigationDrawerFragment mNavigationDrawerFragment;
-
-    private StreamManager mStreamManager;
     private boolean mBound = false;
     private ServiceConnection mConnection = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName className,
                                        IBinder service) {
             StreamManager.LocalBinder binder = (StreamManager.LocalBinder) service;
-            mStreamManager = binder.getService();
+            streamManager = binder.getService();
             mBound = true;
         }
 
         @Override
         public void onServiceDisconnected(ComponentName arg0) {
             if (mBound) {
-                mStreamManager.release();
+                streamManager.releaseAllActiveStreams();
             }
 
             mBound = false;
@@ -50,7 +48,8 @@ public class MainActivity extends ActionBarActivity
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        Navigation.getInstance().addItem(0, R.string.kpcc_live, R.drawable.menu_antenna,
+        Navigation.instance.addItem(0, R.string.kpcc_live, R.drawable.menu_antenna,
+                AnalyticsManager.EVENT_MENU_SELECTION_LIVE_STREAM,
                 new Navigation.NavigationItemSelectedCallback() {
                     public void perform(FragmentManager fm) {
                         FragmentTransaction trans = fm.beginTransaction();
@@ -60,7 +59,8 @@ public class MainActivity extends ActionBarActivity
                 }
         );
 
-        Navigation.getInstance().addItem(1, R.string.programs, R.drawable.menu_microphone,
+        Navigation.instance.addItem(1, R.string.programs, R.drawable.menu_microphone,
+                AnalyticsManager.EVENT_MENU_SELECTION_PROGRAMS,
                 new Navigation.NavigationItemSelectedCallback() {
                     public void perform(FragmentManager fm) {
                         FragmentTransaction trans = fm.beginTransaction();
@@ -70,7 +70,8 @@ public class MainActivity extends ActionBarActivity
                 }
         );
 
-        Navigation.getInstance().addItem(2, R.string.headlines, R.drawable.menu_glasses,
+        Navigation.instance.addItem(2, R.string.headlines, R.drawable.menu_glasses,
+                AnalyticsManager.EVENT_MENU_SELECTION_HEADLINES,
                 new Navigation.NavigationItemSelectedCallback() {
                     public void perform(FragmentManager fm) {
                         FragmentTransaction trans = fm.beginTransaction();
@@ -80,7 +81,8 @@ public class MainActivity extends ActionBarActivity
                 }
         );
 
-        Navigation.getInstance().addItem(3, R.string.donate, R.drawable.menu_heart_plus,
+        Navigation.instance.addItem(3, R.string.donate, R.drawable.menu_heart_plus,
+                AnalyticsManager.EVENT_MENU_SELECTION_DONATE,
                 new Navigation.NavigationItemSelectedCallback() {
                     public void perform(FragmentManager fm) {
                         Uri uri = Uri.parse(DONATE_URL);
@@ -93,7 +95,8 @@ public class MainActivity extends ActionBarActivity
                 }
         );
 
-        Navigation.getInstance().addItem(4, R.string.feedback, R.drawable.menu_feedback,
+        Navigation.instance.addItem(4, R.string.feedback, R.drawable.menu_feedback,
+                AnalyticsManager.EVENT_MENU_SELECTION_FEEDBACK,
                 new Navigation.NavigationItemSelectedCallback() {
                     public void perform(FragmentManager fm) {
                         FragmentTransaction trans = fm.beginTransaction();
@@ -103,7 +106,8 @@ public class MainActivity extends ActionBarActivity
                 }
         );
 
-        Navigation.getInstance().addItem(5, R.string.settings, R.drawable.menu_settings,
+        Navigation.instance.addItem(5, R.string.settings, R.drawable.menu_settings,
+                AnalyticsManager.EVENT_MENU_SELECTION_SETTINGS,
                 new Navigation.NavigationItemSelectedCallback() {
                     public void perform(FragmentManager fm) {
                         FragmentTransaction trans = fm.beginTransaction();
@@ -147,14 +151,10 @@ public class MainActivity extends ActionBarActivity
 
     @Override
     public void onNavigationDrawerItemSelected(int position) {
-        Navigation.NavigationItem item = Navigation.getInstance().getItem(position);
+        Navigation.NavigationItem item = Navigation.instance.navigationItems[position];
 
         // update the main content by replacing fragments
         item.performCallback(this);
-    }
-
-    public StreamManager getStreamManager() {
-        return mStreamManager;
     }
 
     public boolean streamIsBound() {
@@ -180,7 +180,7 @@ public class MainActivity extends ActionBarActivity
 
     @Override
     protected void onDestroy() {
-        AnalyticsManager.getInstance().flush();
+        AnalyticsManager.instance.flush();
         super.onDestroy();
     }
 }

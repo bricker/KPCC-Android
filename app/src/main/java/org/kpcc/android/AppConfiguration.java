@@ -11,7 +11,7 @@ import java.util.Properties;
 
 public class AppConfiguration {
     public static final String TAG = "AppConfiguration";
-    private static AppConfiguration INSTANCE = null;
+    public static AppConfiguration instance = null;
 
     private Properties props;
 
@@ -30,13 +30,9 @@ public class AppConfiguration {
     }
 
     public static void setupInstance(Context context) {
-        if (INSTANCE == null) {
-            INSTANCE = new AppConfiguration(context);
+        if (instance == null) {
+            instance = new AppConfiguration(context);
         }
-    }
-
-    public static AppConfiguration getInstance() {
-        return INSTANCE;
     }
 
     public String getConfig(String config) {

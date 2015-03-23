@@ -12,7 +12,6 @@ public abstract class Entity {
     public final static String PROP_PUBLIC_URL = "public_url";
     public final static String PROP_URL = "url";
     public final static String PROP_DURATION = "duration";
-    public final static String PROP_FILESIZE = "filesize";
     public final static String PROP_AIR_DATE = "air_date";
     public final static String PROP_STARTS_AT = "starts_at";
     public final static String PROP_ENDS_AT = "ends_at";
@@ -32,6 +31,10 @@ public abstract class Entity {
     }
 
     protected static String parseHumanDate(Date date) {
+        if (date == null) {
+            return null;
+        }
+
         return new SimpleDateFormat(HUMAN_DATE_FORMAT, Locale.US).format(date);
     }
 
@@ -42,7 +45,6 @@ public abstract class Entity {
             isoDate = sdf.parse(isoDateString);
         } catch (ParseException e) {
             // TODO: Handle exception
-            e.printStackTrace();
         }
 
         return isoDate;

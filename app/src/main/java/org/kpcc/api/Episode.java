@@ -17,21 +17,23 @@ public class Episode extends Entity
     // API Client
     public final static BaseApiClient Client = new BaseApiClient(ENDPOINT);
 
-    private String mTitle;
-    private Date mAirDate;
-    private String mFormattedAirDate;
-    private String mPublicUrl;
-    private Audio mAudio;
-    private ArrayList<Segment> mSegments = new ArrayList<>();
+    public String title;
+    public Date airDate;
+    public String formattedAirDate;
+    public String publicUrl;
+    public Audio audio;
+    public ArrayList<Segment> segments = new ArrayList<>();
 
     public static Episode buildFromJson(JSONObject jsonEpisode) {
         Episode episode = new Episode();
 
         try {
-            episode.setTitle(jsonEpisode.getString(PROP_TITLE));
-            episode.setAirDate(parseISODate(jsonEpisode.getString(PROP_AIR_DATE)));
+            episode.title = jsonEpisode.getString(PROP_TITLE);
+            episode.airDate = parseISODate(jsonEpisode.getString(PROP_AIR_DATE));
+            episode.formattedAirDate = parseHumanDate(episode.airDate);
+
             // URL is unique so we'll use it as ID too.
-            episode.setPublicUrl(jsonEpisode.getString(PROP_PUBLIC_URL));
+            episode.publicUrl = jsonEpisode.getString(PROP_PUBLIC_URL);
 
             // It's possible an episode will exist without audio. This will probably happen
             // when the show is split into segments.
@@ -41,7 +43,7 @@ public class Episode extends Entity
                 // This app only uses the first audio.
                 JSONObject audioJson = audiosJson.getJSONObject(0);
                 if (audioJson != null) {
-                    episode.setAudio(Audio.buildFromJson(audioJson));
+                    episode.audio = Audio.buildFromJson(audioJson);
                 }
             } else {
                 // For this app, episodes and segments are treated exactly the same.
@@ -50,13 +52,12 @@ public class Episode extends Entity
                 JSONArray jsonSegments = jsonEpisode.getJSONArray(Segment.PLURAL_KEY);
                 for (int i = 0; i < jsonSegments.length(); i++) {
                     JSONObject segmentJson = jsonSegments.getJSONObject(i);
-                    episode.addSegment(Segment.buildFromJson(segmentJson));
+                    episode.segments.add(Segment.buildFromJson(segmentJson));
                 }
             }
 
         } catch (JSONException e) {
             // TODO: Handle exception
-            e.printStackTrace();
         }
 
         return episode;
@@ -65,68 +66,18 @@ public class Episode extends Entity
     public static Episode buildFromSegment(Segment segment) {
         Episode episode = new Episode();
 
-        episode.setTitle(segment.getTitle());
-        episode.setAirDate(segment.getPublishedAt());
-        episode.setPublicUrl(segment.getPublicUrl());
-        episode.setAudio(segment.getAudio());
+        episode.title = segment.title;
+        episode.airDate = segment.publishedAt;
+        episode.publicUrl = segment.publicUrl;
+        episode.audio = segment.audio;
+        episode.formattedAirDate = parseHumanDate(episode.airDate);
 
         return episode;
     }
 
-    public String getTitle() {
-        return mTitle;
-    }
-
-    public void setTitle(String title) {
-        mTitle = title;
-    }
-
-
-    public Date getAirDate() {
-        return mAirDate;
-    }
-
-    public void setAirDate(Date airDate) {
-        mAirDate = airDate;
-    }
-
-
-    public String getFormattedAirDate() {
-        if (mFormattedAirDate == null && getAirDate() != null) {
-            mFormattedAirDate = parseHumanDate(getAirDate());
-        }
-
-        return mFormattedAirDate;
-    }
-
-    public String getPublicUrl() {
-        return mPublicUrl;
-    }
-
-    public void setPublicUrl(String publicUrl) {
-        mPublicUrl = publicUrl;
-    }
-
-
-    public Audio getAudio() {
-        return mAudio;
-    }
-
-    public void setAudio(Audio audio) {
-        mAudio = audio;
-    }
-
-    public ArrayList<Segment> getSegments() {
-        return mSegments;
-    }
-
-    public void addSegment(Segment segment) {
-        mSegments.add(segment);
-    }
-
     @Override
     public int compareTo(@NonNull Episode otherEpisode) {
-        return -getAirDate().compareTo(otherEpisode.getAirDate());
+        return -airDate.compareTo(otherEpisode.airDate);
     }
 
 }

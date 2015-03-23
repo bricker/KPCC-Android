@@ -4,11 +4,11 @@ import android.app.Application;
 import android.content.pm.PackageManager;
 import android.preference.PreferenceManager;
 
+import com.parse.Parse;
+import com.parse.ParseInstallation;
+
 import uk.co.chrisjenx.calligraphy.CalligraphyConfig;
 
-/**
- * Created by rickb014 on 2/15/15.
- */
 public class KPCCApplication extends Application {
     public static long INSTALLATION_TIME = 0;
 
@@ -21,16 +21,18 @@ public class KPCCApplication extends Application {
         }
 
         // The order of these is important.
-        // Can we move these to static initializers? Probably not, because the order
-        // of these honors dependencies and needs to stay intact.
         AppConfiguration.setupInstance(this);
         HttpRequest.Manager.setupInstance(this);
-        NetworkImageManager.setupInstance();
-        ParseManager.setupInstance(this);
         AnalyticsManager.setupInstance(this);
+
+        Parse.initialize(this,
+                AppConfiguration.instance.getConfig("parse.applicationId"),
+                AppConfiguration.instance.getConfig("parse.clientKey")
+        );
+        ParseInstallation.getCurrentInstallation().saveInBackground();
+
+        // Parse must be initialized first.
         NotificationManager.setupInstance(this);
-        FeedbackManager.setupInstance();
-        ProgramsManager.setupInstance();
 
         super.onCreate();
 
@@ -39,6 +41,7 @@ public class KPCCApplication extends Application {
                         .setFontAttrId(R.attr.fontPath)
                         .build()
         );
+
         PreferenceManager.setDefaultValues(this, R.xml.preferences, true);
     }
 }
