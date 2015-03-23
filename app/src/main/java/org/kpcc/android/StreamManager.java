@@ -45,27 +45,19 @@ public class StreamManager extends Service {
         return mBinder;
     }
 
-    public static class EpisodeStream {
-        public String audioUrl;
-        private MediaPlayer mAudioPlayer = new MediaPlayer();
-        private MainActivity mActivity;
-        private EpisodeFragment.EpisodeAudioCompletionCallback mCompletionCallback;
-        private AudioManager mAudioManager;
-        private AtomicBoolean mIsDucking = new AtomicBoolean(false);
-        private float mPreviousVolume = 0;
-        private AudioManager.OnAudioFocusChangeListener mAfChangeListener;
-        private ProgressObserver mProgressObserver;
-        private boolean isPaused = false;
-        private AudioEventListener mAudioEventListener;
+    public static class AudioFocusNotGrantedException extends Exception {
+    }
 
-        public EpisodeStream(String audioUrl,
-                             Context context,
-                             EpisodeFragment.EpisodeAudioCompletionCallback completionCallback) {
+    public abstract static class BaseStream {
+        public MediaPlayer audioPlayer;
+        protected MainActivity mActivity;
+        protected AudioManager mAudioManager;
+        protected AtomicBoolean mIsDucking = new AtomicBoolean(false);
+        protected AudioManager.OnAudioFocusChangeListener mAfChangeListener;
 
-            mAudioPlayer = new MediaPlayer();
-            mAudioPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
-            this.audioUrl = audioUrl;
-            mCompletionCallback = completionCallback;
+        public BaseStream(Context context) {
+            audioPlayer = new MediaPlayer();
+            audioPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
             mActivity = (MainActivity) context;
             mAudioManager = (AudioManager) mActivity.getSystemService(Context.AUDIO_SERVICE);
 
@@ -74,25 +66,99 @@ public class StreamManager extends Service {
                 public void onAudioFocusChange(int focusChange) {
                     switch (focusChange) {
                         case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK:
-                            duckStream();
+                            audioFocusLossTransientCanDuck();
                             break;
                         case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT:
-                            pause();
+                            audioFocusLossTransient();
                             break;
                         case AudioManager.AUDIOFOCUS_GAIN:
-                            if (mIsDucking.get() && mAudioPlayer.isPlaying()) {
-                                unduckStream();
-                            } else {
-                                start();
-                            }
+                            audioFocusGain();
                             break;
                         case AudioManager.AUDIOFOCUS_LOSS:
-                            release();
-                            mAudioManager.abandonAudioFocus(this);
+                            audioFocusLoss();
                             break;
                     }
                 }
             };
+        }
+
+        public abstract void start();
+
+        public abstract void stop();
+
+        public abstract void pause();
+
+        public abstract void release();
+
+        public boolean isPlaying() {
+            return audioPlayer.isPlaying();
+        }
+
+        protected void requestAudioFocus() throws AudioFocusNotGrantedException {
+            int result = mAudioManager.requestAudioFocus(mAfChangeListener,
+                    AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN);
+
+            if (result != AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
+                throw new AudioFocusNotGrantedException();
+            }
+        }
+
+        protected void audioFocusLossTransientCanDuck() {
+            duckStream();
+        }
+
+        protected void audioFocusLossTransient() {
+            pause();
+        }
+
+        protected void audioFocusGain() {
+            if (mIsDucking.get() && audioPlayer.isPlaying()) {
+                unduckStream();
+            } else {
+                start();
+            }
+        }
+
+        protected void audioFocusLoss() {
+            release();
+            mAudioManager.abandonAudioFocus(mAfChangeListener);
+        }
+
+        protected void duckStream() {
+            if (!mIsDucking.get()) {
+                mIsDucking.set(true);
+
+                if (audioPlayer.isPlaying()) {
+                    audioPlayer.setVolume(0.25f, 0.25f);
+                }
+            }
+        }
+
+        protected void unduckStream() {
+            if (mIsDucking.get()) {
+                mIsDucking.set(false);
+
+                if (audioPlayer.isPlaying()) {
+                    audioPlayer.setVolume(1.0f, 1.0f);
+                }
+            }
+        }
+    }
+
+    public static class EpisodeStream extends BaseStream {
+        public String audioUrl;
+        private EpisodeFragment.EpisodeAudioCompletionCallback mCompletionCallback;
+        private ProgressObserver mProgressObserver;
+        private boolean isPaused = false;
+        private AudioEventListener mAudioEventListener;
+
+        public EpisodeStream(String audioUrl,
+                             Context context,
+                             EpisodeFragment.EpisodeAudioCompletionCallback completionCallback) {
+
+            super(context);
+            this.audioUrl = audioUrl;
+            mCompletionCallback = completionCallback;
 
             if (mActivity.streamManager != null) {
                 mActivity.streamManager.currentEpisodePlayer = this;
@@ -103,7 +169,7 @@ public class StreamManager extends Service {
             mAudioEventListener = eventListener;
 
             stopProgressObserver();
-            mProgressObserver = new StreamManager.ProgressObserver(mAudioPlayer, mAudioEventListener);
+            mProgressObserver = new StreamManager.ProgressObserver(audioPlayer, mAudioEventListener);
             startProgressObserver();
         }
 
@@ -117,22 +183,21 @@ public class StreamManager extends Service {
 
             mAudioEventListener.onLoading();
 
-            int result = mAudioManager.requestAudioFocus(mAfChangeListener,
-                    AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN);
-
-            if (result != AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
+            try {
+                requestAudioFocus();
+            } catch (AudioFocusNotGrantedException e) {
                 // TODO: Show an error
                 return;
             }
 
             try {
-                mAudioPlayer.setDataSource(audioUrl);
+                audioPlayer.setDataSource(audioUrl);
             } catch (IOException e) {
                 // TODO: Handle errors
                 return;
             }
 
-            mAudioPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+            audioPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
                 @Override
                 public void onCompletion(MediaPlayer mp) {
                     mCompletionCallback.onCompletion();
@@ -140,7 +205,7 @@ public class StreamManager extends Service {
                 }
             });
 
-            mAudioPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
+            audioPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
                 @Override
                 public void onPrepared(MediaPlayer mp) {
                     start();
@@ -148,44 +213,44 @@ public class StreamManager extends Service {
                 }
             });
 
-            mAudioPlayer.prepareAsync();
-        }
-
-        public boolean isPlaying() {
-            return mAudioPlayer.isPlaying();
+            audioPlayer.prepareAsync();
         }
 
         public long getCurrentPosition() {
-            return mAudioPlayer.getCurrentPosition();
+            return audioPlayer.getCurrentPosition();
         }
 
+        @Override
         public void start() {
             mAudioEventListener.onPlay();
             startProgressObserver();
             isPaused = false;
-            mAudioPlayer.start();
+            audioPlayer.start();
         }
 
+        @Override
         public void pause() {
             mAudioEventListener.onPause();
             stopProgressObserver();
             isPaused = true;
-            mAudioPlayer.pause();
+            audioPlayer.pause();
         }
 
+        @Override
         public void stop() {
             mAudioEventListener.onStop();
             stopProgressObserver();
-            mAudioPlayer.stop();
+            audioPlayer.stop();
         }
 
+        @Override
         public void release() {
             if (mActivity.streamManager.currentEpisodePlayer == this) {
                 mActivity.streamManager.currentEpisodePlayer = null;
             }
 
             stop();
-            mAudioPlayer.release();
+            audioPlayer.release();
         }
 
         private void startProgressObserver() {
@@ -196,28 +261,6 @@ public class StreamManager extends Service {
         private void stopProgressObserver() {
             if (mProgressObserver != null) {
                 mProgressObserver.stop();
-            }
-        }
-
-        private void duckStream() {
-            if (!mIsDucking.get()) {
-                mIsDucking.set(true);
-                mPreviousVolume = mAudioManager.getStreamVolume(AudioManager.STREAM_MUSIC);
-
-                if (mAudioPlayer.isPlaying()) {
-                    mAudioPlayer.setVolume(mPreviousVolume / 2, mPreviousVolume / 2);
-                }
-            }
-        }
-
-        private void unduckStream() {
-            if (mIsDucking.get()) {
-                mIsDucking.set(false);
-
-                if (mAudioPlayer.isPlaying()) {
-                    mAudioPlayer.setVolume(mPreviousVolume, mPreviousVolume);
-                    mPreviousVolume = 0;
-                }
             }
         }
 
@@ -234,55 +277,21 @@ public class StreamManager extends Service {
         }
     }
 
-    public static class LiveStream {
+    public static class LiveStream extends BaseStream {
         // We get preroll directly from Triton so we always use the skip-preroll url.
         public final static String LIVESTREAM_URL = "http://live.scpr.org/kpcclive?preskip=true";
         private final static String PREF_USER_PLAYED_LIVESTREAM = "live_stream_played";
 
-        public MediaPlayer audioPlayer = new MediaPlayer();
-        private MainActivity mActivity;
         private AudioButtonManager mAudioButtonManager;
         private NetworkImageView mAdView;
-        private AudioManager mAudioManager;
-        private AtomicBoolean mIsDucking = new AtomicBoolean(false);
-        private float mPreviousVolume = 0;
-        private AudioManager.OnAudioFocusChangeListener mAfChangeListener;
 
         public LiveStream(Context context,
                           AudioButtonManager audioButtonManager,
                           NetworkImageView adView) {
+            super(context);
 
-            audioPlayer = new MediaPlayer();
-            audioPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
-            mActivity = (MainActivity) context;
             mAudioButtonManager = audioButtonManager;
             mAdView = adView;
-            mAudioManager = (AudioManager) mActivity.getSystemService(Context.AUDIO_SERVICE);
-
-            mAfChangeListener = new AudioManager.OnAudioFocusChangeListener() {
-                @Override
-                public void onAudioFocusChange(int focusChange) {
-                    switch (focusChange) {
-                        case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK:
-                            duckStream();
-                            break;
-                        case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT:
-                            stop();
-                            break;
-                        case AudioManager.AUDIOFOCUS_GAIN:
-                            if (mIsDucking.get() && audioPlayer.isPlaying()) {
-                                unduckStream();
-                            } else {
-                                start();
-                            }
-                            break;
-                        case AudioManager.AUDIOFOCUS_LOSS:
-                            release();
-                            mAudioManager.abandonAudioFocus(this);
-                            break;
-                    }
-                }
-            };
 
             if (mActivity.streamManager != null) {
                 mActivity.streamManager.currentLivePlayer = this;
@@ -293,10 +302,9 @@ public class StreamManager extends Service {
             if (!mActivity.streamIsBound()) return;
             mAudioButtonManager.toggleLoading();
 
-            int result = mAudioManager.requestAudioFocus(mAfChangeListener,
-                    AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN);
-
-            if (result != AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
+            try {
+                requestAudioFocus();
+            } catch (AudioFocusNotGrantedException e) {
                 // TODO: Show an error
                 return;
             }
@@ -346,15 +354,24 @@ public class StreamManager extends Service {
             }
         }
 
-        public boolean isPlaying() {
-            return audioPlayer.isPlaying();
+        @Override
+        public void start() {
+            mAudioButtonManager.togglePlayingForStop();
+            audioPlayer.start();
         }
 
+        @Override
+        public void pause() {
+            stop();
+        }
+
+        @Override
         public void stop() {
             mAudioButtonManager.toggleStopped();
             audioPlayer.stop();
         }
 
+        @Override
         public void release() {
             // We don't want to call stop here, because in the case where the live stream was
             // stopped and started again in the same screen, the audio focus is lost at the same
@@ -367,11 +384,6 @@ public class StreamManager extends Service {
             }
 
             audioPlayer.release();
-        }
-
-        public void start() {
-            mAudioButtonManager.togglePlayingForStop();
-            audioPlayer.start();
         }
 
         private void prepareAndStart() {
@@ -391,84 +403,27 @@ public class StreamManager extends Service {
                 audioPlayer.prepareAsync();
             } catch (IOException e) {
                 // TODO: Handle errors
-                return;
-            }
-        }
-
-        private void duckStream() {
-            if (!mIsDucking.get()) {
-                mIsDucking.set(true);
-                mPreviousVolume = mAudioManager.getStreamVolume(AudioManager.STREAM_MUSIC);
-
-                if (audioPlayer.isPlaying()) {
-                    audioPlayer.setVolume(mPreviousVolume / 2, mPreviousVolume / 2);
-                }
-            }
-        }
-
-        private void unduckStream() {
-            if (mIsDucking.get()) {
-                mIsDucking.set(false);
-
-                if (audioPlayer.isPlaying()) {
-                    audioPlayer.setVolume(mPreviousVolume, mPreviousVolume);
-                    mPreviousVolume = 0;
-                }
             }
         }
     }
 
-    public static class PrerollStream {
-        private MediaPlayer mAudioPlayer = new MediaPlayer();
-        private MainActivity mActivity;
+    public static class PrerollStream extends BaseStream {
         private NetworkImageView mAdView;
         private AudioButtonManager mAudioButtonManager;
-        private AudioManager mAudioManager;
         private LiveStream mParentStream;
         private PrerollManager.PrerollData mPrerollData;
-        private AtomicBoolean mIsDucking = new AtomicBoolean(false);
-        private float mPreviousVolume = 0;
-        private AudioManager.OnAudioFocusChangeListener mAfChangeListener;
 
         public PrerollStream(Context context,
                              AudioButtonManager audioButtonManager,
                              NetworkImageView adView,
                              PrerollManager.PrerollData prerollData,
                              LiveStream parentStream) {
+            super(context);
 
-            mAudioPlayer = new MediaPlayer();
-            mAudioPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
-            mActivity = (MainActivity) context;
             mParentStream = parentStream;
             mPrerollData = prerollData;
             mAdView = adView;
             mAudioButtonManager = audioButtonManager;
-            mAudioManager = (AudioManager) mActivity.getSystemService(Context.AUDIO_SERVICE);
-
-            mAfChangeListener = new AudioManager.OnAudioFocusChangeListener() {
-                @Override
-                public void onAudioFocusChange(int focusChange) {
-                    switch (focusChange) {
-                        case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK:
-                            duckStream();
-                            break;
-                        case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT:
-                            pause();
-                            break;
-                        case AudioManager.AUDIOFOCUS_GAIN:
-                            if (mIsDucking.get() && mAudioPlayer.isPlaying()) {
-                                unduckStream();
-                            } else {
-                                start();
-                            }
-                            break;
-                        case AudioManager.AUDIOFOCUS_LOSS:
-                            release();
-                            mAudioManager.abandonAudioFocus(this);
-                            break;
-                    }
-                }
-            };
 
             if (mActivity.streamManager != null) {
                 mActivity.streamManager.currentPrerollPlayer = this;
@@ -492,34 +447,33 @@ public class StreamManager extends Service {
                 });
             }
 
-            int result = mAudioManager.requestAudioFocus(mAfChangeListener,
-                    AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN);
-
-            if (result != AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
-                // TODO: Show an error
+            try {
+                requestAudioFocus();
+            } catch (AudioFocusNotGrantedException e) {
+                // TODO: Handle errors
                 return;
             }
 
             try {
-                mAudioPlayer.setDataSource(mPrerollData.audioUrl);
+                audioPlayer.setDataSource(mPrerollData.audioUrl);
             } catch (IOException e) {
                 // TODO: Handle errors
                 return;
             }
 
-            mAudioPlayer.prepareAsync();
+            audioPlayer.prepareAsync();
 
-            mAudioPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
+            audioPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
                 @Override
                 public void onPrepared(MediaPlayer mp) {
                     PrerollManager.LAST_PREROLL_PLAY = System.currentTimeMillis();
                     mActivity.getNavigationDrawerFragment().disableDrawer();
                     start();
-                    mAudioPlayer.setNextMediaPlayer(mParentStream.audioPlayer);
+                    audioPlayer.setNextMediaPlayer(mParentStream.audioPlayer);
                 }
             });
 
-            mAudioPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+            audioPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
                 @Override
                 public void onCompletion(MediaPlayer mp) {
                     mActivity.getNavigationDrawerFragment().enableDrawer();
@@ -532,21 +486,25 @@ public class StreamManager extends Service {
             });
         }
 
+        @Override
         public void start() {
             mAudioButtonManager.togglePlayingForStop();
-            mAudioPlayer.start();
+            audioPlayer.start();
         }
 
+        @Override
         public void pause() {
             mAudioButtonManager.togglePaused();
-            mAudioPlayer.pause();
+            audioPlayer.pause();
         }
 
+        @Override
         public void stop() {
             mAudioButtonManager.toggleStopped();
-            mAudioPlayer.stop();
+            audioPlayer.stop();
         }
 
+        @Override
         public void release() {
             stop();
 
@@ -554,31 +512,8 @@ public class StreamManager extends Service {
                 mActivity.streamManager.currentPrerollPlayer = null;
             }
 
-            mAudioPlayer.release();
+            audioPlayer.release();
         }
-
-        private void duckStream() {
-            if (!mIsDucking.get()) {
-                mIsDucking.set(true);
-                mPreviousVolume = mAudioManager.getStreamVolume(AudioManager.STREAM_MUSIC);
-
-                if (mAudioPlayer.isPlaying()) {
-                    mAudioPlayer.setVolume(mPreviousVolume / 2, mPreviousVolume / 2);
-                }
-            }
-        }
-
-        private void unduckStream() {
-            if (mIsDucking.get()) {
-                mIsDucking.set(false);
-
-                if (mAudioPlayer.isPlaying()) {
-                    mAudioPlayer.setVolume(mPreviousVolume, mPreviousVolume);
-                    mPreviousVolume = 0;
-                }
-            }
-        }
-
     }
 
     public static class ProgressObserver implements Runnable {
