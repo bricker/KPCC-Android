@@ -5,6 +5,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.media.AudioManager;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.IBinder;
@@ -49,6 +51,11 @@ public class MainActivity extends ActionBarActivity
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+
+        Intent intent = new Intent(this, StreamManager.class);
+        bindService(intent, mConnection, Context.BIND_AUTO_CREATE);
+
         Navigation.instance.addItem(0, R.string.kpcc_live, R.drawable.menu_antenna,
                 AnalyticsManager.EVENT_MENU_SELECTION_LIVE_STREAM,
                 new Navigation.NavigationItemSelectedCallback() {
@@ -118,7 +125,6 @@ public class MainActivity extends ActionBarActivity
                 }
         );
 
-        super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         setVolumeControlStream(AudioManager.STREAM_MUSIC);
 
@@ -134,6 +140,13 @@ public class MainActivity extends ActionBarActivity
         mNavigationDrawerFragment.setUp(
                 R.id.navigation_drawer,
                 (DrawerLayout) findViewById(R.id.drawer_layout));
+    }
+
+    public boolean isConnectedToInternet() {
+        ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+
+        NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
+        return activeNetwork != null && activeNetwork.isConnectedOrConnecting();
     }
 
     public NavigationDrawerFragment getNavigationDrawerFragment() {
@@ -164,25 +177,14 @@ public class MainActivity extends ActionBarActivity
     }
 
     @Override
-    protected void onStart() {
-        super.onStart();
-        Intent intent = new Intent(this, StreamManager.class);
-        bindService(intent, mConnection, Context.BIND_AUTO_CREATE);
-    }
-
-    @Override
-    protected void onStop() {
-        super.onStop();
+    protected void onDestroy() {
+        super.onDestroy();
+        AnalyticsManager.instance.flush();
 
         if (mBound) {
+            streamManager.releaseAllActiveStreams();
             unbindService(mConnection);
             mBound = false;
         }
-    }
-
-    @Override
-    protected void onDestroy() {
-        AnalyticsManager.instance.flush();
-        super.onDestroy();
     }
 }

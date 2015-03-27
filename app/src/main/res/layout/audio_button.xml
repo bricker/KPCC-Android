@@ -38,4 +38,13 @@
         android:layout_width="@dimen/audio_button"
         android:layout_height="@dimen/audio_button"
         android:visibility="gone" />
+
+    <TextView
+        android:id="@+id/error_message"
+        android:layout_marginTop="10dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_horizontal"
+        android:text="@string/audio_error"
+        android:visibility="gone" />
 </LinearLayout>

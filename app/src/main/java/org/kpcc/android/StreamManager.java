@@ -1,6 +1,7 @@
 package org.kpcc.android;
 
 import android.app.Service;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -48,12 +49,31 @@ public class StreamManager extends Service {
     public static class AudioFocusNotGrantedException extends Exception {
     }
 
+    public abstract static class AudioEventListener {
+        public abstract void onLoading();
+
+        public abstract void onPlay();
+
+        public abstract void onPause();
+
+        public abstract void onStop();
+
+        public abstract void onProgress(int progress);
+
+        public abstract void onError();
+
+        public void onPrerollData(PrerollManager.PrerollData prerollData) {
+        }
+    }
+
     public abstract static class BaseStream {
         public MediaPlayer audioPlayer;
         protected MainActivity mActivity;
         protected AudioManager mAudioManager;
         protected AtomicBoolean mIsDucking = new AtomicBoolean(false);
         protected AudioManager.OnAudioFocusChangeListener mAfChangeListener;
+        protected AudioEventListener mAudioEventListener;
+        protected ProgressObserver mProgressObserver;
 
         public BaseStream(Context context) {
             audioPlayer = new MediaPlayer();
@@ -80,6 +100,13 @@ public class StreamManager extends Service {
                     }
                 }
             };
+        }
+
+        public void setOnAudioEventListener(AudioEventListener eventListener) {
+            mAudioEventListener = eventListener;
+        }
+
+        public void onPrerollComplete() {
         }
 
         public abstract void start();
@@ -143,14 +170,32 @@ public class StreamManager extends Service {
                 }
             }
         }
+
+        protected void startProgressObserver() {
+            mProgressObserver.start();
+            new Thread(mProgressObserver).start();
+        }
+
+        protected void stopProgressObserver() {
+            if (mProgressObserver != null) {
+                mProgressObserver.stop();
+            }
+        }
+
+        protected void resetProgressObserver() {
+            stopProgressObserver();
+            mProgressObserver = new StreamManager.ProgressObserver(audioPlayer, mAudioEventListener);
+
+            if (audioPlayer.isPlaying()) {
+                startProgressObserver();
+            }
+        }
     }
 
     public static class EpisodeStream extends BaseStream {
         public String audioUrl;
         private EpisodeFragment.EpisodeAudioCompletionCallback mCompletionCallback;
-        private ProgressObserver mProgressObserver;
         private boolean isPaused = false;
-        private AudioEventListener mAudioEventListener;
 
         public EpisodeStream(String audioUrl,
                              Context context,
@@ -160,17 +205,15 @@ public class StreamManager extends Service {
             this.audioUrl = audioUrl;
             mCompletionCallback = completionCallback;
 
-            if (mActivity.streamManager != null) {
+            if (mActivity.streamIsBound()) {
                 mActivity.streamManager.currentEpisodePlayer = this;
             }
         }
 
+        @Override
         public void setOnAudioEventListener(AudioEventListener eventListener) {
             mAudioEventListener = eventListener;
-
-            stopProgressObserver();
-            mProgressObserver = new StreamManager.ProgressObserver(audioPlayer, mAudioEventListener);
-            startProgressObserver();
+            resetProgressObserver();
         }
 
         public void play() {
@@ -186,14 +229,14 @@ public class StreamManager extends Service {
             try {
                 requestAudioFocus();
             } catch (AudioFocusNotGrantedException e) {
-                // TODO: Show an error
+                mAudioEventListener.onError();
                 return;
             }
 
             try {
                 audioPlayer.setDataSource(audioUrl);
             } catch (IOException e) {
-                // TODO: Handle errors
+                mAudioEventListener.onError();
                 return;
             }
 
@@ -249,31 +292,9 @@ public class StreamManager extends Service {
                 mActivity.streamManager.currentEpisodePlayer = null;
             }
 
-            stop();
+            mAudioEventListener.onStop();
+            stopProgressObserver();
             audioPlayer.release();
-        }
-
-        private void startProgressObserver() {
-            mProgressObserver.start();
-            new Thread(mProgressObserver).start();
-        }
-
-        private void stopProgressObserver() {
-            if (mProgressObserver != null) {
-                mProgressObserver.stop();
-            }
-        }
-
-        public abstract static class AudioEventListener {
-            public abstract void onLoading();
-
-            public abstract void onPlay();
-
-            public abstract void onPause();
-
-            public abstract void onStop();
-
-            public abstract void onProgress(int progress);
         }
     }
 
@@ -281,33 +302,27 @@ public class StreamManager extends Service {
         // We get preroll directly from Triton so we always use the skip-preroll url.
         public final static String LIVESTREAM_URL = "http://live.scpr.org/kpcclive?preskip=true";
         private final static String PREF_USER_PLAYED_LIVESTREAM = "live_stream_played";
-
-        private AudioButtonManager mAudioButtonManager;
         private NetworkImageView mAdView;
+        private AudioEventListener mPrerollAudioEventListener;
 
         public LiveStream(Context context,
-                          AudioButtonManager audioButtonManager,
                           NetworkImageView adView) {
             super(context);
-
-            mAudioButtonManager = audioButtonManager;
             mAdView = adView;
 
-            if (mActivity.streamManager != null) {
+            if (mActivity.streamIsBound()) {
                 mActivity.streamManager.currentLivePlayer = this;
             }
         }
 
+        public void setPrerollAudioEventListener(AudioEventListener eventListener) {
+            mPrerollAudioEventListener = eventListener;
+            resetProgressObserver();
+        }
+
         public void playWithPrerollAttempt() {
             if (!mActivity.streamIsBound()) return;
-            mAudioButtonManager.toggleLoading();
-
-            try {
-                requestAudioFocus();
-            } catch (AudioFocusNotGrantedException e) {
-                // TODO: Show an error
-                return;
-            }
+            mAudioEventListener.onLoading();
 
             // If they just installed the app (less than 10 minutes ago), and have never played the live
             // stream, don't play preroll.
@@ -330,19 +345,12 @@ public class StreamManager extends Service {
                         if (prerollData == null || prerollData.audioUrl == null) {
                             prepareAndStart();
                         } else {
-                            audioPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
-                                @Override
-                                public void onPrepared(MediaPlayer mp) {
-                                    // Don't start manually, nextMediaPlayer() will do that for us.
-                                    mAudioButtonManager.togglePlayingForStop();
-                                }
-                            });
-
-                            prepare();
+                            mPrerollAudioEventListener.onPrerollData(prerollData);
 
                             PrerollStream preroll = new PrerollStream(mActivity,
-                                    mAudioButtonManager, mAdView, prerollData, LiveStream.this);
+                                    mAdView, prerollData, LiveStream.this);
 
+                            preroll.setOnAudioEventListener(mPrerollAudioEventListener);
                             preroll.playAndShowAsset();
                         }
                     }
@@ -355,8 +363,13 @@ public class StreamManager extends Service {
         }
 
         @Override
+        public void onPrerollComplete() {
+            prepareAndStart();
+        }
+
+        @Override
         public void start() {
-            mAudioButtonManager.togglePlayingForStop();
+            mAudioEventListener.onPlay();
             audioPlayer.start();
         }
 
@@ -367,7 +380,7 @@ public class StreamManager extends Service {
 
         @Override
         public void stop() {
-            mAudioButtonManager.toggleStopped();
+            mAudioEventListener.onStop();
             audioPlayer.stop();
         }
 
@@ -387,13 +400,19 @@ public class StreamManager extends Service {
         }
 
         private void prepareAndStart() {
+            try {
+                requestAudioFocus();
+            } catch (AudioFocusNotGrantedException e) {
+                mAudioEventListener.onError();
+                return;
+            }
+
             audioPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
                 @Override
                 public void onPrepared(MediaPlayer mp) {
                     start();
                 }
             });
-
             prepare();
         }
 
@@ -402,37 +421,44 @@ public class StreamManager extends Service {
                 audioPlayer.setDataSource(LIVESTREAM_URL);
                 audioPlayer.prepareAsync();
             } catch (IOException e) {
-                // TODO: Handle errors
+                mAudioEventListener.onError();
             }
         }
     }
 
     public static class PrerollStream extends BaseStream {
         private NetworkImageView mAdView;
-        private AudioButtonManager mAudioButtonManager;
-        private LiveStream mParentStream;
+        private BaseStream mParentStream;
         private PrerollManager.PrerollData mPrerollData;
 
         public PrerollStream(Context context,
-                             AudioButtonManager audioButtonManager,
                              NetworkImageView adView,
                              PrerollManager.PrerollData prerollData,
-                             LiveStream parentStream) {
+                             BaseStream parentStream) {
             super(context);
 
             mParentStream = parentStream;
             mPrerollData = prerollData;
             mAdView = adView;
-            mAudioButtonManager = audioButtonManager;
 
-            if (mActivity.streamManager != null) {
+            if (mActivity.streamIsBound()) {
                 mActivity.streamManager.currentPrerollPlayer = this;
             }
+        }
+
+        @Override
+        public void setOnAudioEventListener(AudioEventListener eventListener) {
+            mAudioEventListener = eventListener;
+            resetProgressObserver();
         }
 
         public void playAndShowAsset() {
             if (mPrerollData.assetUrl != null) {
                 NetworkImageManager.instance.setPrerollImage(mAdView, mPrerollData.assetUrl);
+
+                if (mPrerollData.impressionUrl != null) {
+                    HttpRequest.ImpressionRequest.get(mPrerollData.impressionUrl);
+                }
 
                 mAdView.setOnClickListener(new View.OnClickListener() {
                     @Override
@@ -442,6 +468,10 @@ public class StreamManager extends Service {
 
                         if (intent.resolveActivity(mActivity.getPackageManager()) != null) {
                             mActivity.startActivity(intent);
+                        }
+
+                        if (mPrerollData.trackingUrl != null) {
+                            HttpRequest.ImpressionRequest.get(mPrerollData.trackingUrl);
                         }
                     }
                 });
@@ -469,7 +499,6 @@ public class StreamManager extends Service {
                     PrerollManager.LAST_PREROLL_PLAY = System.currentTimeMillis();
                     mActivity.getNavigationDrawerFragment().disableDrawer();
                     start();
-                    audioPlayer.setNextMediaPlayer(mParentStream.audioPlayer);
                 }
             });
 
@@ -478,51 +507,52 @@ public class StreamManager extends Service {
                 public void onCompletion(MediaPlayer mp) {
                     mActivity.getNavigationDrawerFragment().enableDrawer();
                     mAdView.setVisibility(View.GONE);
-                    // Even though we're technically changing the state for the Live Stream,
-                    // and not Preroll, it's the same set of buttons so we can do this here.
-                    release();
-                    mAudioButtonManager.togglePlayingForStop();
+                    mParentStream.onPrerollComplete();
                 }
             });
         }
 
         @Override
         public void start() {
-            mAudioButtonManager.togglePlayingForStop();
+            mAudioEventListener.onPlay();
+            startProgressObserver();
             audioPlayer.start();
         }
 
         @Override
         public void pause() {
-            mAudioButtonManager.togglePaused();
+            mAudioEventListener.onPause();
+            stopProgressObserver();
             audioPlayer.pause();
         }
 
         @Override
         public void stop() {
-            mAudioButtonManager.toggleStopped();
+            mAudioEventListener.onStop();
+            stopProgressObserver();
             audioPlayer.stop();
         }
 
         @Override
         public void release() {
-            stop();
-
             if (mActivity.streamManager.currentPrerollPlayer == this) {
                 mActivity.streamManager.currentPrerollPlayer = null;
             }
 
+            mAudioEventListener.onStop();
+            stopProgressObserver();
             audioPlayer.release();
         }
     }
+
 
     public static class ProgressObserver implements Runnable {
         private AtomicBoolean mIsObserving = new AtomicBoolean(false);
         private Handler mHandler = new Handler();
         private MediaPlayer mMediaPlayer;
-        private EpisodeStream.AudioEventListener mAudioEventListener;
+        private AudioEventListener mAudioEventListener;
 
-        public ProgressObserver(MediaPlayer mediaPlayer, EpisodeStream.AudioEventListener eventListener) {
+        public ProgressObserver(MediaPlayer mediaPlayer, AudioEventListener eventListener) {
             mMediaPlayer = mediaPlayer;
             mAudioEventListener = eventListener;
         }
@@ -556,9 +586,17 @@ public class StreamManager extends Service {
 
                     Thread.sleep(1000);
                 } catch (InterruptedException e) {
-                    // TODO: Handle Errors
+                    // If the progress observer fails, just stop the observer.
+                    mIsObserving.set(false);
                 }
             }
+        }
+    }
+
+    public static class ConnectivityBroadcastReceiver extends BroadcastReceiver {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+
         }
     }
 

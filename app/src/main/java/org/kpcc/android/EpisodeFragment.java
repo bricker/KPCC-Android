@@ -112,69 +112,77 @@ public class EpisodeFragment extends Fragment {
         final AudioButtonManager audioButtonManager = new AudioButtonManager(view);
         boolean alreadyPlaying = false;
 
-        // TODO: Check if streamManager is null
-        StreamManager.EpisodeStream currentPlayer = activity.streamManager.currentEpisodePlayer;
-        if (currentPlayer != null && currentPlayer.audioUrl.equals(mAudioUrl) && currentPlayer.isPlaying()) {
-            mPlayer = currentPlayer;
-            alreadyPlaying = true;
-            audioButtonManager.togglePlayingForPause();
-
-            // Audio should be released when next one starts, based on Audio Focus rules.
-        }
-
-        if (mPlayer == null) {
-            mPlayer = new StreamManager.EpisodeStream(mAudioUrl, activity, new EpisodeAudioCompletionCallback());
-        }
-
-        audioButtonManager.getPlayButton().setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                mPlayer.play();
-                logEpisodeStreamEvent(activity, AnalyticsManager.EVENT_ON_DEMAND_BEGAN);
-            }
-        });
-
-        audioButtonManager.getPauseButton().setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                mPlayer.pause();
-                // The key discrepancy is for parity with the iOS app.
-                logEpisodeStreamEvent(activity, AnalyticsManager.EVENT_ON_DEMAND_PAUSED);
-            }
-        });
-
-        mPlayer.setOnAudioEventListener(new StreamManager.EpisodeStream.AudioEventListener() {
-            @Override
-            public void onLoading() {
-                audioButtonManager.toggleLoading();
-            }
-
-            @Override
-            public void onPlay() {
+        if (!activity.streamIsBound()) {
+            // TODO: Handle error for no stream manager available.
+        } else {
+            StreamManager.EpisodeStream currentPlayer = activity.streamManager.currentEpisodePlayer;
+            if (currentPlayer != null && currentPlayer.audioUrl.equals(mAudioUrl) && currentPlayer.isPlaying()) {
+                mPlayer = currentPlayer;
+                alreadyPlaying = true;
                 audioButtonManager.togglePlayingForPause();
+
+                // Audio should be released when next one starts, based on Audio Focus rules.
             }
 
-            @Override
-            public void onPause() {
-                audioButtonManager.togglePaused();
+            if (mPlayer == null) {
+                mPlayer = new StreamManager.EpisodeStream(mAudioUrl, activity, new EpisodeAudioCompletionCallback());
             }
 
-            @Override
-            public void onStop() {
+            audioButtonManager.getPlayButton().setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    mPlayer.play();
+                    logEpisodeStreamEvent(activity, AnalyticsManager.EVENT_ON_DEMAND_BEGAN);
+                }
+            });
+
+            audioButtonManager.getPauseButton().setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    mPlayer.pause();
+                    // The key discrepancy is for parity with the iOS app.
+                    logEpisodeStreamEvent(activity, AnalyticsManager.EVENT_ON_DEMAND_PAUSED);
+                }
+            });
+
+            mPlayer.setOnAudioEventListener(new StreamManager.AudioEventListener() {
+                @Override
+                public void onLoading() {
+                    audioButtonManager.toggleLoading();
+                }
+
+                @Override
+                public void onPlay() {
+                    audioButtonManager.togglePlayingForPause();
+                }
+
+                @Override
+                public void onPause() {
+                    audioButtonManager.togglePaused();
+                }
+
+                @Override
+                public void onStop() {
+                    audioButtonManager.toggleStopped();
+                }
+
+                @Override
+                public void onProgress(int progress) {
+                    progressBar.setProgress(progress / 1000);
+                    currentTime.setText(StreamManager.getTimeFormat(progress / 1000));
+                }
+
+                @Override
+                public void onError() {
+                    audioButtonManager.toggleError(R.string.audio_error);
+                }
+            });
+
+            if (!alreadyPlaying) {
                 audioButtonManager.toggleStopped();
+                // Start the episode right away unless it's already playing.
+                audioButtonManager.clickPlay();
             }
-
-            @Override
-            public void onProgress(int progress) {
-                progressBar.setProgress(progress / 1000);
-                currentTime.setText(StreamManager.getTimeFormat(progress / 1000));
-            }
-        });
-
-        if (!alreadyPlaying) {
-            audioButtonManager.toggleStopped();
-            // Start the episode right away unless it's already playing.
-            audioButtonManager.clickPlay();
         }
 
         return view;

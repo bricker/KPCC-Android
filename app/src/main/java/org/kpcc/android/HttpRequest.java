@@ -8,6 +8,7 @@ import com.android.volley.ParseError;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
+import com.android.volley.VolleyError;
 import com.android.volley.toolbox.HttpHeaderParser;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.StringRequest;
@@ -59,6 +60,25 @@ public class HttpRequest {
             return mRequestQueue;
         }
 
+    }
+
+    public static class ImpressionRequest {
+        // This class is just for sending impressions. We don't need callbacks, but Volley
+        // requires them to be passed in, so we just pass in empty ones.
+        // i.e. "Fire and Forget"
+        public static void get(String url) {
+            StringRequest req = new StringRequest(Request.Method.GET, url, new Response.Listener<String>() {
+                @Override
+                public void onResponse(String response) {
+                }
+            }, new Response.ErrorListener() {
+                @Override
+                public void onErrorResponse(VolleyError error) {
+                }
+            });
+
+            HttpRequest.Manager.instance.addToRequestQueue(req);
+        }
     }
 
     public static class XmlRequest {

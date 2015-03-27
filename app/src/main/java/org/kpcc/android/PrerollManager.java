@@ -2,6 +2,7 @@ package org.kpcc.android;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.util.Xml;
 
@@ -45,6 +46,8 @@ public class PrerollManager {
         public Integer audioDuration; // Seconds
         public String assetUrl;
         public String assetClickUrl;
+        public String trackingUrl;
+        public String impressionUrl;
     }
 
     private static class XmlParser {
@@ -69,41 +72,47 @@ public class PrerollManager {
 
                     String name = parser.getName();
                     switch (name) {
-                        case "Duration":
-                            if (prerollData.audioDuration != null) {
-                                continue;
+                        case "Impression":
+                            if (prerollData.impressionUrl == null) {
+                                prerollData.impressionUrl = readText(parser);
                             }
-                            String durationString = readText(parser);
-                            String[] segments = durationString.split(":");
-                            int duration = 0;
-                            duration += Integer.valueOf(segments[0]) * 60 * 60; // hours
-                            duration += Integer.valueOf(segments[1]) * 60; // minutes
-                            duration += Integer.valueOf(segments[2].split("\\.")[0]); // seconds
-                            prerollData.audioDuration = duration;
+                            continue;
+                        case "Duration":
+                            if (prerollData.audioDuration == null) {
+                                String durationString = readText(parser);
+                                String[] segments = durationString.split(":");
+                                int duration = 0;
+                                duration += Integer.valueOf(segments[0]) * 60 * 60; // hours
+                                duration += Integer.valueOf(segments[1]) * 60; // minutes
+                                duration += Integer.valueOf(segments[2].split("\\.")[0]); // seconds
+                                prerollData.audioDuration = duration;
+                            }
                             continue;
                         case "MediaFile":
-                            if (prerollData.audioUrl != null) {
-                                continue;
-                            }
-                            String type = parser.getAttributeValue(null, "type");
-                            if (type != null && type.matches("audio.+")) {
-                                prerollData.audioUrl = readText(parser);
+                            if (prerollData.audioUrl == null) {
+                                String type = parser.getAttributeValue(null, "type");
+                                if (type != null && type.matches("audio.+")) {
+                                    prerollData.audioUrl = readText(parser);
+                                }
                             }
                             continue;
                         case "StaticResource":
-                            if (prerollData.assetUrl != null) {
-                                continue;
+                            if (prerollData.assetUrl == null) {
+                                String creativeType = parser.getAttributeValue(null, "creativeType");
+                                if (creativeType != null && creativeType.matches("image.+")) {
+                                    prerollData.assetUrl = readText(parser);
+                                }
                             }
-                            String creativeType = parser.getAttributeValue(null, "creativeType");
-                            if (creativeType != null && creativeType.matches("image.+")) {
-                                prerollData.assetUrl = readText(parser);
+                            continue;
+                        case "Tracking":
+                            if (prerollData.trackingUrl == null) {
+                                prerollData.trackingUrl = readText(parser);
                             }
                             continue;
                         case "CompanionClickThrough":
-                            if (prerollData.assetClickUrl != null) {
-                                continue;
+                            if (prerollData.assetClickUrl == null) {
+                                prerollData.assetClickUrl = readText(parser);
                             }
-                            prerollData.assetClickUrl = readText(parser);
                             continue;
                         default: // implicit continue
                     }

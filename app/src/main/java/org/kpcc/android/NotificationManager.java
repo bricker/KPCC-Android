@@ -1,27 +1,35 @@
 package org.kpcc.android;
 
 import android.app.Application;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.preference.PreferenceManager;
 
+import com.parse.GcmBroadcastReceiver;
 import com.parse.ParsePush;
 import com.parse.ParsePushBroadcastReceiver;
 
-public class NotificationManager
-        implements SharedPreferences.OnSharedPreferenceChangeListener {
+public class NotificationManager implements SharedPreferences.OnSharedPreferenceChangeListener {
 
     public static final String TAG = "NotificationManager";
     public static final String CHANNEL_LISTEN_LIVE = "sandbox_listenLive";
     private static NotificationManager instance = null;
 
+    public Application application;
+
     protected NotificationManager(Application application) {
+        this.application = application;
+
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(application);
         prefs.registerOnSharedPreferenceChangeListener(this);
 
         if (prefs.getBoolean(SettingsFragment.PREF_KEY_PUSH_NOTIFICATIONS, true)) {
             subscribe(CHANNEL_LISTEN_LIVE);
+        } else {
+            disableReceivers();
         }
     }
 
@@ -29,6 +37,34 @@ public class NotificationManager
         if (instance == null) {
             instance = new NotificationManager(application);
         }
+    }
+
+    public void enableReceivers() {
+        PackageManager pm = application.getPackageManager();
+
+        ComponentName receiver1 = new ComponentName(application, BroadcastReceiver.class);
+        pm.setComponentEnabledSetting(receiver1,
+                PackageManager.COMPONENT_ENABLED_STATE_ENABLED,
+                PackageManager.DONT_KILL_APP);
+
+        ComponentName receiver2 = new ComponentName(application, GcmBroadcastReceiver.class);
+        pm.setComponentEnabledSetting(receiver2,
+                PackageManager.COMPONENT_ENABLED_STATE_ENABLED,
+                PackageManager.DONT_KILL_APP);
+    }
+
+    public void disableReceivers() {
+        PackageManager pm = application.getPackageManager();
+
+        ComponentName receiver1 = new ComponentName(application, BroadcastReceiver.class);
+        pm.setComponentEnabledSetting(receiver1,
+                PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
+                PackageManager.DONT_KILL_APP);
+
+        ComponentName receiver2 = new ComponentName(application, GcmBroadcastReceiver.class);
+        pm.setComponentEnabledSetting(receiver2,
+                PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
+                PackageManager.DONT_KILL_APP);
     }
 
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences,
@@ -49,10 +85,12 @@ public class NotificationManager
 
     public void subscribe(String channel) {
         ParsePush.subscribeInBackground(channel);
+        enableReceivers();
     }
 
     public void unsubscribe(String channel) {
         ParsePush.unsubscribeInBackground(channel);
+        disableReceivers();
     }
 
     public static class BroadcastReceiver extends ParsePushBroadcastReceiver {

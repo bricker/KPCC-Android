@@ -17,8 +17,8 @@ public class Navigation {
         navigationItems[idx] = new NavigationItem(titleId, iconId, analyticsKey, callback);
     }
 
-    public static interface NavigationItemSelectedCallback {
-        public void perform(FragmentManager fm);
+    public static abstract class NavigationItemSelectedCallback {
+        public abstract void perform(FragmentManager fm);
     }
 
     public static class NavigationItem {
