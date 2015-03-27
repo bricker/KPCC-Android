@@ -4,9 +4,6 @@ import android.view.View;
 import android.widget.ImageButton;
 import android.widget.ProgressBar;
 
-/**
- * Created by rickb014 on 3/1/15.
- */
 public class AudioButtonManager {
     private ImageButton mPlayButton;
     private ImageButton mPauseButton;

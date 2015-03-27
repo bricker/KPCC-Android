@@ -450,14 +450,14 @@ public class StreamManager extends Service {
             try {
                 requestAudioFocus();
             } catch (AudioFocusNotGrantedException e) {
-                // TODO: Handle errors
+                // No preroll.
                 return;
             }
 
             try {
                 audioPlayer.setDataSource(mPrerollData.audioUrl);
             } catch (IOException e) {
-                // TODO: Handle errors
+                // No preroll.
                 return;
             }
 

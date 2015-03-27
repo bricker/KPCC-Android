@@ -2,7 +2,6 @@ package org.kpcc.android;
 
 import android.content.Context;
 import android.content.res.AssetManager;
-import android.util.Log;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -25,7 +24,7 @@ public class AppConfiguration {
             props.load(is);
             is.close();
         } catch (IOException e) {
-            Log.d(TAG, "keys.properties couldn't be read.");
+            // Nothing we can really do.
         }
     }
 

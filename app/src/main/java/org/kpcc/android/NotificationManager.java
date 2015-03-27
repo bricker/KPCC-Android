@@ -63,12 +63,7 @@ public class NotificationManager
 
         @Override
         protected void onPushOpen(Context context, Intent intent) {
-            // Determine which type of push notification this was and
-            // do something about it.
             super.onPushOpen(context, intent);
-            // TODO: Automatically start stream.
-            // We'll need to add extras to the main activity to specify that the stream should
-            // auto-start, and then check for that in the LiveFragment code.
         }
 
         @Override

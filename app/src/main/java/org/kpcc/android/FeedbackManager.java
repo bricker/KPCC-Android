@@ -1,7 +1,6 @@
 package org.kpcc.android;
 
 import android.util.Base64;
-import android.util.Log;
 
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
@@ -59,22 +58,18 @@ public class FeedbackManager {
 
     private void searchCustomer(final String customerEmail,
                                 final CustomerResponseCallback responseHandler) {
-        Log.d(TAG, "searchCustomer");
         HashMap<String, String> params = new HashMap<>();
         params.put("email", customerEmail);
 
-        Log.d(TAG, "searchCustomer sending request...");
         HttpRequest.JsonRequest.get(
                 getAbsoluteUrl(ENDPOINT_CUSTOMERS_SEARCH), params, mHeaders,
                 new Response.Listener<JSONObject>() {
                     @Override
                     public void onResponse(JSONObject response) {
-                        Log.d(TAG, "POST /customers/search success");
                         String customerId = "";
 
                         try {
                             if (response.getInt("total_entries") == 0) {
-                                Log.d(TAG, "No Customers Found");
                                 // No need to traverse the JSON.
                                 // TODO: Handle Errors. How did we get here?
                             }
@@ -89,14 +84,12 @@ public class FeedbackManager {
                             );
 
                         } catch (JSONException e) {
-                            Log.d(TAG, "JSON Error 1");
                             responseHandler.onFailure();
                         }
 
                         if (!customerId.isEmpty()) {
                             responseHandler.onSuccess(customerId);
                         } else {
-                            Log.d(TAG, "Customer ID is empty");
                             responseHandler.onFailure();
                         }
                     }
@@ -113,7 +106,6 @@ public class FeedbackManager {
     private void createOrFindCustomer(final String customerName,
                                       final String customerEmail,
                                       final CustomerResponseCallback responseHandler) {
-        Log.d(TAG, "createOrFindCustomer");
         try {
             // Setup Customer params.
             // We need to get the customer resource to send with the message later.
@@ -142,19 +134,16 @@ public class FeedbackManager {
                 params.put("last_name", names[1]);
             }
 
-            Log.d(TAG, "createOrFindCustomer sending request...");
             HttpRequest.JsonRequest.post(
                     getAbsoluteUrl(ENDPOINT_CUSTOMERS_CREATE), params, mHeaders,
                     new Response.Listener<JSONObject>() {
                         @Override
                         public void onResponse(JSONObject response) {
-                            Log.d(TAG, "POST /customers success");
                             String customerId = "";
 
                             try {
                                 customerId = String.valueOf(response.getInt("id"));
                             } catch (JSONException e) {
-                                Log.d(TAG, "JSON Error 2");
                                 responseHandler.onFailure();
                             }
 
@@ -162,23 +151,18 @@ public class FeedbackManager {
                                 // User was just created.
                                 responseHandler.onSuccess(customerId);
                             } else {
-                                Log.d(TAG, "Unhandled scenario.");
                                 responseHandler.onFailure();
                             }
                         }
                     }, new Response.ErrorListener() {
                         @Override
                         public void onErrorResponse(VolleyError error) {
-                            Log.d(TAG, "POST /customers failure.");
-                            Log.d(TAG, "statusCode: " + String.valueOf(error.networkResponse.statusCode));
                             // Unprocessable Entity
                             if (error.networkResponse.statusCode == 422) {
-                                Log.d(TAG, "User already exists. Searching...");
                                 // User already exists.
                                 // Search for a customer with this e-mail address, get the href attribute.
                                 searchCustomer(customerEmail, responseHandler);
                             } else {
-                                Log.d(TAG, "Unhandled error response.");
                                 responseHandler.onFailure();
                             }
                         }
@@ -186,7 +170,6 @@ public class FeedbackManager {
             );
 
         } catch (JSONException e) {
-            Log.d(TAG, "JSON Error 3");
             // TODO: Handle JSONException
         }
     }
@@ -197,7 +180,6 @@ public class FeedbackManager {
                              String customerName,
                              String customerEmail,
                              final FeedbackCallback callback) {
-        Log.d(TAG, "sendFeedback");
         try {
             final String priority;
             final String description;
@@ -270,19 +252,16 @@ public class FeedbackManager {
                 public void onSuccess(String customerId) {
                     String path = String.format(ENDPOINT_CUSTOMERS_CASES, customerId);
 
-                    Log.d(TAG, "sendFeedback sending request...");
                     HttpRequest.JsonRequest.post(
                             getAbsoluteUrl(path), params, mHeaders,
                             new Response.Listener<JSONObject>() {
                                 @Override
                                 public void onResponse(JSONObject response) {
-                                    Log.d(TAG, "POST /customers/:id/cases success");
                                     callback.onSuccess();
                                 }
                             }, new Response.ErrorListener() {
                                 @Override
                                 public void onErrorResponse(VolleyError error) {
-                                    Log.d(TAG, "POST /customers/:id/cases failure");
                                     callback.onFailure();
                                 }
                             }
@@ -291,13 +270,11 @@ public class FeedbackManager {
 
                 @Override
                 public void onFailure() {
-                    Log.d(TAG, "Customer Response failure");
                     callback.onFailure();
                 }
             });
 
         } catch (JSONException e) {
-            Log.d(TAG, "JSON Error 4");
             callback.onFailure();
         }
     }

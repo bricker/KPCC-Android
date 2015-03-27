@@ -5,7 +5,6 @@ import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.text.Editable;
 import android.text.TextWatcher;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -136,14 +135,12 @@ public class FeedbackFragment extends Fragment {
                                 unlockForm();
                                 mSubmitButton.setVisibility(View.GONE);
                                 mSuccessMessage.setVisibility(View.VISIBLE);
-                                Log.d(TAG, "Success");
                             }
 
                             @Override
                             public void onFailure() {
                                 unlockForm();
                                 mErrorMessage.setVisibility(View.VISIBLE);
-                                Log.d(TAG, "Failure");
                             }
                         }
                 );
