@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<VAST version="2.0.1">
+    <Ad id="Y206YWQ9MTkxNzI3MSZjcz0xMzY0NDExJnR1PTA">
+        <InLine>
+            <AdSystem version="3.0">
+                <![CDATA[TritonDigitalCampaignManager]]>
+            </AdSystem>
+            <AdTitle>
+                <![CDATA[]]>
+            </AdTitle>
+            <Impression id="ImpressionConfirmationURL">
+                <![CDATA[http://cmod.live.streamtheworld.com/ondemand/impression?cat=cm-ondemand-preroll&cid=Y206YWQ9MTkxNzI3MSZjPTEzNjQ0MjEmYT04OTc1OTEmY3M9MTM2NDQxMSZ0dT0x&stid=83153&lsid=gaid:be875700-bcc8-44e8-bdd7-fc7cfe1cd32a&cb=1182192259]]>
+            </Impression>
+            <Creatives>
+                <Creative sequence="1">
+                    <Linear>
+                        <Duration>00:00:10.736</Duration>
+                        <MediaFiles>
+                            <MediaFile delivery="progressive" type="audio/mpeg" width="0" height="0">
+                                <![CDATA[http://cmodmedia.live.streamtheworld.com/media/cm-audio/cm:6af9d8a8-7e28-4fc9-8f5d-4e9281516710.mp3]]>
+                            </MediaFile>
+                        </MediaFiles>
+                    </Linear>
+                </Creative>
+                <Creative sequence="1">
+                    <CompanionAds>
+                        <Companion height="250" width="300">
+                            <StaticResource creativeType="image/jpeg">
+                                <![CDATA[http://cmodmedia.live.streamtheworld.com/media/cm-image/cm:48a6d346-c1c3-4bee-9184-9ac419775c62.jpg]]>
+                            </StaticResource>
+                            <TrackingEvents>
+                                <Tracking event="creativeView">
+                                    <![CDATA[http://cmod.live.streamtheworld.com/ondemand/viewtrack?cat=cm-ondemand-preroll&cid=Y206YWQ9MTkxNzI3MSZjPTEzNjQ0MzEmYT04OTc2MDEmY3M9MTM2NDQxMSZ0dT0w&stid=83153&lsid=gaid:be875700-bcc8-44e8-bdd7-fc7cfe1cd32a&cb=1182192259]]>
+                                </Tracking>
+                            </TrackingEvents>
+                            <CompanionClickThrough>
+                                <![CDATA[http://cmod.live.streamtheworld.com/ondemand/clicktrack?cat=cm-ondemand-preroll&cid=Y206YWQ9MTkxNzI3MSZjPTEzNjQ0MzEmYT04OTc2MDEmY3M9MTM2NDQxMSZ0dT0w&stid=83153&lsid=gaid:be875700-bcc8-44e8-bdd7-fc7cfe1cd32a&cb=1182192259&redir=http%3A%2F%2Fwww.valleyperformingartscenter.org%2Fcalendar%2Fmartha-graham-dance-company%2F]]>
+                            </CompanionClickThrough>
+                            <AltText>
+                                <![CDATA[]]>
+                            </AltText>
+                        </Companion>
+                        <Companion height="250" width="300">
+                            <HTMLResource>
+                                <![CDATA[
+
+                
+            
+            <a target="_blank" href="http://cmod.live.streamtheworld.com/ondemand/clicktrack?cat=cm-ondemand-preroll&amp;cid=Y206YWQ9MTkxNzI3MSZjPTEzNjQ0MzEmYT04OTc2MDEmY3M9MTM2NDQxMSZ0dT0w&amp;stid=83153&amp;lsid=gaid:be875700-bcc8-44e8-bdd7-fc7cfe1cd32a&amp;cb=1182192259&amp;redir=http%3A%2F%2Fwww.valleyperformingartscenter.org%2Fcalendar%2Fmartha-graham-dance-company%2F">
+            <img alt='' border="0" src="http://cmod.live.streamtheworld.com/ondemand/viewtrack?cat=cm-ondemand-preroll&amp;cid=Y206YWQ9MTkxNzI3MSZjPTEzNjQ0MzEmYT04OTc2MDEmY3M9MTM2NDQxMSZ0dT0w&amp;stid=83153&amp;lsid=gaid:be875700-bcc8-44e8-bdd7-fc7cfe1cd32a&amp;cb=1182192259&amp;redir=http://cmodmedia.live.streamtheworld.com/media/cm-image/cm:48a6d346-c1c3-4bee-9184-9ac419775c62.jpg"/>
+        </a>
+    ]]>
+                            </HTMLResource>
+                        </Companion>
+                        <Companion height="250" width="300">
+                            <IFrameResource>
+                                <![CDATA[http://cmod.live.streamtheworld.com/ondemand/creative?cat=cm-ondemand-preroll&cid=Y206YWQ9MTkxNzI3MSZjPTEzNjQ0MzEmYT04OTc2MDEmY3M9MTM2NDQxMSZ0dT0w&fmt=iframe&stid=83153&lsid=gaid:be875700-bcc8-44e8-bdd7-fc7cfe1cd32a&cb=1182192259]]>
+                            </IFrameResource>
+                        </Companion>
+                    </CompanionAds>
+                </Creative>
+            </Creatives>
+        </InLine>
+    </Ad>
+</VAST>
