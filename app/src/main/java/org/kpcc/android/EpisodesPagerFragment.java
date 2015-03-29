@@ -29,6 +29,7 @@ public class EpisodesPagerFragment extends Fragment {
     private EpisodePagerAdapter mAdapter;
     private ArrayList<String> mEpisodes;
     private String mProgramSlug;
+    private Integer mPrevPos;
 
     public static EpisodesPagerFragment newInstance(ArrayList<Episode> episodes, int position, String programSlug) {
         Bundle args = new Bundle();
@@ -81,13 +82,23 @@ public class EpisodesPagerFragment extends Fragment {
         pager.setOnPageChangeListener(new ViewPager.OnPageChangeListener() {
             @Override
             public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
-                EpisodeFragment fragment = mAdapter.getRegisteredFragment(position);
+                if (mPrevPos == null) {
+                    mPrevPos = position;
+                    return;
+                }
 
-                if (fragment != null && positionOffset == 1 && fragment.episodeWasSkipped()) {
+                if (position == mPrevPos) {
+                    // We haven't changed positions
+                    return;
+                }
+
+                EpisodeFragment fragment = mAdapter.getRegisteredFragment(mPrevPos);
+
+                if (fragment != null && fragment.episodeWasSkipped()) {
                     JSONObject params = new JSONObject();
 
                     try {
-                        params.put(AnalyticsManager.PARAM_PROGRAM_PUBLISHED_AT, fragment.episode.formattedAirDate);
+                        params.put(AnalyticsManager.PARAM_PROGRAM_PUBLISHED_AT, fragment.episode.airDate);
                         params.put(AnalyticsManager.PARAM_PROGRAM_TITLE, fragment.program.title);
                         params.put(AnalyticsManager.PARAM_EPISODE_TITLE, fragment.episode.title);
                         params.put(AnalyticsManager.PARAM_PROGRAM_LENGTH, fragment.episode.audio.durationSeconds);
@@ -96,8 +107,10 @@ public class EpisodesPagerFragment extends Fragment {
                         // Nothing to do. No data will be sent with this event.
                     }
 
-                    AnalyticsManager.instance.logEvent(AnalyticsManager.EVENT_ON_DEMAND_SKIPPED);
+                    AnalyticsManager.instance.logEvent(AnalyticsManager.EVENT_ON_DEMAND_SKIPPED, params);
                 }
+
+                mPrevPos = position;
             }
 
             @Override

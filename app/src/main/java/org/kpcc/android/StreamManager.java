@@ -262,38 +262,69 @@ public class StreamManager extends Service {
                 @Override
                 public void onPrepared(MediaPlayer mp) {
                     start();
-                    startProgressObserver();
                 }
             });
 
             audioPlayer.prepareAsync();
         }
 
-        public long getCurrentPosition() {
+        public long getCurrentPosition() throws IllegalStateException {
             return audioPlayer.getCurrentPosition();
+        }
+
+        public void seekTo(int pos) {
+            try {
+                // We're pausing/starting the player directly so the button states don't change.
+                if (!isPaused) {
+                    audioPlayer.pause();
+                }
+
+                audioPlayer.seekTo(pos);
+
+                if (!isPaused) {
+                    audioPlayer.start();
+                }
+            } catch (IllegalStateException e) {
+                release();
+            }
         }
 
         @Override
         public void start() {
-            mAudioEventListener.onPlay();
-            startProgressObserver();
-            isPaused = false;
-            audioPlayer.start();
+            try {
+                mAudioEventListener.onPlay();
+                startProgressObserver();
+                isPaused = false;
+                audioPlayer.start();
+            } catch (IllegalStateException e) {
+                // Call release() to stop progress observer, update button state, etc.
+                release();
+            }
         }
 
         @Override
         public void pause() {
-            mAudioEventListener.onPause();
-            stopProgressObserver();
-            isPaused = true;
-            audioPlayer.pause();
+            try {
+                mAudioEventListener.onPause();
+                stopProgressObserver();
+                isPaused = true;
+                audioPlayer.pause();
+            } catch (IllegalStateException e) {
+                // Call release() to stop progress observer, update button state, etc.
+                release();
+            }
         }
 
         @Override
         public void stop() {
-            mAudioEventListener.onStop();
-            stopProgressObserver();
-            audioPlayer.stop();
+            try {
+                mAudioEventListener.onStop();
+                stopProgressObserver();
+                audioPlayer.stop();
+            } catch (IllegalStateException e) {
+                // Call release() to stop progress observer, update button state, etc.
+                release();
+            }
         }
 
         @Override
@@ -302,6 +333,7 @@ public class StreamManager extends Service {
                 mActivity.streamManager.currentEpisodePlayer = null;
             }
 
+            isPaused = false;
             mAudioEventListener.onStop();
             stopProgressObserver();
             audioPlayer.release();
@@ -376,8 +408,13 @@ public class StreamManager extends Service {
 
         @Override
         public void start() {
-            mAudioEventListener.onPlay();
-            audioPlayer.start();
+            try {
+                mAudioEventListener.onPlay();
+                audioPlayer.start();
+            } catch (IllegalStateException e) {
+                // Call release() to stop progress observer, update button state, etc.
+                release();
+            }
         }
 
         @Override
@@ -387,8 +424,13 @@ public class StreamManager extends Service {
 
         @Override
         public void stop() {
-            mAudioEventListener.onStop();
-            audioPlayer.stop();
+            try {
+                mAudioEventListener.onStop();
+                audioPlayer.stop();
+            } catch (IllegalStateException e) {
+                // Call release() to stop progress observer, update button state, etc.
+                release();
+            }
         }
 
         @Override
@@ -495,23 +537,35 @@ public class StreamManager extends Service {
 
         @Override
         public void start() {
-            mAudioEventListener.onPlay();
-            startProgressObserver();
-            audioPlayer.start();
+            try {
+                audioPlayer.start();
+                mAudioEventListener.onPlay();
+                startProgressObserver();
+            } catch (IllegalStateException e) {
+                // Nothing to do, player has been released.
+            }
         }
 
         @Override
         public void pause() {
-            mAudioEventListener.onPause();
-            stopProgressObserver();
-            audioPlayer.pause();
+            try {
+                audioPlayer.pause();
+                mAudioEventListener.onPause();
+                stopProgressObserver();
+            } catch (IllegalStateException e) {
+                // Nothing to do, player has been released.
+            }
         }
 
         @Override
         public void stop() {
-            mAudioEventListener.onStop();
-            stopProgressObserver();
-            audioPlayer.stop();
+            try {
+                audioPlayer.stop();
+                mAudioEventListener.onStop();
+                stopProgressObserver();
+            } catch (IllegalStateException e) {
+                // Nothing to do, player has been released.
+            }
         }
 
         @Override

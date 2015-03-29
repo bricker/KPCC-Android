@@ -21,25 +21,20 @@ public class ScheduleOccurrence extends Entity {
     public String programSlug;
 
 
-    public static ScheduleOccurrence buildFromJson(JSONObject jsonSchedule) {
+    public static ScheduleOccurrence buildFromJson(JSONObject jsonSchedule) throws JSONException {
         if (jsonSchedule.length() == 0) {
             return null;
         }
 
         ScheduleOccurrence schedule = new ScheduleOccurrence();
 
-        try {
-            schedule.title = jsonSchedule.getString(PROP_TITLE);
-            schedule.startsAt = parseISODateTime(jsonSchedule.getString(PROP_STARTS_AT));
-            schedule.endsAt = parseISODateTime(jsonSchedule.getString(PROP_ENDS_AT));
-            schedule.softStartsAt = parseISODateTime(jsonSchedule.getString(PROP_SOFT_STARTS_AT));
+        schedule.title = jsonSchedule.getString(PROP_TITLE);
+        schedule.startsAt = parseISODateTime(jsonSchedule.getString(PROP_STARTS_AT));
+        schedule.endsAt = parseISODateTime(jsonSchedule.getString(PROP_ENDS_AT));
+        schedule.softStartsAt = parseISODateTime(jsonSchedule.getString(PROP_SOFT_STARTS_AT));
 
-            if (jsonSchedule.has(Program.SINGULAR_KEY)) {
-                schedule.programSlug = jsonSchedule.getJSONObject(Program.SINGULAR_KEY).getString(PROP_SLUG);
-            }
-
-        } catch (JSONException e) {
-            // TODO: Handle error
+        if (jsonSchedule.has(Program.SINGULAR_KEY)) {
+            schedule.programSlug = jsonSchedule.getJSONObject(Program.SINGULAR_KEY).getString(PROP_SLUG);
         }
 
         return schedule;

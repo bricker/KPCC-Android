@@ -2,6 +2,7 @@ package org.kpcc.android;
 
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -96,25 +97,12 @@ public class EpisodeFragment extends Fragment {
                 }
 
                 if (mPlayer != null) {
-                    try {
-                        mPlayer.audioPlayer.seekTo(progress);
-                        // Bypassing callbacks.
-                        mPlayer.start();
-                    } catch (IllegalStateException e) {
-                        // Do nothing. The player was killed off.
-                    }
+                    mPlayer.seekTo(progress);
                 }
             }
 
             @Override
             public void onStartTrackingTouch(SeekBar seekBar) {
-                if (mPlayer != null) {
-                    try {
-                        mPlayer.pause();
-                    } catch (IllegalStateException e) {
-                        // Do nothing. The player was killed off.
-                    }
-                }
             }
 
             @Override
@@ -199,7 +187,6 @@ public class EpisodeFragment extends Fragment {
             @Override
             public void onClick(View v) {
                 mPlayer.play();
-                logEpisodeStreamEvent(AnalyticsManager.EVENT_ON_DEMAND_BEGAN);
             }
         });
 
@@ -207,7 +194,6 @@ public class EpisodeFragment extends Fragment {
             @Override
             public void onClick(View v) {
                 mPlayer.pause();
-                logEpisodeStreamEvent(AnalyticsManager.EVENT_ON_DEMAND_PAUSED);
             }
         });
 
@@ -220,11 +206,13 @@ public class EpisodeFragment extends Fragment {
             @Override
             public void onPlay() {
                 mAudioButtonManager.togglePlayingForPause();
+                logEpisodeStreamEvent(AnalyticsManager.EVENT_ON_DEMAND_BEGAN);
             }
 
             @Override
             public void onPause() {
                 mAudioButtonManager.togglePaused();
+                logEpisodeStreamEvent(AnalyticsManager.EVENT_ON_DEMAND_PAUSED);
             }
 
             @Override
@@ -234,17 +222,19 @@ public class EpisodeFragment extends Fragment {
 
             @Override
             public void onCompletion() {
-                logEpisodeStreamEvent(AnalyticsManager.EVENT_ON_DEMAND_COMPLETED);
-                EpisodesPagerFragment fragment = (EpisodesPagerFragment) getChildFragmentManager().findFragmentByTag(EpisodesPagerFragment.STACK_TAG);
+                FragmentManager fm = getActivity().getSupportFragmentManager();
+                EpisodesPagerFragment fragment = (EpisodesPagerFragment) fm.findFragmentByTag(EpisodesPagerFragment.STACK_TAG);
 
                 if (fragment != null && fragment.pager != null) {
                     if (fragment.pager.canScrollHorizontally(1)) {
                         fragment.pager.setCurrentItem(fragment.pager.getCurrentItem() + 1);
                     } else {
                         // Go back to the episodes list.
-                        getChildFragmentManager().popBackStackImmediate();
+                        fm.popBackStackImmediate();
                     }
                 }
+
+                logEpisodeStreamEvent(AnalyticsManager.EVENT_ON_DEMAND_COMPLETED);
             }
 
             @Override
@@ -276,11 +266,15 @@ public class EpisodeFragment extends Fragment {
             return false;
         }
 
-        // If they didn't listen to 25% of the episode, this counts as "skipped".
-        return getCurrentPlayerPositionSeconds() < (mPlayer.durationSeconds / 4);
+        try {
+            int current = getCurrentPlayerPositionSeconds();
+            return current < (mPlayer.durationSeconds / 4);
+        } catch (IllegalStateException e) {
+            return false;
+        }
     }
 
-    public int getCurrentPlayerPositionSeconds() {
+    public int getCurrentPlayerPositionSeconds() throws IllegalStateException {
         if (streamNotAvailable()) {
             return 0;
         }
@@ -297,7 +291,7 @@ public class EpisodeFragment extends Fragment {
         JSONObject params = new JSONObject();
 
         try {
-            params.put(AnalyticsManager.PARAM_PROGRAM_PUBLISHED_AT, episode.formattedAirDate);
+            params.put(AnalyticsManager.PARAM_PROGRAM_PUBLISHED_AT, episode.airDate);
             params.put(AnalyticsManager.PARAM_PROGRAM_TITLE, program.title);
             params.put(AnalyticsManager.PARAM_EPISODE_TITLE, episode.title);
             params.put(AnalyticsManager.PARAM_PROGRAM_LENGTH, episode.audio.durationSeconds);

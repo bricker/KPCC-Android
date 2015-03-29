@@ -22,9 +22,6 @@ public abstract class Entity {
     public static String ISO_DATE_FORMAT = "yyyy-MM-dd";
     public static String HUMAN_DATE_FORMAT = "MMMM d, yyyy";
 
-    // Default value for JSON failures, so at least the app doesn't crash.
-    public static String EMPTY_JSON = "{}";
-
     protected static Date parseISODateTime(String isoDateString) {
         return parseDate(new SimpleDateFormat(ISO_DATETIME_FORMAT, Locale.US), isoDateString);
     }

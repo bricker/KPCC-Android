@@ -19,6 +19,7 @@ public class Episode extends Entity implements Comparable<Episode> {
     public String title;
     public Date airDate;
     public String formattedAirDate;
+    public String rawAirDate; // For serializing
     public String publicUrl;
     public Audio audio;
     public ArrayList<Segment> segments = new ArrayList<>();
@@ -28,9 +29,13 @@ public class Episode extends Entity implements Comparable<Episode> {
     }
 
     public static Episode buildFromJson(JSONObject jsonEpisode) throws JSONException {
+        // We could keep track of the full jsonEpisode object for serialization, but these
+        // episodes tend to stick around a while (and there are a lot of them),
+        // and if we stored the json object we'd be using up more memory than we need.
         Episode episode = new Episode();
 
         episode.title = jsonEpisode.getString(PROP_TITLE);
+        episode.rawAirDate = jsonEpisode.getString(PROP_AIR_DATE);
         episode.airDate = parseISODate(jsonEpisode.getString(PROP_AIR_DATE));
         episode.formattedAirDate = parseHumanDate(episode.airDate);
 
@@ -65,6 +70,7 @@ public class Episode extends Entity implements Comparable<Episode> {
         Episode episode = new Episode();
 
         episode.title = segment.title;
+        episode.rawAirDate = segment.rawPublishedAt;
         episode.airDate = segment.publishedAt;
         episode.publicUrl = segment.publicUrl;
         episode.audio = segment.audio;
@@ -79,13 +85,13 @@ public class Episode extends Entity implements Comparable<Episode> {
     }
 
     // This function isn't complete - it was made for the EpisodePager and is missing some stuff
-    // that isn't needed to help performance.
+    // that isn't needed. See buildFromJson for an explanation.
     public JSONObject toJSON() throws JSONException {
         JSONObject json = new JSONObject();
 
         json.put(Entity.PROP_TITLE, title);
         json.put(Entity.PROP_PUBLIC_URL, publicUrl);
-        json.put(Entity.PROP_AIR_DATE, airDate);
+        json.put(Entity.PROP_AIR_DATE, rawAirDate);
 
         JSONArray audios = new JSONArray();
 
