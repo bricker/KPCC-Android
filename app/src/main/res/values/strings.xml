@@ -28,8 +28,6 @@
     <string name="feedback_type_feedback">General Feedback</string>
     <string name="feedback_hint_name">Name</string>
     <string name="feedback_hint_email">Email</string>
-    <string name="feedback_placeholder_name">eg. Ornette Coleman</string>
-    <string name="feedback_placeholder_email">eg. you@domain.com</string>
     <string name="feedback_placeholder_comments">Add your comments here</string>
     <string name="feedback_submit">Submit</string>
     <string name="feedback_validation_message">All Fields are Required</string>

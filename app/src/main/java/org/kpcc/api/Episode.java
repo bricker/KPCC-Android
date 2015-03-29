@@ -11,7 +11,7 @@ import java.util.Date;
 
 public class Episode extends Entity implements Comparable<Episode> {
     public final static String PLURAL_KEY = "episodes";
-    public final static String ENDPOINT = PLURAL_KEY;
+    private final static String ENDPOINT = PLURAL_KEY;
 
     // API Client
     public final static BaseApiClient Client = new BaseApiClient(ENDPOINT);
@@ -19,10 +19,10 @@ public class Episode extends Entity implements Comparable<Episode> {
     public String title;
     public Date airDate;
     public String formattedAirDate;
-    public String rawAirDate; // For serializing
-    public String publicUrl;
+    private String rawAirDate; // For serializing
+    private String publicUrl;
     public Audio audio;
-    public ArrayList<Segment> segments = new ArrayList<>();
+    public final ArrayList<Segment> segments = new ArrayList<>();
 
     public static Episode buildFromJson(String jsonEpisode) throws JSONException {
         return buildFromJson(new JSONObject(jsonEpisode));

@@ -34,9 +34,9 @@ public class AnalyticsManager {
 
     private static final String MIXPANEL_TOKEN = AppConfiguration.instance.getConfig("mixpanel.token");
     public static AnalyticsManager instance = null;
-    private MixpanelAPI mMixpanelAPI;
+    private final MixpanelAPI mMixpanelAPI;
 
-    protected AnalyticsManager(Context context) {
+    private AnalyticsManager(Context context) {
         mMixpanelAPI = MixpanelAPI.getInstance(context, MIXPANEL_TOKEN);
     }
 

@@ -24,7 +24,7 @@ public class MainActivity extends ActionBarActivity {
     public StreamManager streamManager;
     private NavigationDrawerFragment mNavigationDrawerFragment;
     private boolean mBound = false;
-    private ServiceConnection mConnection = new ServiceConnection() {
+    private final ServiceConnection mConnection = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName className,
                                        IBinder service) {

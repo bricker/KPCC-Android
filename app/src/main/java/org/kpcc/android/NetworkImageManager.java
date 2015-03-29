@@ -1,6 +1,5 @@
 package org.kpcc.android;
 
-import android.content.Context;
 import android.graphics.Bitmap;
 import android.support.v4.util.LruCache;
 import android.view.View;
@@ -12,9 +11,8 @@ import com.android.volley.toolbox.NetworkImageView;
 
 public class NetworkImageManager {
     public final static NetworkImageManager instance = new NetworkImageManager();
-    public static final String PROGRAM_TILE_URL = "http://media.scpr.org/iphone/program-images/program_tile_%s@2x.jpg";
-    private final static String GENERIC_SLUG = "generic";
-    private ImageLoader mImageLoader;
+    private static final String PROGRAM_TILE_URL = "http://media.scpr.org/iphone/program-images/program_tile_%s@2x.jpg";
+    private final ImageLoader mImageLoader;
 
     private NetworkImageManager() {
         // On the S4 this was around 16000 kilobytes.
@@ -28,7 +26,7 @@ public class NetworkImageManager {
         view.setVisibility(View.VISIBLE);
     }
 
-    public void setBitmap(final Context context, final ImageView view, String slug) {
+    public void setBitmap(final ImageView view, String slug) {
         mImageLoader.get(buildTileUrl(slug), new ImageLoader.ImageListener() {
             @Override
             public void onResponse(ImageLoader.ImageContainer response, boolean isImmediate) {

@@ -3,18 +3,13 @@ package org.kpcc.android;
 import android.content.Context;
 import android.net.Uri;
 
-import com.android.volley.Network;
 import com.android.volley.NetworkResponse;
 import com.android.volley.ParseError;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
-import com.android.volley.toolbox.BasicNetwork;
-import com.android.volley.toolbox.DiskBasedCache;
 import com.android.volley.toolbox.HttpHeaderParser;
-import com.android.volley.toolbox.HttpStack;
-import com.android.volley.toolbox.HurlStack;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
@@ -22,7 +17,6 @@ import com.android.volley.toolbox.Volley;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.File;
 import java.io.UnsupportedEncodingException;
 import java.util.HashMap;
 import java.util.Map;
@@ -45,16 +39,11 @@ public class HttpRequest {
     }
 
     public static class Manager {
-        private static final int DISK_USAGE_BYTES = 25 * 1024 * 1024;
-        private static final String CACHE_DIR = "kpcc_programs";
-
         public static Manager instance = null;
-        public RequestQueue requestQueue;
-        public RequestQueue diskRequestQueue;
+        public final RequestQueue requestQueue;
 
-        protected Manager(Context context) {
+        Manager(Context context) {
             requestQueue = Volley.newRequestQueue(context.getApplicationContext());
-            diskRequestQueue = newDiskRequestQueue(context.getApplicationContext());
         }
 
         public static void setupInstance(Context context) {
@@ -62,26 +51,6 @@ public class HttpRequest {
                 instance = new Manager(context);
             }
         }
-
-        private RequestQueue newDiskRequestQueue(Context context) {
-            File rootCache = context.getExternalCacheDir();
-
-            if (rootCache == null) {
-                rootCache = context.getCacheDir();
-            }
-
-            File cacheDir = new File(rootCache, CACHE_DIR);
-            cacheDir.mkdirs();
-
-            HttpStack stack = new HurlStack();
-            Network network = new BasicNetwork(stack);
-            DiskBasedCache diskBasedCache = new DiskBasedCache(cacheDir, DISK_USAGE_BYTES);
-            RequestQueue queue = new RequestQueue(diskBasedCache, network);
-            queue.start();
-
-            return queue;
-        }
-
     }
 
     public static class ImpressionRequest {
@@ -114,8 +83,8 @@ public class HttpRequest {
     }
 
     public static class JsonRequest extends Request<JSONObject> {
-        private Response.Listener<JSONObject> mListener;
-        private Map<String, String> mHeaders;
+        private final Response.Listener<JSONObject> mListener;
+        private final Map<String, String> mHeaders;
 
         public JsonRequest(int method,
                            String url,

@@ -26,7 +26,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 
 public class LiveFragment extends Fragment {
-    public static String ARG_PLAY_NOW = "args_play_now";
+    private static final String ARG_PLAY_NOW = "args_play_now";
     private static long PLAY_START = 0;
 
     private TextView mTitle;
@@ -87,10 +87,10 @@ public class LiveFragment extends Fragment {
                                 if (softStartsAt != null && new Date().getTime() < softStartsAt.getTime()) {
                                     mStatus.setText(R.string.up_next);
                                 } else {
-                                    setDefaultValues(true, false);
+                                    mStatus.setText(R.string.on_now);
                                 }
 
-                                NetworkImageManager.instance.setBitmap(getActivity(), mBackground, schedule.programSlug);
+                                NetworkImageManager.instance.setBitmap(mBackground, schedule.programSlug);
                             } else {
                                 setDefaultValues(true, true);
                             }
@@ -337,9 +337,9 @@ public class LiveFragment extends Fragment {
     }
 
     private class ScheduleUpdater implements Runnable {
-        private AtomicBoolean mIsObserving = new AtomicBoolean(false);
-        private Handler mHandler = new Handler();
-        private ScheduleUpdateCallback mCallbacks;
+        private final AtomicBoolean mIsObserving = new AtomicBoolean(false);
+        private final Handler mHandler = new Handler();
+        private final ScheduleUpdateCallback mCallbacks;
 
         public ScheduleUpdater(ScheduleUpdateCallback callbacks) {
             mCallbacks = callbacks;

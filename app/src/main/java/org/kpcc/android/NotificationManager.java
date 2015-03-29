@@ -12,13 +12,13 @@ import com.parse.GcmBroadcastReceiver;
 import com.parse.ParsePush;
 import com.parse.ParsePushBroadcastReceiver;
 
-public class NotificationManager implements SharedPreferences.OnSharedPreferenceChangeListener {
-    public static final String CHANNEL_LISTEN_LIVE = "sandbox_listenLive";
+class NotificationManager implements SharedPreferences.OnSharedPreferenceChangeListener {
+    private static final String CHANNEL_LISTEN_LIVE = "sandbox_listenLive";
     private static NotificationManager instance = null;
 
-    public Application application;
+    private final Application application;
 
-    protected NotificationManager(Application application) {
+    private NotificationManager(Application application) {
         this.application = application;
 
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(application);
@@ -37,7 +37,7 @@ public class NotificationManager implements SharedPreferences.OnSharedPreference
         }
     }
 
-    public void enableReceivers() {
+    void enableReceivers() {
         PackageManager pm = application.getPackageManager();
 
         ComponentName receiver1 = new ComponentName(application, BroadcastReceiver.class);
@@ -51,7 +51,7 @@ public class NotificationManager implements SharedPreferences.OnSharedPreference
                 PackageManager.DONT_KILL_APP);
     }
 
-    public void disableReceivers() {
+    void disableReceivers() {
         PackageManager pm = application.getPackageManager();
 
         ComponentName receiver1 = new ComponentName(application, BroadcastReceiver.class);
@@ -81,12 +81,12 @@ public class NotificationManager implements SharedPreferences.OnSharedPreference
         }
     }
 
-    public void subscribe(String channel) {
+    void subscribe(String channel) {
         ParsePush.subscribeInBackground(channel);
         enableReceivers();
     }
 
-    public void unsubscribe(String channel) {
+    void unsubscribe(String channel) {
         ParsePush.unsubscribeInBackground(channel);
         disableReceivers();
     }

@@ -41,7 +41,7 @@ public class StreamManager extends Service {
         return mBinder;
     }
 
-    public static class AudioFocusNotGrantedException extends Exception {
+    private static class AudioFocusNotGrantedException extends Exception {
     }
 
     public abstract static class AudioEventListener {
@@ -71,13 +71,13 @@ public class StreamManager extends Service {
     }
 
     public abstract static class BaseStream {
-        public MediaPlayer audioPlayer;
-        protected MainActivity mActivity;
-        protected AudioManager mAudioManager;
-        protected AtomicBoolean mIsDucking = new AtomicBoolean(false);
-        protected AudioManager.OnAudioFocusChangeListener mAfChangeListener;
-        protected AudioEventListener mAudioEventListener;
-        protected ProgressObserver mProgressObserver;
+        public final MediaPlayer audioPlayer;
+        final MainActivity mActivity;
+        final AudioManager mAudioManager;
+        final AtomicBoolean mIsDucking = new AtomicBoolean(false);
+        final AudioManager.OnAudioFocusChangeListener mAfChangeListener;
+        AudioEventListener mAudioEventListener;
+        ProgressObserver mProgressObserver;
 
         public BaseStream(Context context) {
             audioPlayer = new MediaPlayer();
@@ -125,7 +125,7 @@ public class StreamManager extends Service {
             return audioPlayer.isPlaying();
         }
 
-        protected void requestAudioFocus() throws AudioFocusNotGrantedException {
+        void requestAudioFocus() throws AudioFocusNotGrantedException {
             int result = mAudioManager.requestAudioFocus(mAfChangeListener,
                     AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN);
 
@@ -134,15 +134,15 @@ public class StreamManager extends Service {
             }
         }
 
-        protected void audioFocusLossTransientCanDuck() {
+        void audioFocusLossTransientCanDuck() {
             duckStream();
         }
 
-        protected void audioFocusLossTransient() {
+        void audioFocusLossTransient() {
             pause();
         }
 
-        protected void audioFocusGain() {
+        void audioFocusGain() {
             if (mIsDucking.get() && audioPlayer.isPlaying()) {
                 unduckStream();
             } else {
@@ -150,12 +150,12 @@ public class StreamManager extends Service {
             }
         }
 
-        protected void audioFocusLoss() {
+        void audioFocusLoss() {
             release();
             mAudioManager.abandonAudioFocus(mAfChangeListener);
         }
 
-        protected void duckStream() {
+        void duckStream() {
             if (!mIsDucking.get()) {
                 mIsDucking.set(true);
 
@@ -165,7 +165,7 @@ public class StreamManager extends Service {
             }
         }
 
-        protected void unduckStream() {
+        void unduckStream() {
             if (mIsDucking.get()) {
                 mIsDucking.set(false);
 
@@ -175,18 +175,18 @@ public class StreamManager extends Service {
             }
         }
 
-        protected void startProgressObserver() {
+        void startProgressObserver() {
             mProgressObserver.start();
             new Thread(mProgressObserver).start();
         }
 
-        protected void stopProgressObserver() {
+        void stopProgressObserver() {
             if (mProgressObserver != null) {
                 mProgressObserver.stop();
             }
         }
 
-        protected void resetProgressObserver() {
+        void resetProgressObserver() {
             stopProgressObserver();
             mProgressObserver = new StreamManager.ProgressObserver(audioPlayer, mAudioEventListener);
 
@@ -197,9 +197,9 @@ public class StreamManager extends Service {
     }
 
     public static class EpisodeStream extends BaseStream {
-        public String audioUrl;
-        public String programSlug;
-        public int durationSeconds;
+        public final String audioUrl;
+        public final String programSlug;
+        public final int durationSeconds;
         private boolean isPaused = false;
 
         public EpisodeStream(String audioUrl, String programSlug, int durationSeconds, Context context) {
@@ -476,8 +476,8 @@ public class StreamManager extends Service {
     }
 
     public static class PrerollStream extends BaseStream {
-        private BaseStream mParentStream;
-        private PrerollManager.PrerollData mPrerollData;
+        private final BaseStream mParentStream;
+        private final PrerollManager.PrerollData mPrerollData;
 
         public PrerollStream(Context context,
                              PrerollManager.PrerollData prerollData,
@@ -582,10 +582,10 @@ public class StreamManager extends Service {
 
 
     public static class ProgressObserver implements Runnable {
-        private AtomicBoolean mIsObserving = new AtomicBoolean(false);
-        private Handler mHandler = new Handler();
-        private MediaPlayer mMediaPlayer;
-        private AudioEventListener mAudioEventListener;
+        private final AtomicBoolean mIsObserving = new AtomicBoolean(false);
+        private final Handler mHandler = new Handler();
+        private final MediaPlayer mMediaPlayer;
+        private final AudioEventListener mAudioEventListener;
 
         public ProgressObserver(MediaPlayer mediaPlayer, AudioEventListener eventListener) {
             mMediaPlayer = mediaPlayer;

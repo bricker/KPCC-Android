@@ -14,9 +14,9 @@ import java.util.HashMap;
 
 public class ProgramsManager {
     public static ProgramsManager instance;
-    public ArrayList<Program> ALL_PROGRAMS = new ArrayList<>();
+    public final ArrayList<Program> ALL_PROGRAMS = new ArrayList<>();
 
-    protected ProgramsManager() {
+    private ProgramsManager() {
         HashMap<String, String> params = new HashMap<>();
         params.put("air_status", "onair");
 

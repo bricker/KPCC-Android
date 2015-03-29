@@ -6,12 +6,12 @@ import android.widget.ImageButton;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
-public class AudioButtonManager {
-    private ImageButton mPlayButton;
-    private ImageButton mPauseButton;
-    private ImageButton mStopButton;
-    private ProgressBar mLoadingInd;
-    private TextView mErrorMsg;
+class AudioButtonManager {
+    private final ImageButton mPlayButton;
+    private final ImageButton mPauseButton;
+    private final ImageButton mStopButton;
+    private final ProgressBar mLoadingInd;
+    private final TextView mErrorMsg;
 
     public AudioButtonManager(@NonNull View view) {
         mPlayButton = (ImageButton) view.findViewById(R.id.play_button);
@@ -81,10 +81,6 @@ public class AudioButtonManager {
 
     public ImageButton getStopButton() {
         return mStopButton;
-    }
-
-    public ProgressBar getLoadingIndicator() {
-        return mLoadingInd;
     }
 
     public void clickPlay() {

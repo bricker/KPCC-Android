@@ -26,10 +26,6 @@ public class FeedbackFragment extends Fragment {
     private TextView mSuccessMessage;
     private TextView mErrorMessage;
 
-    public FeedbackFragment() {
-        // Required empty public constructor
-    }
-
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);

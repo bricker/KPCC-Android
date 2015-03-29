@@ -19,7 +19,7 @@ import org.json.JSONObject;
 import org.kpcc.api.Program;
 
 public class ProgramsFragment extends Fragment implements AdapterView.OnItemClickListener {
-    public final static String STACK_TAG = "programsList";
+    private final static String STACK_TAG = "programsList";
 
     private ListAdapter mAdapter;
 

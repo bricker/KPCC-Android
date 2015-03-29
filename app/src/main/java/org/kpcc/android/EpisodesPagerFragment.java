@@ -25,7 +25,7 @@ public class EpisodesPagerFragment extends Fragment {
     private final static String ARG_PROGRAM_SLUG = "args_program_slug";
 
     public ViewPager pager;
-    public int currentPosition;
+    private int currentPosition;
     private EpisodePagerAdapter mAdapter;
     private ArrayList<String> mEpisodes;
     private String mProgramSlug;
@@ -73,7 +73,7 @@ public class EpisodesPagerFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_episodes_pager, container, false);
 
         ImageView background = (ImageView) view.findViewById(R.id.background);
-        NetworkImageManager.instance.setBitmap(getActivity(), background, mProgramSlug);
+        NetworkImageManager.instance.setBitmap(background, mProgramSlug);
 
         mAdapter = new EpisodePagerAdapter(getChildFragmentManager());
         pager = (ViewPager) view.findViewById(R.id.pager);
@@ -143,7 +143,7 @@ public class EpisodesPagerFragment extends Fragment {
     }
 
     private class EpisodePagerAdapter extends FragmentPagerAdapter {
-        private SparseArray<String> registeredFragments = new SparseArray<>();
+        private final SparseArray<String> registeredFragments = new SparseArray<>();
 
         public EpisodePagerAdapter(FragmentManager fm) {
             super(fm);

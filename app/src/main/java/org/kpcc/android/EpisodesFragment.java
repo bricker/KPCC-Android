@@ -35,13 +35,11 @@ public class EpisodesFragment extends Fragment implements AbsListView.OnItemClic
     private static final String PARAM_PROGRAM = "program";
     private static final String PARAM_LIMIT = "limit";
     private static final String EPISODE_LIMIT = "8";
-
+    private final ArrayList<Episode> mEpisodes = new ArrayList<>();
     private AbsListView mListView;
     private LinearLayout mProgressBar;
     private ListAdapter mAdapter;
     private Program mProgram;
-    private ArrayList<Episode> mEpisodes = new ArrayList<>();
-
     // Unrecoverable error. Just show an error message if this is true.
     private boolean mDidError = false;
 
@@ -156,7 +154,7 @@ public class EpisodesFragment extends Fragment implements AbsListView.OnItemClic
         View view = inflater.inflate(R.layout.fragment_episodes, container, false);
 
         ImageView background = (ImageView) view.findViewById(R.id.background);
-        NetworkImageManager.instance.setBitmap(getActivity(), background, mProgram.slug);
+        NetworkImageManager.instance.setBitmap(background, mProgram.slug);
 
         mProgressBar = (LinearLayout) view.findViewById(R.id.progress_layout);
 
@@ -191,7 +189,7 @@ public class EpisodesFragment extends Fragment implements AbsListView.OnItemClic
                 .commit();
     }
 
-    public void setAdapter() {
+    void setAdapter() {
         if (mAdapter != null) {
             mListView.setAdapter(mAdapter);
             mProgressBar.setVisibility(View.GONE);

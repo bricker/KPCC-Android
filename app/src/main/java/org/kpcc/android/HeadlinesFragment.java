@@ -19,10 +19,6 @@ public class HeadlinesFragment extends Fragment {
     private boolean mDidBrowse = false;
     private LinearLayout mProgressBar;
 
-    public HeadlinesFragment() {
-        // Required empty public constructor
-    }
-
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {

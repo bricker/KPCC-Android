@@ -9,14 +9,12 @@ import java.util.Date;
 
 
 public class ScheduleOccurrence extends Entity {
-    public final static String ENDPOINT = "schedule";
+    private final static String ENDPOINT = "schedule";
     public final static ApiClient Client = new ApiClient(ENDPOINT);
     public final static String SINGULAR_KEY = "schedule_occurrence";
-    public final static String CURRENT_ENDPOINT = "current";
+    private final static String CURRENT_ENDPOINT = "current";
 
     public String title;
-    public Date startsAt;
-    public Date endsAt;
     public Date softStartsAt;
     public String programSlug;
 
@@ -29,8 +27,6 @@ public class ScheduleOccurrence extends Entity {
         ScheduleOccurrence schedule = new ScheduleOccurrence();
 
         schedule.title = jsonSchedule.getString(PROP_TITLE);
-        schedule.startsAt = parseISODateTime(jsonSchedule.getString(PROP_STARTS_AT));
-        schedule.endsAt = parseISODateTime(jsonSchedule.getString(PROP_ENDS_AT));
         schedule.softStartsAt = parseISODateTime(jsonSchedule.getString(PROP_SOFT_STARTS_AT));
 
         if (jsonSchedule.has(Program.SINGULAR_KEY)) {

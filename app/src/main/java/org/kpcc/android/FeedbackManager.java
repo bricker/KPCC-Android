@@ -16,9 +16,9 @@ public class FeedbackManager {
     public final static String TYPE_BUG = "bug";
     public final static String TYPE_SUGGESTION = "suggestion";
     public final static String TYPE_FEEDBACK = "feedback";
-    public final static String DESC_BUG = "Bug";
-    public final static String DESC_SUGGESTION = "Suggestion";
-    public final static String DESC_FEEDBACK = "General Feedback";
+    private final static String DESC_BUG = "Bug";
+    private final static String DESC_SUGGESTION = "Suggestion";
+    private final static String DESC_FEEDBACK = "General Feedback";
     private final static String CONTENT_TYPE = "application/json";
     private final static String DESK_ROOT = "https://kpcc.desk.com/api/v2/";
     private final static String ENDPOINT_CUSTOMERS_CREATE = "customers";
@@ -37,9 +37,9 @@ public class FeedbackManager {
             "Android Version: %s\n" +
             "Device: %s %s %s\n" +
             "App Version: %s (%s)";
-    private HashMap<String, String> mHeaders = new HashMap<>();
+    private final HashMap<String, String> mHeaders = new HashMap<>();
 
-    protected FeedbackManager() {
+    private FeedbackManager() {
         // Currently using bricker88@gmail.com account.
         String email = AppConfiguration.instance.getConfig("desk.email");
         String password = AppConfiguration.instance.getConfig("desk.password");
@@ -64,28 +64,24 @@ public class FeedbackManager {
                 new Response.Listener<JSONObject>() {
                     @Override
                     public void onResponse(JSONObject response) {
-                        String customerId = "";
+                        String customerId = null;
 
                         try {
-                            if (response.getInt("total_entries") == 0) {
-                                // No need to traverse the JSON.
-                                // TODO: Handle Errors. How did we get here?
+                            if (response.getInt("total_entries") > 0) {
+                                // The API documentation specifies that emails are unique, so we
+                                // can safely just get the first result.
+                                customerId = String.valueOf(response
+                                                .getJSONObject("_embedded")
+                                                .getJSONArray("entries")
+                                                .getJSONObject(0)
+                                                .getInt("id")
+                                );
                             }
-
-                            // The API documentation specifies that emails are unique, so we
-                            // can safely just get the first result.
-                            customerId = String.valueOf(response
-                                            .getJSONObject("_embedded")
-                                            .getJSONArray("entries")
-                                            .getJSONObject(0)
-                                            .getInt("id")
-                            );
-
                         } catch (JSONException e) {
-                            responseHandler.onFailure();
+                            // No customer ID will be handled below.
                         }
 
-                        if (!customerId.isEmpty()) {
+                        if (customerId != null) {
                             responseHandler.onSuccess(customerId);
                         } else {
                             responseHandler.onFailure();

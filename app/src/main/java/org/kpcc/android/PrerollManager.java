@@ -20,17 +20,14 @@ import java.io.StringReader;
 import java.util.UUID;
 
 public class PrerollManager {
-    public final static String TRITON_BASE = "http://cmod.live.streamtheworld.com/ondemand/ars?type=preroll&stid=83153&lsid=%s:%s";
     public final static long PREROLL_THRESHOLD = 1000 * 60 * 60 * 4; // 4 hours
     public final static long INSTALL_GRACE = 1000 * 60 * 10; // 10 minutes
-    public final static String PREF_FALLBACK_AD_ID = "fallback_ad_id";
     public final static PrerollManager instance = new PrerollManager();
+    private final static String TRITON_BASE = "http://cmod.live.streamtheworld.com/ondemand/ars?type=preroll&stid=83153&lsid=%s:%s";
+    private final static String PREF_FALLBACK_AD_ID = "fallback_ad_id";
     public static long LAST_PREROLL_PLAY = 0;
 
     private PrerollCallbackListener mCallback;
-
-    protected PrerollManager() {
-    }
 
     public void getPrerollData(Context context, PrerollCallbackListener callback) {
         mCallback = callback;
@@ -51,7 +48,7 @@ public class PrerollManager {
     }
 
     private static class XmlParser {
-        private String mData;
+        private final String mData;
 
         public XmlParser(String data) {
             mData = data;
@@ -119,7 +116,6 @@ public class PrerollManager {
                 }
 
             } catch (XmlPullParserException | IOException e) {
-                String string = e.toString();
                 return null; // Preroll will just be skipped
             }
 

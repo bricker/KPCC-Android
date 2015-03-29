@@ -11,10 +11,10 @@ import java.util.Properties;
 public class AppConfiguration {
     public static AppConfiguration instance = null;
 
-    private Properties props;
+    private final Properties props;
 
     // If keys.properties is missing or can't be read, you'll get a big ol' IOException.
-    protected AppConfiguration(Context context) {
+    private AppConfiguration(Context context) {
         props = new Properties();
 
         try {

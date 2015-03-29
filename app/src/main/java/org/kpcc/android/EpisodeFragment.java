@@ -23,10 +23,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class EpisodeFragment extends Fragment {
     private static final String ARG_PROGRAM_SLUG = "programSlug";
     private static final String ARG_EPISODE = "episode";
-
+    public final AtomicBoolean pagerVisible = new AtomicBoolean(false);
     public Episode episode;
     public Program program;
-    public AtomicBoolean pagerVisible = new AtomicBoolean(false);
     private StreamManager.EpisodeStream mPlayer;
     private SeekBar mSeekBar;
     private TextView mCurrentTime;
@@ -153,7 +152,7 @@ public class EpisodeFragment extends Fragment {
         super.onSaveInstanceState(outState);
     }
 
-    public void playAudio() {
+    void playAudio() {
         MainActivity activity = (MainActivity) getActivity();
         boolean alreadyPlaying = false;
 

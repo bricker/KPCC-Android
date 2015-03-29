@@ -28,9 +28,9 @@ import java.util.Map;
 //     }
 //   }
 public class BaseApiClient {
-    public static final String API_ROOT = "http://www.scpr.org/api/v3/";
+    private static final String API_ROOT = "http://www.scpr.org/api/v3/";
 
-    protected String mEndpoint;
+    private final String mEndpoint;
 
     public BaseApiClient(String endpoint) {
         mEndpoint = endpoint;
