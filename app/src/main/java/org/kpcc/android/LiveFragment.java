@@ -1,11 +1,14 @@
 package org.kpcc.android;
 
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
@@ -23,13 +26,11 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 
 public class LiveFragment extends Fragment {
-    public final static String TAG = "LiveFragment";
     public static String ARG_PLAY_NOW = "args_play_now";
     private static long PLAY_START = 0;
 
     private TextView mTitle;
     private TextView mStatus;
-    private NetworkImageView mBackground;
     private NetworkImageView mAdView;
     private String mScheduleTitle;
     private StreamManager.LiveStream mPlayer;
@@ -38,10 +39,7 @@ public class LiveFragment extends Fragment {
     private ProgressBar mPrerollProgressBar;
     private View mPrerollView;
     private ScheduleUpdater mScheduleUpdater;
-
-    public LiveFragment() {
-        // Required empty public constructor
-    }
+    private ImageView mBackground;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -57,15 +55,13 @@ public class LiveFragment extends Fragment {
                              Bundle savedInstanceState) {
 
         final MainActivity activity = (MainActivity) getActivity();
-
         activity.setTitle(R.string.kpcc_live);
 
-        // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_live, container, false);
 
+        mBackground = (ImageView) view.findViewById(R.id.background);
         mTitle = (TextView) view.findViewById(R.id.live_title);
         mStatus = (TextView) view.findViewById(R.id.live_status);
-        mBackground = (NetworkImageView) view.findViewById(R.id.background);
         mAdView = (NetworkImageView) view.findViewById(R.id.preroll_ad);
         mPrerollProgressBar = (ProgressBar) view.findViewById(R.id.progress_bar);
         mPrerollView = view.findViewById(R.id.preroll);
@@ -94,7 +90,7 @@ public class LiveFragment extends Fragment {
                                     setDefaultValues(true, false);
                                 }
 
-                                NetworkImageManager.instance.setBackgroundImage(mBackground, schedule.programSlug);
+                                NetworkImageManager.instance.setBitmap(getActivity(), mBackground, schedule.programSlug);
                             } else {
                                 setDefaultValues(true, true);
                             }
@@ -145,7 +141,7 @@ public class LiveFragment extends Fragment {
                     // We should always set a new mPlayer here. If the play button was clicked,
                     // either it was handled by the preroll case above or the previous
                     // stream was destroyed.
-                    mPlayer = new StreamManager.LiveStream(activity, mAdView);
+                    mPlayer = new StreamManager.LiveStream(activity);
                     setupAudioStateHandlers();
 
                     // Preroll will be handled normally
@@ -197,7 +193,7 @@ public class LiveFragment extends Fragment {
             mStatus.setText(R.string.live);
         }
         if (doImage) {
-            NetworkImageManager.instance.setDefaultBackgroundImage(mBackground);
+            NetworkImageManager.instance.setDefaultBitmap(mBackground);
         }
     }
 
@@ -228,8 +224,8 @@ public class LiveFragment extends Fragment {
             }
 
             @Override
-            public void onProgress(int progress) {
-                mPrerollProgressBar.setProgress(progress / 1000);
+            public void onCompletion() {
+                // MBC has burned down please call 911
             }
 
             @Override
@@ -239,17 +235,43 @@ public class LiveFragment extends Fragment {
         });
 
         mPlayer.setPrerollAudioEventListener(new StreamManager.AudioEventListener() {
-            public void onPrerollData(PrerollManager.PrerollData prerollData) {
-                mPrerollProgressBar.setMax(prerollData.audioDuration);
-                ;
+            public void onPrerollData(final PrerollManager.PrerollData prerollData) {
+                mPrerollProgressBar.setMax(prerollData.audioDurationSeconds * 1000);
                 mPrerollView.setVisibility(View.VISIBLE);
                 mStatus.setVisibility(View.INVISIBLE);
                 mTitle.setVisibility(View.INVISIBLE);
+
+                if (prerollData.assetUrl != null) {
+                    NetworkImageManager.instance.setPrerollImage(mAdView, prerollData.assetUrl);
+
+                    if (prerollData.assetClickUrl != null) {
+                        mAdView.setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+                                Uri uri = Uri.parse(prerollData.assetClickUrl);
+                                Intent intent = new Intent(Intent.ACTION_VIEW, uri);
+
+                                if (intent.resolveActivity(getActivity().getPackageManager()) != null) {
+                                    getActivity().startActivity(intent);
+                                }
+
+                                if (prerollData.trackingUrl != null) {
+                                    HttpRequest.ImpressionRequest.get(prerollData.trackingUrl);
+                                }
+                            }
+                        });
+                    }
+
+                    if (prerollData.impressionUrl != null) {
+                        HttpRequest.ImpressionRequest.get(prerollData.impressionUrl);
+                    }
+                }
             }
 
             @Override
             public void onLoading() {
                 mAudioButtonManager.toggleLoading();
+                ((MainActivity) getActivity()).getNavigationDrawerFragment().disableDrawer();
             }
 
             @Override
@@ -264,6 +286,13 @@ public class LiveFragment extends Fragment {
 
             @Override
             public void onStop() {
+                ((MainActivity) getActivity()).getNavigationDrawerFragment().enableDrawer();
+            }
+
+            @Override
+            public void onCompletion() {
+                ((MainActivity) getActivity()).getNavigationDrawerFragment().enableDrawer();
+                mAdView.setVisibility(View.GONE);
                 mPrerollView.setVisibility(View.GONE);
                 mStatus.setVisibility(View.VISIBLE);
                 mTitle.setVisibility(View.VISIBLE);
@@ -273,12 +302,12 @@ public class LiveFragment extends Fragment {
 
             @Override
             public void onProgress(int progress) {
-                mPrerollProgressBar.setProgress(progress / 1000);
+                mPrerollProgressBar.setProgress(progress);
             }
 
             @Override
             public void onError() {
-                mAudioButtonManager.toggleError(R.string.audio_error);
+                ((MainActivity) getActivity()).getNavigationDrawerFragment().enableDrawer();
             }
         });
 
@@ -288,12 +317,12 @@ public class LiveFragment extends Fragment {
         JSONObject params = new JSONObject();
 
         try {
-            params.put("programTitle", mScheduleTitle);
+            params.put(AnalyticsManager.PARAM_PROGRAM_TITLE, mScheduleTitle);
 
             if (key.equals(AnalyticsManager.EVENT_LIVE_STREAM_PAUSE)) {
                 if (PLAY_START != 0) {
                     long seconds = TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis() - PLAY_START);
-                    params.put("sessionLengthInSeconds", seconds);
+                    params.put(AnalyticsManager.PARAM_SESSION_LENGTH, seconds);
                 }
             }
         } catch (JSONException e) {

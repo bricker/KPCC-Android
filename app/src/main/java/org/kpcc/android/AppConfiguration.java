@@ -9,7 +9,6 @@ import java.util.Properties;
 
 
 public class AppConfiguration {
-    public static final String TAG = "AppConfiguration";
     public static AppConfiguration instance = null;
 
     private Properties props;

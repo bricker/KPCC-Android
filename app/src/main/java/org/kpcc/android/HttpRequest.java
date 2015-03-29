@@ -3,13 +3,18 @@ package org.kpcc.android;
 import android.content.Context;
 import android.net.Uri;
 
+import com.android.volley.Network;
 import com.android.volley.NetworkResponse;
 import com.android.volley.ParseError;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
+import com.android.volley.toolbox.BasicNetwork;
+import com.android.volley.toolbox.DiskBasedCache;
 import com.android.volley.toolbox.HttpHeaderParser;
+import com.android.volley.toolbox.HttpStack;
+import com.android.volley.toolbox.HurlStack;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
@@ -17,6 +22,7 @@ import com.android.volley.toolbox.Volley;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.File;
 import java.io.UnsupportedEncodingException;
 import java.util.HashMap;
 import java.util.Map;
@@ -39,11 +45,16 @@ public class HttpRequest {
     }
 
     public static class Manager {
+        private static final int DISK_USAGE_BYTES = 25 * 1024 * 1024;
+        private static final String CACHE_DIR = "kpcc_programs";
+
         public static Manager instance = null;
-        private static RequestQueue mRequestQueue;
+        public RequestQueue requestQueue;
+        public RequestQueue diskRequestQueue;
 
         protected Manager(Context context) {
-            mRequestQueue = Volley.newRequestQueue(context.getApplicationContext());
+            requestQueue = Volley.newRequestQueue(context.getApplicationContext());
+            diskRequestQueue = newDiskRequestQueue(context.getApplicationContext());
         }
 
         public static void setupInstance(Context context) {
@@ -52,12 +63,23 @@ public class HttpRequest {
             }
         }
 
-        public <T> void addToRequestQueue(Request<T> req) {
-            mRequestQueue.add(req);
-        }
+        private RequestQueue newDiskRequestQueue(Context context) {
+            File rootCache = context.getExternalCacheDir();
 
-        public RequestQueue getRequestQueue() {
-            return mRequestQueue;
+            if (rootCache == null) {
+                rootCache = context.getCacheDir();
+            }
+
+            File cacheDir = new File(rootCache, CACHE_DIR);
+            cacheDir.mkdirs();
+
+            HttpStack stack = new HurlStack();
+            Network network = new BasicNetwork(stack);
+            DiskBasedCache diskBasedCache = new DiskBasedCache(cacheDir, DISK_USAGE_BYTES);
+            RequestQueue queue = new RequestQueue(diskBasedCache, network);
+            queue.start();
+
+            return queue;
         }
 
     }
@@ -77,7 +99,7 @@ public class HttpRequest {
                 }
             });
 
-            HttpRequest.Manager.instance.addToRequestQueue(req);
+            Manager.instance.requestQueue.add(req);
         }
     }
 
@@ -87,7 +109,7 @@ public class HttpRequest {
                                Response.ErrorListener errorListener) {
 
             StringRequest req = new StringRequest(Request.Method.GET, url, responseListener, errorListener);
-            HttpRequest.Manager.instance.addToRequestQueue(req);
+            Manager.instance.requestQueue.add(req);
         }
     }
 
@@ -115,7 +137,7 @@ public class HttpRequest {
 
             String queryUrl = HttpRequest.addQueryParams(url, params);
             JsonRequest req = new JsonRequest(Request.Method.GET, queryUrl, headers, responseListener, errorListener);
-            HttpRequest.Manager.instance.addToRequestQueue(req);
+            Manager.instance.requestQueue.add(req);
         }
 
         public static void post(String url,
@@ -125,7 +147,7 @@ public class HttpRequest {
                                 Response.ErrorListener errorListener) {
 
             JsonObjectRequestWithHeaders req = new JsonObjectRequestWithHeaders(headers, Request.Method.POST, url, params, responseListener, errorListener);
-            HttpRequest.Manager.instance.addToRequestQueue(req);
+            Manager.instance.requestQueue.add(req);
         }
 
         @Override

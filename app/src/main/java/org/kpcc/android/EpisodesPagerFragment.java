@@ -1,0 +1,182 @@
+package org.kpcc.android;
+
+import android.os.Bundle;
+import android.support.annotation.Nullable;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentPagerAdapter;
+import android.support.v4.view.ViewPager;
+import android.util.SparseArray;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.ImageView;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+import org.kpcc.api.Episode;
+
+import java.util.ArrayList;
+
+public class EpisodesPagerFragment extends Fragment {
+    public final static String STACK_TAG = "episodesPager";
+    private final static String ARG_EPISODE = "args_episodes";
+    private final static String ARG_POSITION = "args_position";
+    private final static String ARG_PROGRAM_SLUG = "args_program_slug";
+
+    public ViewPager pager;
+    public int currentPosition;
+    private EpisodePagerAdapter mAdapter;
+    private ArrayList<String> mEpisodes;
+    private String mProgramSlug;
+
+    public static EpisodesPagerFragment newInstance(ArrayList<Episode> episodes, int position, String programSlug) {
+        Bundle args = new Bundle();
+        ArrayList<String> episodesJson = new ArrayList<>();
+
+        for (Episode episode : episodes) {
+            try {
+                episodesJson.add(episode.toJSON().toString());
+            } catch (JSONException e) {
+                // implicit continue
+                // This episode will not be included.
+            }
+        }
+
+        args.putSerializable(ARG_EPISODE, episodesJson);
+        args.putInt(ARG_POSITION, position);
+        args.putString(ARG_PROGRAM_SLUG, programSlug);
+
+        EpisodesPagerFragment fragment = new EpisodesPagerFragment();
+        fragment.setArguments(args);
+        return fragment;
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        Bundle args = getArguments();
+
+        if (args != null) {
+            // This is coming from our args that we're setting above
+            // The compiler warns about unchecked cast but it's safe.
+            mEpisodes = (ArrayList<String>) args.getSerializable(ARG_EPISODE);
+            mProgramSlug = args.getString(ARG_PROGRAM_SLUG);
+            currentPosition = args.getInt(ARG_POSITION);
+        }
+    }
+
+    @Override
+    public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+        View view = inflater.inflate(R.layout.fragment_episodes_pager, container, false);
+
+        ImageView background = (ImageView) view.findViewById(R.id.background);
+        NetworkImageManager.instance.setBitmap(getActivity(), background, mProgramSlug);
+
+        mAdapter = new EpisodePagerAdapter(getChildFragmentManager());
+        pager = (ViewPager) view.findViewById(R.id.pager);
+        pager.setAdapter(mAdapter);
+
+        pager.setOnPageChangeListener(new ViewPager.OnPageChangeListener() {
+            @Override
+            public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
+                EpisodeFragment fragment = mAdapter.getRegisteredFragment(position);
+
+                if (fragment != null && positionOffset == 1 && fragment.episodeWasSkipped()) {
+                    JSONObject params = new JSONObject();
+
+                    try {
+                        params.put(AnalyticsManager.PARAM_PROGRAM_PUBLISHED_AT, fragment.episode.formattedAirDate);
+                        params.put(AnalyticsManager.PARAM_PROGRAM_TITLE, fragment.program.title);
+                        params.put(AnalyticsManager.PARAM_EPISODE_TITLE, fragment.episode.title);
+                        params.put(AnalyticsManager.PARAM_PROGRAM_LENGTH, fragment.episode.audio.durationSeconds);
+                        params.put(AnalyticsManager.PARAM_PLAYED_DURATION, fragment.getCurrentPlayerPositionSeconds());
+                    } catch (JSONException e) {
+                        // Nothing to do. No data will be sent with this event.
+                    }
+
+                    AnalyticsManager.instance.logEvent(AnalyticsManager.EVENT_ON_DEMAND_SKIPPED);
+                }
+            }
+
+            @Override
+            public void onPageSelected(int position) {
+                EpisodeFragment fragment = mAdapter.getRegisteredFragment(position);
+
+                if (fragment != null) {
+                    fragment.pagerVisible.set(true);
+                    fragment.onResume();
+                }
+            }
+
+            @Override
+            public void onPageScrollStateChanged(int state) {
+            }
+        });
+
+        pager.setCurrentItem(currentPosition);
+
+        return view;
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        outState.putSerializable(ARG_EPISODE, mEpisodes);
+        outState.putInt(ARG_POSITION, currentPosition);
+        outState.putString(ARG_PROGRAM_SLUG, mProgramSlug);
+
+        super.onSaveInstanceState(outState);
+    }
+
+    private class EpisodePagerAdapter extends FragmentPagerAdapter {
+        private SparseArray<String> registeredFragments = new SparseArray<>();
+
+        public EpisodePagerAdapter(FragmentManager fm) {
+            super(fm);
+        }
+
+        @Override
+        public Fragment getItem(int position) {
+            currentPosition = position;
+            String episodeJson = mEpisodes.get(position);
+            return EpisodeFragment.newInstance(mProgramSlug, episodeJson);
+        }
+
+        @Override
+        public void setPrimaryItem(ViewGroup container, int position, Object object) {
+            super.setPrimaryItem(container, position, object);
+            EpisodeFragment fragment = (EpisodeFragment) object;
+
+            // Inform the fragment that it's now visible and call onResume() again to reset the
+            // buttons and play the audio.
+            // There is probably a better way to do this but I couldn't find it.
+            fragment.pagerVisible.set(true);
+        }
+
+        @Override
+        public int getCount() {
+            return mEpisodes.size();
+        }
+
+        @Override
+        public Object instantiateItem(ViewGroup container, int position) {
+            Fragment fragment = (Fragment) super.instantiateItem(container, position);
+            // We can use getTag here because we're use FragmentPagerAdapter.
+            // FragmentStatePagerAdapter doesn't set tags on its fragments.
+            registeredFragments.put(position, fragment.getTag());
+            return fragment;
+        }
+
+        @Override
+        public void destroyItem(ViewGroup container, int position, Object object) {
+            registeredFragments.remove(position);
+            super.destroyItem(container, position, object);
+        }
+
+        public EpisodeFragment getRegisteredFragment(int position) {
+            String tag = registeredFragments.get(position);
+            return (EpisodeFragment) getChildFragmentManager().findFragmentByTag(tag);
+        }
+    }
+}

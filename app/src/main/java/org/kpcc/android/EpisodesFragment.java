@@ -10,13 +10,13 @@ import android.view.ViewGroup;
 import android.widget.AbsListView;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListAdapter;
 import android.widget.TextView;
 
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
-import com.android.volley.toolbox.NetworkImageView;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -29,39 +29,21 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 
-/**
- * A fragment representing a list of Items.
- * <p/>
- * Large screen devices (such as tablets) are supported by replacing the ListView
- * with a GridView.
- */
 public class EpisodesFragment extends Fragment implements AbsListView.OnItemClickListener {
-    public final static String TAG = "EpisodesFragment";
     public final static String STACK_TAG = "episodesList";
     private static final String ARG_PROGRAM_SLUG = "program_slug";
+    private static final String PARAM_PROGRAM = "program";
+    private static final String PARAM_LIMIT = "limit";
+    private static final String EPISODE_LIMIT = "8";
 
-    /**
-     * The fragment's ListView/GridView.
-     */
     private AbsListView mListView;
     private LinearLayout mProgressBar;
-    private NetworkImageView mBackground;
-
-    /**
-     * The Adapter which will be used to populate the ListView/GridView with
-     * Views.
-     */
     private ListAdapter mAdapter;
-
     private Program mProgram;
     private ArrayList<Episode> mEpisodes = new ArrayList<>();
 
-    /**
-     * Mandatory empty constructor for the fragment manager to instantiate the
-     * fragment (e.g. upon screen orientation changes).
-     */
-    public EpisodesFragment() {
-    }
+    // Unrecoverable error. Just show an error message if this is true.
+    private boolean mDidError = false;
 
     public static EpisodesFragment newInstance(String programSlug) {
         EpisodesFragment fragment = new EpisodesFragment();
@@ -82,8 +64,8 @@ public class EpisodesFragment extends Fragment implements AbsListView.OnItemClic
 
         HashMap<String, String> params = new HashMap<>();
 
-        params.put("program", mProgram.slug);
-        params.put("limit", "8");
+        params.put(PARAM_PROGRAM, mProgram.slug);
+        params.put(PARAM_LIMIT, EPISODE_LIMIT);
 
         Episode.Client.getCollection(params, new Response.Listener<JSONObject>() {
             @Override
@@ -92,56 +74,74 @@ public class EpisodesFragment extends Fragment implements AbsListView.OnItemClic
                     JSONArray jsonEpisodes = response.getJSONArray(Episode.PLURAL_KEY);
 
                     for (int i = 0; i < jsonEpisodes.length(); i++) {
-                        Episode episode = Episode.buildFromJson(jsonEpisodes.getJSONObject(i));
+                        try {
+                            Episode episode = Episode.buildFromJson(jsonEpisodes.getJSONObject(i));
 
-                        // Don't show the episode if there is no audio.
-                        if (episode.audio != null) {
-                            mEpisodes.add(episode);
-                        } else {
-                            // If there was no episode but there are segments, use those as episodes.
-                            if (episode.segments.size() > 0) {
-                                for (Segment segment : episode.segments) {
-                                    if (segment.audio != null) {
-                                        mEpisodes.add(Episode.buildFromSegment(segment));
+                            // Don't show the episode if there is no audio.
+                            if (episode.audio != null) {
+                                mEpisodes.add(episode);
+                            } else {
+                                // If there was no episode but there are segments, use those as episodes.
+                                if (episode.segments.size() > 0) {
+                                    for (Segment segment : episode.segments) {
+                                        if (segment.audio != null) {
+                                            mEpisodes.add(Episode.buildFromSegment(segment));
+                                        }
                                     }
                                 }
                             }
+                        } catch (JSONException e) {
+                            // implicit continue
+                            // This episode will not show.
                         }
                     }
-
-                    Collections.sort(mEpisodes);
-
-                    mAdapter = (new ArrayAdapter<Episode>(getActivity(), R.layout.list_item_episode, mEpisodes) {
-                        @Override
-                        public View getView(int position, View convertView, ViewGroup parent) {
-                            View view = convertView;
-
-                            if (view == null) {
-                                LayoutInflater inflater = (LayoutInflater) getContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-                                view = inflater.inflate(R.layout.list_item_episode, null);
-                            }
-
-                            Episode episode = mEpisodes.get(position);
-                            TextView title = (TextView) view.findViewById(R.id.episode_title);
-                            TextView date = (TextView) view.findViewById(R.id.air_date);
-
-                            title.setText(episode.title);
-                            date.setText(episode.formattedAirDate);
-
-                            return view;
-                        }
-                    });
-
-                    setAdapter();
-
                 } catch (JSONException e) {
-                    // TODO: Handle failures
+                    // The list will be empty. This will happen if the API returns malformed JSON.
+                    // I don't expect that to happen so it's not worth the time to write a proper
+                    // UI for a failure here.
                 }
+
+                Collections.sort(mEpisodes);
+
+                mAdapter = (new ArrayAdapter<Episode>(getActivity(), R.layout.list_item_episode, mEpisodes) {
+                    @Override
+                    public View getView(int position, View convertView, ViewGroup parent) {
+                        MainActivity activity = (MainActivity) getActivity();
+                        View view = convertView;
+
+                        if (view == null) {
+                            LayoutInflater inflater = (LayoutInflater) getContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+                            view = inflater.inflate(R.layout.list_item_episode, null);
+                        }
+
+                        Episode episode = mEpisodes.get(position);
+                        TextView title = (TextView) view.findViewById(R.id.episode_title);
+                        TextView date = (TextView) view.findViewById(R.id.air_date);
+                        ImageView audio_icon = (ImageView) view.findViewById(R.id.audio_icon);
+
+                        title.setText(episode.title);
+                        date.setText(episode.formattedAirDate);
+
+                        if (activity.streamIsBound()) {
+                            StreamManager.EpisodeStream currentPlayer = activity.streamManager.currentEpisodePlayer;
+                            if (currentPlayer != null && currentPlayer.audioUrl.equals(episode.audio.url)) {
+                                audio_icon.setVisibility(View.VISIBLE);
+                            } else {
+                                audio_icon.setVisibility(View.GONE);
+                            }
+                        }
+
+                        return view;
+                    }
+                });
+
+                setAdapter();
             }
         }, new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {
-                // TODO: Handle failures
+                // This boolean will be checked in onCreateView() and handled.
+                mDidError = true;
             }
         });
     }
@@ -150,35 +150,44 @@ public class EpisodesFragment extends Fragment implements AbsListView.OnItemClic
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
 
-        MainActivity activity = (MainActivity) getActivity();
+        final MainActivity activity = (MainActivity) getActivity();
         activity.setTitle(mProgram.title);
 
         View view = inflater.inflate(R.layout.fragment_episodes, container, false);
 
-        // Set the adapter
-        mListView = (AbsListView) view.findViewById(android.R.id.list);
-        mProgressBar = (LinearLayout) view.findViewById(R.id.progress_layout);
-        mBackground = (NetworkImageView) view.findViewById(R.id.background);
-        NetworkImageManager.instance.setBackgroundImage(mBackground, mProgram.slug);
+        ImageView background = (ImageView) view.findViewById(R.id.background);
+        NetworkImageManager.instance.setBitmap(getActivity(), background, mProgram.slug);
 
-        // Set OnItemClickListener so we can be notified on item clicks
-        mListView.setOnItemClickListener(this);
-        setAdapter();
+        mProgressBar = (LinearLayout) view.findViewById(R.id.progress_layout);
+
+        if (mDidError) {
+            LinearLayout errorView = (LinearLayout) view.findViewById(R.id.generic_load_error);
+            mProgressBar.setVisibility(View.GONE);
+            errorView.setVisibility(View.VISIBLE);
+        } else {
+            // Set the adapter
+            mListView = (AbsListView) view.findViewById(android.R.id.list);
+
+            // Set OnItemClickListener so we can be notified on item clicks
+            mListView.setOnItemClickListener(this);
+
+            // This should be called here in case onCreate() was bypassed.
+            setAdapter();
+        }
 
         return view;
     }
 
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-        Episode episode = mEpisodes.get(position);
+        getActivity().setTitle(R.string.programs);
 
         FragmentManager fragmentManager = getActivity().getSupportFragmentManager();
         fragmentManager.beginTransaction()
-                .replace(R.id.container, EpisodeFragment.newInstance(
-                                mProgram.slug, episode.title, episode.formattedAirDate,
-                                episode.audio.url, episode.audio.durationSeconds),
-                        STACK_TAG)
-                .addToBackStack(null)
+                .replace(R.id.container,
+                        EpisodesPagerFragment.newInstance(mEpisodes, position, mProgram.slug),
+                        EpisodesPagerFragment.STACK_TAG)
+                .addToBackStack(STACK_TAG)
                 .commit();
     }
 
@@ -187,5 +196,11 @@ public class EpisodesFragment extends Fragment implements AbsListView.OnItemClic
             mListView.setAdapter(mAdapter);
             mProgressBar.setVisibility(View.GONE);
         }
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        outState.putString(ARG_PROGRAM_SLUG, mProgram.slug);
+        super.onSaveInstanceState(outState);
     }
 }

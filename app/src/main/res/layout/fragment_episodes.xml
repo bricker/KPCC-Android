@@ -1,12 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    tools:context="org.kpcc.android.EpisodesFragment">
+    android:layout_height="match_parent">
 
-    <include layout="@layout/program_background" />
+    <ImageView
+        android:id="@+id/background"
+        style="@style/background_image" />
+
+    <include layout="@layout/generic_load_error" android:visibility="gone" />
 
     <!-- Don't use static_content_wrapper here or the padding will get nested -->
     <RelativeLayout

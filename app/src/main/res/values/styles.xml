@@ -59,12 +59,13 @@
 
     <style name="background_image">
         <item name="android:scaleType">centerCrop</item>
-        <item name="android:layout_width">match_parent</item>
-        <item name="android:layout_height">match_parent</item>
+        <item name="android:layout_width">fill_parent</item>
+        <item name="android:layout_height">fill_parent</item>
+        <item name="android:alpha">0.7</item>
     </style>
 
-    <style name="background_image_blurred" parent="background_image">
-        <item name="android:alpha">0.3</item>
+    <style name="generic_background_image" parent="background_image">
+        <item name="android:src">@drawable/tile_generic</item>
     </style>
 
     <style name="check_radio_button">

@@ -5,7 +5,9 @@
     android:layout_weight="1"
     android:orientation="vertical" >
 
-    <include layout="@layout/generic_background_blurred" />
+    <ImageView
+        android:id="@+id/background"
+        style="@style/generic_background_image" />
 
     <WebView
         xmlns:android="http://schemas.android.com/apk/res/android"

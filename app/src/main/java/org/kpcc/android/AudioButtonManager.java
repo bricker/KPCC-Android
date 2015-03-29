@@ -1,5 +1,6 @@
 package org.kpcc.android;
 
+import android.support.annotation.NonNull;
 import android.view.View;
 import android.widget.ImageButton;
 import android.widget.ProgressBar;
@@ -12,7 +13,7 @@ public class AudioButtonManager {
     private ProgressBar mLoadingInd;
     private TextView mErrorMsg;
 
-    public AudioButtonManager(View view) {
+    public AudioButtonManager(@NonNull View view) {
         mPlayButton = (ImageButton) view.findViewById(R.id.play_button);
         mPauseButton = (ImageButton) view.findViewById(R.id.pause_button);
         mStopButton = (ImageButton) view.findViewById(R.id.stop_button);

@@ -13,8 +13,6 @@ import java.util.HashMap;
 
 public class FeedbackManager {
     public static final FeedbackManager instance = new FeedbackManager();
-
-    public final static String TAG = "kpcc.FeedbackManager";
     public final static String TYPE_BUG = "bug";
     public final static String TYPE_SUGGESTION = "suggestion";
     public final static String TYPE_FEEDBACK = "feedback";

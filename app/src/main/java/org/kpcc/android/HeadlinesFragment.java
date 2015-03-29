@@ -13,13 +13,7 @@ import android.webkit.WebViewClient;
 import android.widget.LinearLayout;
 
 
-/**
- * A simple {@link Fragment} subclass.
- * Use the {@link HeadlinesFragment#newInstance} factory method to
- * create an instance of this fragment.
- */
 public class HeadlinesFragment extends Fragment {
-    public static final String TAG = "HeadlinesFragment";
     private static final String SHORTLIST_URL = "http://www.scpr.org/short-list/latest#no-prelims";
 
     private boolean mDidBrowse = false;
@@ -33,12 +27,13 @@ public class HeadlinesFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        View v = inflater.inflate(R.layout.fragment_headlines, container, false);
+        View view = inflater.inflate(R.layout.fragment_headlines, container, false);
+
         final MainActivity activity = (MainActivity) getActivity();
         activity.setTitle(R.string.headlines);
 
-        WebView browser = (WebView) v.findViewById(R.id.content_wrapper);
-        mProgressBar = (LinearLayout) v.findViewById(R.id.progress_layout);
+        WebView browser = (WebView) view.findViewById(R.id.content_wrapper);
+        mProgressBar = (LinearLayout) view.findViewById(R.id.progress_layout);
 
         browser.setWebViewClient(new WebViewClient() {
             @Override
@@ -88,7 +83,7 @@ public class HeadlinesFragment extends Fragment {
             }
         });
 
-        return v;
+        return view;
     }
 
     @Override

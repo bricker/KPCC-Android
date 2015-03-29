@@ -10,16 +10,25 @@ public class Audio extends Entity {
     public int durationSeconds;
 
 
-    public static Audio buildFromJson(JSONObject jsonAudio) {
+    public static Audio buildFromJson(JSONObject jsonAudio) throws JSONException {
         Audio audio = new Audio();
 
+        audio.url = jsonAudio.getString(PROP_URL);
+
         try {
-            audio.url = jsonAudio.getString(PROP_URL);
             audio.durationSeconds = jsonAudio.getInt(PROP_DURATION);
         } catch (JSONException e) {
-            // TODO: Handle error
+            audio.durationSeconds = 0; // Ensure an integer
         }
 
         return audio;
+    }
+
+    public JSONObject toJSON() throws JSONException {
+        JSONObject audioJson = new JSONObject();
+        audioJson.put(Entity.PROP_URL, url);
+        audioJson.put(Entity.PROP_DURATION, durationSeconds);
+
+        return audioJson;
     }
 }

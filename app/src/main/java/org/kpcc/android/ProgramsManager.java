@@ -13,10 +13,8 @@ import java.util.Collections;
 import java.util.HashMap;
 
 public class ProgramsManager {
-    public static final String TAG = "ProgramsManager";
-    public static final String PROGRAM_TILE_URL = "http://media.scpr.org/iphone/program-images/program_tile_%s@2x.jpg";
-    public final static ProgramsManager instance = new ProgramsManager();
-    public static ArrayList<Program> ALL_PROGRAMS = new ArrayList<Program>();
+    public static ProgramsManager instance;
+    public ArrayList<Program> ALL_PROGRAMS = new ArrayList<>();
 
     protected ProgramsManager() {
         HashMap<String, String> params = new HashMap<>();
@@ -29,25 +27,30 @@ public class ProgramsManager {
                     JSONArray jsonPrograms = response.getJSONArray(Program.PLURAL_KEY);
 
                     for (int i = 0; i < jsonPrograms.length(); i++) {
-                        Program program = Program.buildFromJson(jsonPrograms.getJSONObject(i));
-                        ALL_PROGRAMS.add(program);
+                        try {
+                            Program program = Program.buildFromJson(jsonPrograms.getJSONObject(i));
+                            ALL_PROGRAMS.add(program);
+                        } catch (JSONException e) {
+                            // implicit continue.
+                        }
                     }
 
                     Collections.sort(ALL_PROGRAMS);
                 } catch (JSONException e) {
-                    // TODO: Handle errors
+                    // No programs will be available.
                 }
             }
         }, new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {
-                // TODO: Handle response errors
+                // No programs will be available.
+                // The fragment should check the status and try to reload the programs.
             }
         });
     }
 
-    public static String buildTileUrl(String slug) {
-        return String.format(ProgramsManager.PROGRAM_TILE_URL, slug);
+    public static void setupInstance() {
+        instance = new ProgramsManager();
     }
 
     public Program find(String slug) {

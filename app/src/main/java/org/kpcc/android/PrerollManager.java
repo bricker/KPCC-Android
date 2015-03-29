@@ -43,7 +43,7 @@ public class PrerollManager {
 
     public static class PrerollData {
         public String audioUrl;
-        public Integer audioDuration; // Seconds
+        public Integer audioDurationSeconds;
         public String assetUrl;
         public String assetClickUrl;
         public String trackingUrl;
@@ -78,14 +78,14 @@ public class PrerollManager {
                             }
                             continue;
                         case "Duration":
-                            if (prerollData.audioDuration == null) {
+                            if (prerollData.audioDurationSeconds == null) {
                                 String durationString = readText(parser);
                                 String[] segments = durationString.split(":");
                                 int duration = 0;
                                 duration += Integer.valueOf(segments[0]) * 60 * 60; // hours
                                 duration += Integer.valueOf(segments[1]) * 60; // minutes
                                 duration += Integer.valueOf(segments[2].split("\\.")[0]); // seconds
-                                prerollData.audioDuration = duration;
+                                prerollData.audioDurationSeconds = duration;
                             }
                             continue;
                         case "MediaFile":

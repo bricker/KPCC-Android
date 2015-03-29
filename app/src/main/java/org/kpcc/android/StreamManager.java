@@ -7,20 +7,15 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
-import android.net.Uri;
 import android.os.Binder;
 import android.os.Handler;
 import android.os.IBinder;
-import android.view.View;
-
-import com.android.volley.toolbox.NetworkImageView;
 
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class StreamManager extends Service {
-    public static final String TAG = "kpcc.StreamManager";
     private final IBinder mBinder = new LocalBinder();
 
     public EpisodeStream currentEpisodePlayer;
@@ -52,15 +47,24 @@ public class StreamManager extends Service {
     public abstract static class AudioEventListener {
         public abstract void onLoading();
 
+        public void onPrepared() {
+        }
+
         public abstract void onPlay();
 
         public abstract void onPause();
 
         public abstract void onStop();
 
-        public abstract void onProgress(int progress);
+        public abstract void onCompletion();
+
+        public void onProgress(int progress) {
+        }
 
         public abstract void onError();
+
+        public void onBufferingUpdate(int percent) {
+        }
 
         public void onPrerollData(PrerollManager.PrerollData prerollData) {
         }
@@ -194,16 +198,15 @@ public class StreamManager extends Service {
 
     public static class EpisodeStream extends BaseStream {
         public String audioUrl;
-        private EpisodeFragment.EpisodeAudioCompletionCallback mCompletionCallback;
+        public String programSlug;
+        public int durationSeconds;
         private boolean isPaused = false;
 
-        public EpisodeStream(String audioUrl,
-                             Context context,
-                             EpisodeFragment.EpisodeAudioCompletionCallback completionCallback) {
-
+        public EpisodeStream(String audioUrl, String programSlug, int durationSeconds, Context context) {
             super(context);
             this.audioUrl = audioUrl;
-            mCompletionCallback = completionCallback;
+            this.durationSeconds = durationSeconds;
+            this.programSlug = programSlug;
 
             if (mActivity.streamIsBound()) {
                 mActivity.streamManager.currentEpisodePlayer = this;
@@ -243,8 +246,15 @@ public class StreamManager extends Service {
             audioPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
                 @Override
                 public void onCompletion(MediaPlayer mp) {
-                    mCompletionCallback.onCompletion();
+                    mAudioEventListener.onCompletion();
                     release();
+                }
+            });
+
+            audioPlayer.setOnBufferingUpdateListener(new MediaPlayer.OnBufferingUpdateListener() {
+                @Override
+                public void onBufferingUpdate(MediaPlayer mp, int percent) {
+                    mAudioEventListener.onBufferingUpdate(percent);
                 }
             });
 
@@ -302,13 +312,10 @@ public class StreamManager extends Service {
         // We get preroll directly from Triton so we always use the skip-preroll url.
         public final static String LIVESTREAM_URL = "http://live.scpr.org/kpcclive?preskip=true";
         private final static String PREF_USER_PLAYED_LIVESTREAM = "live_stream_played";
-        private NetworkImageView mAdView;
         private AudioEventListener mPrerollAudioEventListener;
 
-        public LiveStream(Context context,
-                          NetworkImageView adView) {
+        public LiveStream(Context context) {
             super(context);
-            mAdView = adView;
 
             if (mActivity.streamIsBound()) {
                 mActivity.streamManager.currentLivePlayer = this;
@@ -348,10 +355,10 @@ public class StreamManager extends Service {
                             mPrerollAudioEventListener.onPrerollData(prerollData);
 
                             PrerollStream preroll = new PrerollStream(mActivity,
-                                    mAdView, prerollData, LiveStream.this);
+                                    prerollData, LiveStream.this);
 
                             preroll.setOnAudioEventListener(mPrerollAudioEventListener);
-                            preroll.playAndShowAsset();
+                            preroll.play();
                         }
                     }
                 });
@@ -427,19 +434,16 @@ public class StreamManager extends Service {
     }
 
     public static class PrerollStream extends BaseStream {
-        private NetworkImageView mAdView;
         private BaseStream mParentStream;
         private PrerollManager.PrerollData mPrerollData;
 
         public PrerollStream(Context context,
-                             NetworkImageView adView,
                              PrerollManager.PrerollData prerollData,
                              BaseStream parentStream) {
             super(context);
 
             mParentStream = parentStream;
             mPrerollData = prerollData;
-            mAdView = adView;
 
             if (mActivity.streamIsBound()) {
                 mActivity.streamManager.currentPrerollPlayer = this;
@@ -452,30 +456,8 @@ public class StreamManager extends Service {
             resetProgressObserver();
         }
 
-        public void playAndShowAsset() {
-            if (mPrerollData.assetUrl != null) {
-                NetworkImageManager.instance.setPrerollImage(mAdView, mPrerollData.assetUrl);
-
-                if (mPrerollData.impressionUrl != null) {
-                    HttpRequest.ImpressionRequest.get(mPrerollData.impressionUrl);
-                }
-
-                mAdView.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        Uri uri = Uri.parse(mPrerollData.assetClickUrl);
-                        Intent intent = new Intent(Intent.ACTION_VIEW, uri);
-
-                        if (intent.resolveActivity(mActivity.getPackageManager()) != null) {
-                            mActivity.startActivity(intent);
-                        }
-
-                        if (mPrerollData.trackingUrl != null) {
-                            HttpRequest.ImpressionRequest.get(mPrerollData.trackingUrl);
-                        }
-                    }
-                });
-            }
+        public void play() {
+            mAudioEventListener.onLoading();
 
             try {
                 requestAudioFocus();
@@ -496,8 +478,8 @@ public class StreamManager extends Service {
             audioPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
                 @Override
                 public void onPrepared(MediaPlayer mp) {
+                    mAudioEventListener.onPrepared();
                     PrerollManager.LAST_PREROLL_PLAY = System.currentTimeMillis();
-                    mActivity.getNavigationDrawerFragment().disableDrawer();
                     start();
                 }
             });
@@ -505,8 +487,7 @@ public class StreamManager extends Service {
             audioPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
                 @Override
                 public void onCompletion(MediaPlayer mp) {
-                    mActivity.getNavigationDrawerFragment().enableDrawer();
-                    mAdView.setVisibility(View.GONE);
+                    mAudioEventListener.onCompletion();
                     mParentStream.onPrerollComplete();
                 }
             });

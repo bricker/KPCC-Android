@@ -18,17 +18,13 @@ public class Program extends Entity implements Comparable<Program> {
     public String normalizedTitle;
 
 
-    public static Program buildFromJson(JSONObject jsonProgram) {
+    public static Program buildFromJson(JSONObject jsonProgram) throws JSONException {
         Program program = new Program();
 
-        try {
-            program.title = jsonProgram.getString(PROP_TITLE);
-            program.normalizedTitle = program.title.replaceFirst("^(The )", "");
-            program.slug = jsonProgram.getString(PROP_SLUG);
-            program.publicUrl = jsonProgram.getString(PROP_PUBLIC_URL);
-        } catch (JSONException e) {
-            // TODO: Handle error
-        }
+        program.title = jsonProgram.getString(PROP_TITLE);
+        program.normalizedTitle = program.title.replaceFirst("^(The )", "");
+        program.slug = jsonProgram.getString(PROP_SLUG);
+        program.publicUrl = jsonProgram.getString(PROP_PUBLIC_URL);
 
         return program;
     }

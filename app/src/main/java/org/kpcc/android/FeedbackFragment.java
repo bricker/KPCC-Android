@@ -14,8 +14,6 @@ import android.widget.RadioButton;
 import android.widget.TextView;
 
 public class FeedbackFragment extends Fragment {
-    public static final String TAG = "kpcc.FeedbackFragment";
-
     private boolean mLock = false;
     private Button mSubmitButton;
     private RadioButton mFeedbackTypeBug;
@@ -44,21 +42,21 @@ public class FeedbackFragment extends Fragment {
         activity.setTitle(R.string.feedback);
 
         // Inflate the layout for this fragment
-        View v = inflater.inflate(R.layout.fragment_feedback, container, false);
+        View view = inflater.inflate(R.layout.fragment_feedback, container, false);
 
-        TextView appVersion = (TextView) v.findViewById(R.id.appVersion);
+        TextView appVersion = (TextView) view.findViewById(R.id.appVersion);
         appVersion.setText(BuildConfig.VERSION_NAME);
 
-        mSubmitButton = (Button) v.findViewById(R.id.submitButton);
-        mFeedbackTypeBug = (RadioButton) v.findViewById(R.id.feedbackTypeBug);
-        mFeedbackTypeSuggestion = (RadioButton) v.findViewById(R.id.feedbackTypeSuggestion);
-        mFeedbackTypeFeedback = (RadioButton) v.findViewById(R.id.feedbackTypeFeedback);
-        mInputComments = (EditText) v.findViewById(R.id.inputComments);
-        mInputName = (EditText) v.findViewById(R.id.inputName);
-        mInputEmail = (EditText) v.findViewById(R.id.inputEmail);
-        mValidationMessage = (TextView) v.findViewById(R.id.validationMessage);
-        mSuccessMessage = (TextView) v.findViewById(R.id.successMessage);
-        mErrorMessage = (TextView) v.findViewById(R.id.errorMessage);
+        mSubmitButton = (Button) view.findViewById(R.id.submitButton);
+        mFeedbackTypeBug = (RadioButton) view.findViewById(R.id.feedbackTypeBug);
+        mFeedbackTypeSuggestion = (RadioButton) view.findViewById(R.id.feedbackTypeSuggestion);
+        mFeedbackTypeFeedback = (RadioButton) view.findViewById(R.id.feedbackTypeFeedback);
+        mInputComments = (EditText) view.findViewById(R.id.inputComments);
+        mInputName = (EditText) view.findViewById(R.id.inputName);
+        mInputEmail = (EditText) view.findViewById(R.id.inputEmail);
+        mValidationMessage = (TextView) view.findViewById(R.id.validationMessage);
+        mSuccessMessage = (TextView) view.findViewById(R.id.successMessage);
+        mErrorMessage = (TextView) view.findViewById(R.id.errorMessage);
 
         // Override the button and put it on the right.
         View.OnClickListener listener = new View.OnClickListener() {
@@ -147,7 +145,7 @@ public class FeedbackFragment extends Fragment {
             }
         });
 
-        return v;
+        return view;
     }
 
     private void lockForm() {

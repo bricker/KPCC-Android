@@ -7,7 +7,7 @@ import com.mixpanel.android.mpmetrics.MixpanelAPI;
 import org.json.JSONObject;
 
 public class AnalyticsManager {
-    public static final String TAG = "AnalyticsManager";
+    // Any key discrepancy is for parity with the iOS app.
     public final static String EVENT_PROGRAM_SELECTED = "programSelected";
     public final static String EVENT_MENU_SELECTION_LIVE_STREAM = "menuSelectionLiveStream";
     public final static String EVENT_MENU_SELECTION_PROGRAMS = "menuSelectionPrograms";
@@ -20,7 +20,18 @@ public class AnalyticsManager {
     public final static String EVENT_ON_DEMAND_COMPLETED = "onDemandEpisodeCompleted";
     public final static String EVENT_ON_DEMAND_BEGAN = "onDemandEpisodeBegan";
     public final static String EVENT_ON_DEMAND_PAUSED = "onDemandAudioPaused";
+    public final static String EVENT_ON_DEMAND_SKIPPED = "onDemandAudioSkipped";
     public final static String EVENT_CLOSED_HEADLINES = "userClosedHeadlines";
+    public final static String EVENT_MENU_OPENED = "menuOpened";
+    public final static String EVENT_MENU_CLOSED = "menuClosed";
+
+    public final static String PARAM_PROGRAM_PUBLISHED_AT = "programPublishedAt";
+    public final static String PARAM_PROGRAM_TITLE = "programTitle";
+    public final static String PARAM_EPISODE_TITLE = "episodeTitle";
+    public final static String PARAM_PROGRAM_LENGTH = "programLengthInSeconds";
+    public final static String PARAM_PLAYED_DURATION = "playedDurationInSeconds";
+    public final static String PARAM_SESSION_LENGTH = "sessionLengthInSeconds";
+
     private static final String MIXPANEL_TOKEN = AppConfiguration.instance.getConfig("mixpanel.token");
     public static AnalyticsManager instance = null;
     private MixpanelAPI mMixpanelAPI;
@@ -36,16 +47,28 @@ public class AnalyticsManager {
     }
 
     public void logEvent(String name, JSONObject parameters) {
-        mMixpanelAPI.track(name, parameters);
+        try {
+            mMixpanelAPI.track(name, parameters);
+        } catch (Exception e) {
+            // No event will be sent.
+        }
     }
 
     public void logEvent(String name) {
-        // Send empty parameters
-        JSONObject parameters = new JSONObject();
-        mMixpanelAPI.track(name, parameters);
+        try {
+            // Send empty parameters
+            JSONObject parameters = new JSONObject();
+            mMixpanelAPI.track(name, parameters);
+        } catch (Exception e) {
+            // No event will be sent.
+        }
     }
 
     public void flush() {
-        mMixpanelAPI.flush();
+        try {
+            mMixpanelAPI.flush();
+        } catch (Exception e) {
+            // Events are not flushed.
+        }
     }
 }

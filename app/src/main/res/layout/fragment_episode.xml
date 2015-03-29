@@ -1,109 +1,115 @@
-<FrameLayout
+<ScrollView
     xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/episode_page"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    tools:context="org.kpcc.android.EpisodeFragment"
-    android:background="@android:color/black">
+    android:background="@android:color/transparent">
 
-    <include layout="@layout/program_background" />
-
+    <!-- ScrollView must have only one direct child -->
     <FrameLayout
-        android:id="@+id/content_wrapper"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
 
-        <LinearLayout
+        <include layout="@layout/generic_load_error" android:visibility="gone" />
+
+        <FrameLayout
+            android:id="@+id/content_wrapper"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_gravity="top"
-            android:orientation="vertical"
-            style="@style/static_content_wrapper">
-
-            <TextView
-                android:id="@+id/program_title"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:gravity="start"
-                android:textColor="@android:color/white"
-                android:textSize="16sp" />
-
-            <include layout="@layout/horizontal_rule" />
-
-            <TextView
-                android:id="@+id/episode_title"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:gravity="start"
-                android:textColor="@android:color/white"
-                android:textSize="20sp"
-                android:paddingBottom="20dp" />
-
-            <TextView
-                android:id="@+id/air_date"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:gravity="start"
-                android:textAppearance="@style/text_date" />
-
-        </LinearLayout>
-
-        <!-- The specific height is to make the play buttons align in live stream and episode player -->
-        <RelativeLayout
-            android:layout_width="match_parent"
-            android:layout_height="203dp"
-            android:layout_gravity="bottom"
-            style="@style/static_content_wrapper">
-
-            <ProgressBar
-                android:id="@+id/progress_bar"
-                android:layout_width="match_parent"
-                android:layout_height="2dp"
-                android:layout_marginBottom="2dp"
-                style="@android:style/Widget.ProgressBar.Horizontal" />
+            android:layout_height="match_parent">
 
             <LinearLayout
-                android:id="@+id/audio_time"
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:gravity="start"
-                android:paddingBottom="18dp"
-                android:orientation="horizontal"
-                android:layout_below="@id/progress_bar">
+                android:layout_gravity="top"
+                android:orientation="vertical"
+                style="@style/static_content_wrapper">
 
                 <TextView
-                    android:id="@+id/audio_current_time"
-                    android:layout_width="70dp"
+                    android:id="@+id/program_title"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:textColor="@android:color/white"
-                    android:textSize="16sp"
-                    android:text="@string/audio_default_time" />
-
-                <TextView
-                    android:id="@+id/time_separator"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:textColor="@android:color/white"
-                    android:textSize="16sp"
-                    android:paddingLeft="5dp"
-                    android:paddingRight="5dp"
-                    android:text="@string/time_separator" />
-
-                <TextView
-                    android:id="@+id/audio_total_time"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
+                    android:gravity="start"
                     android:textColor="@android:color/white"
                     android:textSize="16sp" />
 
+                <include layout="@layout/horizontal_rule" />
+
+                <TextView
+                    android:id="@+id/episode_title"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="start"
+                    android:textColor="@android:color/white"
+                    android:textSize="20sp"
+                    android:paddingBottom="20dp" />
+
+                <TextView
+                    android:id="@+id/air_date"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="start"
+                    android:textAppearance="@style/text_date" />
+
             </LinearLayout>
 
-            <include layout="@layout/audio_button"
-                     android:layout_width="match_parent"
-                     android:layout_height="wrap_content"
-                     android:layout_gravity="center_horizontal"
-                     android:layout_below="@id/audio_time" />
-        </RelativeLayout>
+            <!-- The specific height is to make the play buttons align in live stream and episode player -->
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="203dp"
+                android:layout_gravity="bottom"
+                style="@style/static_content_wrapper">
+
+                <!-- Tinting of the progress indicators is only supported in API 21+
+                I'm too lazy to build a custom seek bar right now -->
+                <SeekBar
+                    android:id="@+id/progress_bar"
+                    android:layout_width="match_parent"
+                    android:layout_height="30dp"
+                    android:layout_marginBottom="2dp" />
+
+                <LinearLayout
+                    android:id="@+id/audio_time"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:gravity="start"
+                    android:paddingBottom="18dp"
+                    android:orientation="horizontal"
+                    android:layout_below="@id/progress_bar">
+
+                    <TextView
+                        android:id="@+id/audio_current_time"
+                        android:layout_width="70dp"
+                        android:layout_height="wrap_content"
+                        android:textColor="@android:color/white"
+                        android:textSize="16sp"
+                        android:text="@string/audio_default_time" />
+
+                    <TextView
+                        android:id="@+id/time_separator"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textColor="@android:color/white"
+                        android:textSize="16sp"
+                        android:paddingLeft="5dp"
+                        android:paddingRight="5dp"
+                        android:text="@string/time_separator" />
+
+                    <TextView
+                        android:id="@+id/audio_total_time"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textColor="@android:color/white"
+                        android:textSize="16sp" />
+
+                </LinearLayout>
+
+                <include layout="@layout/audio_button"
+                         android:layout_width="match_parent"
+                         android:layout_height="wrap_content"
+                         android:layout_gravity="center_horizontal"
+                         android:layout_below="@id/audio_time" />
+            </RelativeLayout>
+        </FrameLayout>
     </FrameLayout>
-</FrameLayout>
+</ScrollView>

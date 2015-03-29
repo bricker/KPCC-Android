@@ -1,10 +1,10 @@
 package org.kpcc.android;
 
-import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.os.Bundle;
+import android.os.Handler;
 import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
 import android.support.v4.widget.DrawerLayout;
@@ -23,31 +23,13 @@ import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 
-/**
- * Fragment used for managing interactions for and presentation of a navigation drawer.
- * See the <a href="https://developer.android.com/design/patterns/navigation-drawer.html#Interaction">
- * design guidelines</a> for a complete explanation of the behaviors implemented here.
- */
+import java.util.concurrent.atomic.AtomicBoolean;
+
 public class NavigationDrawerFragment extends Fragment {
-
-    /**
-     * Remember the position of the selected item.
-     */
     private static final String STATE_SELECTED_POSITION = "selected_navigation_drawer_position";
-
-    /**
-     * Per the design guidelines, you should show the drawer on launch until the user manually
-     * expands it. This shared preference tracks this.
-     */
     private static final String PREF_USER_LEARNED_DRAWER = "navigation_drawer_learned";
+
     public AnalyticsManager mAnalyticsManager;
-    /**
-     * A pointer to the current callbacks instance (the Activity).
-     */
-    private NavigationDrawerCallbacks mCallbacks;
-    /**
-     * Helper component that ties the action bar to the navigation drawer.
-     */
     private ActionBarDrawerToggle mDrawerToggle;
     private DrawerLayout mDrawerLayout;
     private ListView mDrawerListView;
@@ -55,9 +37,8 @@ public class NavigationDrawerFragment extends Fragment {
     private int mCurrentSelectedPosition = 0;
     private boolean mFromSavedInstanceState;
     private boolean mUserLearnedDrawer;
-
-    public NavigationDrawerFragment() {
-    }
+    private Handler mHandler = new Handler();
+    private AtomicBoolean mDoFragmentTransaction = new AtomicBoolean(false);
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -129,12 +110,6 @@ public class NavigationDrawerFragment extends Fragment {
         return mDrawerLayout != null && mDrawerLayout.isDrawerOpen(mFragmentContainerView);
     }
 
-    /**
-     * Users of this fragment must call this method to set up the navigation drawer interactions.
-     *
-     * @param fragmentId   The android:id of this fragment in its activity's layout.
-     * @param drawerLayout The DrawerLayout containing this fragment's UI.
-     */
     public void setUp(int fragmentId, DrawerLayout drawerLayout) {
         mFragmentContainerView = getActivity().findViewById(fragmentId);
         mDrawerLayout = drawerLayout;
@@ -154,26 +129,10 @@ public class NavigationDrawerFragment extends Fragment {
             @Override
             public void onDrawerSlide(View drawerView, float slideOffset) {
                 View wrapper = mDrawerLayout.findViewById(R.id.content_wrapper);
-                View background = mDrawerLayout.findViewById(R.id.background_image_blurred);
 
                 if (wrapper != null) {
                     wrapper.setAlpha(1.0f - slideOffset);
                 }
-
-                // For blurred backgrounds, we want to bump the alpha up to 1 because:
-                // 1. If we don't, it's too dark
-                // 2. The navigation drawer lowers the alpha so it'll even out.
-                if (background != null && background.getAlpha() >= 0.3f) {
-                    float alpha = slideOffset;
-                    if (alpha < 0.3f) {
-                        alpha = 0.3f;
-                    }
-
-                    if (alpha >= 0.3f) {
-                        background.setAlpha(alpha);
-                    }
-                }
-
                 super.onDrawerSlide(drawerView, slideOffset);
             }
 
@@ -184,7 +143,15 @@ public class NavigationDrawerFragment extends Fragment {
                     return;
                 }
 
-                mAnalyticsManager.logEvent("menuClosed");
+                if (mDoFragmentTransaction.get()) {
+                    mDoFragmentTransaction.set(false);
+                    // Handle the fragment transaction.
+                    // This was placed here because the drawer was stuttering when it was closed
+                    // because of the fragment transaction taking over the UI thread.
+                    updateFragment();
+                }
+
+                mAnalyticsManager.logEvent(AnalyticsManager.EVENT_MENU_CLOSED);
             }
 
             @Override
@@ -203,7 +170,7 @@ public class NavigationDrawerFragment extends Fragment {
                     sp.edit().putBoolean(PREF_USER_LEARNED_DRAWER, true).apply();
                 }
 
-                mAnalyticsManager.logEvent("menuOpened");
+                mAnalyticsManager.logEvent(AnalyticsManager.EVENT_MENU_OPENED);
             }
         };
 
@@ -226,14 +193,18 @@ public class NavigationDrawerFragment extends Fragment {
 
     private void selectItem(int position) {
         mCurrentSelectedPosition = position;
+
         if (mDrawerListView != null) {
             mDrawerListView.setItemChecked(position, true);
         }
-        if (mDrawerLayout != null) {
+
+        if (isDrawerOpen()) {
+            // If the drawer is open, close it. The fragment will be updated afterwards.
+            // If the drawer is NOT open, then load the fragment immediately.
+            mDoFragmentTransaction.set(true);
             mDrawerLayout.closeDrawer(mFragmentContainerView);
-        }
-        if (mCallbacks != null) {
-            mCallbacks.onNavigationDrawerItemSelected(position);
+        } else {
+            updateFragment();
         }
     }
 
@@ -247,18 +218,6 @@ public class NavigationDrawerFragment extends Fragment {
         mDrawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED);
         getActionBar().setHomeButtonEnabled(true);
         getActionBar().setDisplayHomeAsUpEnabled(true);
-    }
-
-    @Override
-    public void onAttach(Activity activity) {
-        super.onAttach(activity);
-        mCallbacks = (NavigationDrawerCallbacks) activity;
-    }
-
-    @Override
-    public void onDetach() {
-        super.onDetach();
-        mCallbacks = null;
     }
 
     @Override
@@ -294,10 +253,6 @@ public class NavigationDrawerFragment extends Fragment {
         return super.onOptionsItemSelected(item);
     }
 
-    /**
-     * Per the navigation drawer design guidelines, updates the action bar to show the global app
-     * 'context', rather than just what's in the current screen.
-     */
     private void showGlobalContextActionBar() {
         ActionBar actionBar = getActionBar();
         actionBar.setDisplayShowTitleEnabled(true);
@@ -309,13 +264,9 @@ public class NavigationDrawerFragment extends Fragment {
         return ((ActionBarActivity) getActivity()).getSupportActionBar();
     }
 
-    /**
-     * Callbacks interface that all activities using this fragment must implement.
-     */
-    public static interface NavigationDrawerCallbacks {
-        /**
-         * Called when an item in the navigation drawer is selected.
-         */
-        void onNavigationDrawerItemSelected(int position);
+    private void updateFragment() {
+        Navigation.NavigationItem item = Navigation.instance.navigationItems[mCurrentSelectedPosition];
+        // update the main content by replacing fragments
+        item.performCallback(getActivity());
     }
 }

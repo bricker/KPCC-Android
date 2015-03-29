@@ -6,7 +6,9 @@
     tools:context="org.kpcc.android.FeedbackFragment"
     android:orientation="vertical">
 
-    <include layout="@layout/generic_background_blurred" />
+    <ImageView
+        android:id="@+id/background"
+        style="@style/generic_background_image" />
 
     <LinearLayout
         android:layout_width="match_parent"

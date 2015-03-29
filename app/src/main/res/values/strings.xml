@@ -17,7 +17,6 @@
     <string name="play_audio">Play Audio</string>
     <string name="pause_audio">Pause Audio</string>
     <string name="stop_audio">Stop Audio</string>
-    <string name="audio_error">There was an error playing the stream. Please try again in a few minutes.</string>
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>
 
@@ -35,7 +34,6 @@
     <string name="feedback_submit">Submit</string>
     <string name="feedback_validation_message">All Fields are Required</string>
     <string name="feedback_success_message">Thank you for your feedback!</string>
-    <string name="feedback_error_message">There was an error submitting your feedback. Please e-mail mobilefeedback@scpr.org.</string>
 
     <string name="live">Live</string>
     <string name="on_now">On Now</string>
@@ -43,6 +41,10 @@
 
     <string name="advertisement">Advertisement</string>
     <string name="preroll_message">A KPCC Underwriter Message</string>
+
+    <string name="audio_error">There was an error playing the stream. Please try again in a few minutes.</string>
+    <string name="load_error">There was an error loading the data. Please try again in a few minutes.</string>
+    <string name="feedback_error_message">There was an error submitting your feedback. Please e-mail mobilefeedback@scpr.org.</string>
 
     <string name="pref_title_push_notifications">Push Notifications</string>
     <string name="pref_desc_push_notifications">Receive alerts when breaking news events are happening.</string>

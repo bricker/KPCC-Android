@@ -1,12 +1,12 @@
 <FrameLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    tools:context="org.kpcc.android.LiveFragment">
+    android:orientation="vertical">
 
-    <include layout="@layout/program_background" />
+    <ImageView
+        android:id="@+id/background"
+        style="@style/background_image" />
 
     <include
         android:id="@+id/preroll"

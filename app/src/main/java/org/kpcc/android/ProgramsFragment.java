@@ -1,6 +1,5 @@
 package org.kpcc.android;
 
-import android.app.Activity;
 import android.content.Context;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -8,55 +7,31 @@ import android.support.v4.app.FragmentManager;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AbsListView;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.ListAdapter;
+import android.widget.ListView;
 import android.widget.TextView;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.kpcc.api.Program;
 
-/**
- * A fragment representing a list of Items.
- * <p/>
- * Large screen devices (such as tablets) are supported by replacing the ListView
- * with a GridView.
- */
-public class ProgramsFragment extends Fragment
-        implements AdapterView.OnItemClickListener {
-
-    public final static String TAG = "ProgramsFragment";
+public class ProgramsFragment extends Fragment implements AdapterView.OnItemClickListener {
     public final static String STACK_TAG = "programsList";
 
-    /**
-     * The fragment's ListView/GridView.
-     */
-    private AbsListView mListView;
-
-    /**
-     * The Adapter which will be used to populate the ListView/GridView with
-     * Views.
-     */
     private ListAdapter mAdapter;
-
-    /**
-     * Mandatory empty constructor for the fragment manager to instantiate the
-     * fragment (e.g. upon screen orientation changes).
-     */
-    public ProgramsFragment() {
-    }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         mAdapter = (new ArrayAdapter<Program>(getActivity(),
-                R.layout.list_item_program, ProgramsManager.ALL_PROGRAMS) {
+                R.layout.list_item_program, ProgramsManager.instance.ALL_PROGRAMS) {
             @Override
             public View getView(int position, View convertView, ViewGroup parent) {
+                MainActivity activity = (MainActivity) getActivity();
                 View view = convertView;
 
                 if (view == null) {
@@ -64,10 +39,22 @@ public class ProgramsFragment extends Fragment
                     view = inflater.inflate(R.layout.list_item_program, null);
                 }
 
-                Program program = ProgramsManager.ALL_PROGRAMS.get(position);
+                Program program = ProgramsManager.instance.ALL_PROGRAMS.get(position);
                 TextView title = (TextView) view.findViewById(R.id.program_title);
                 ImageView avatar = (ImageView) view.findViewById(R.id.program_avatar);
                 ImageView arrow = (ImageView) view.findViewById(R.id.arrow);
+                ImageView audio_icon = (ImageView) view.findViewById(R.id.audio_icon);
+
+                if (activity.streamIsBound()) {
+                    StreamManager.EpisodeStream currentPlayer = activity.streamManager.currentEpisodePlayer;
+                    if (currentPlayer != null && currentPlayer.programSlug.equals(program.slug)) {
+                        arrow.setVisibility(View.GONE);
+                        audio_icon.setVisibility(View.VISIBLE);
+                    } else {
+                        arrow.setVisibility(View.VISIBLE);
+                        audio_icon.setVisibility(View.GONE);
+                    }
+                }
 
                 title.setText(program.title);
 
@@ -91,29 +78,29 @@ public class ProgramsFragment extends Fragment
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
 
-        Activity activity = getActivity();
+        MainActivity activity = (MainActivity) getActivity();
         activity.setTitle(R.string.programs);
 
         View view = inflater.inflate(R.layout.fragment_programs, container, false);
 
         // Set the adapter
-        mListView = (AbsListView) view.findViewById(R.id.content_wrapper);
-        mListView.setAdapter(mAdapter);
+        ListView listView = (ListView) view.findViewById(R.id.content_wrapper);
+        listView.setAdapter(mAdapter);
 
         // Set OnItemClickListener so we can be notified on item clicks
-        mListView.setOnItemClickListener(this);
+        listView.setOnItemClickListener(this);
 
         return view;
     }
 
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-        Program program = ProgramsManager.ALL_PROGRAMS.get(position);
+        Program program = ProgramsManager.instance.ALL_PROGRAMS.get(position);
 
         JSONObject params = new JSONObject();
 
         try {
-            params.put("programTitle", program.title);
+            params.put(AnalyticsManager.PARAM_PROGRAM_TITLE, program.title);
         } catch (JSONException e) {
             // No params
         }
@@ -122,8 +109,10 @@ public class ProgramsFragment extends Fragment
 
         FragmentManager fragmentManager = getActivity().getSupportFragmentManager();
         fragmentManager.beginTransaction()
-                .replace(R.id.container, EpisodesFragment.newInstance(program.slug), STACK_TAG)
-                .addToBackStack(null)
+                .replace(R.id.container,
+                        EpisodesFragment.newInstance(program.slug),
+                        EpisodesFragment.STACK_TAG)
+                .addToBackStack(STACK_TAG)
                 .commit();
     }
 }

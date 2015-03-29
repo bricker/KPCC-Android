@@ -5,19 +5,35 @@
     android:layout_height="match_parent"
     android:layout_width="match_parent"
     android:minHeight="90dp"
-    android:orientation="vertical"
+    android:orientation="horizontal"
     android:paddingTop="10dp">
 
-    <TextView
-        android:id="@+id/episode_title"
+    <LinearLayout
+        android:layout_height="match_parent"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:textAppearance="@style/text_list_item" />
+        android:orientation="vertical"
+        android:layout_weight="1"
+        android:paddingTop="10dp" >
+        <TextView
+            android:id="@+id/episode_title"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textAppearance="@style/text_list_item" />
 
-    <TextView
-        android:id="@+id/air_date"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:textAppearance="@style/text_date" />
+        <TextView
+            android:id="@+id/air_date"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textAppearance="@style/text_date" />
+    </LinearLayout>
+
+    <ImageView
+        android:id="@+id/audio_icon"
+        android:layout_width="30dp"
+        android:layout_height="30dp"
+        android:contentDescription="@null"
+        android:layout_gravity="center_vertical|end"
+        android:src="@drawable/ic_circle"
+        android:visibility="gone" />
 
 </LinearLayout>

@@ -19,15 +19,9 @@ import android.support.v7.app.ActionBarActivity;
 import uk.co.chrisjenx.calligraphy.CalligraphyContextWrapper;
 
 
-public class MainActivity extends ActionBarActivity
-        implements NavigationDrawerFragment.NavigationDrawerCallbacks {
-
-    public final static String TAG = "kpcc.MainActivity";
+public class MainActivity extends ActionBarActivity {
     private static final String DONATE_URL = "https://scprcontribute.publicradio.org/contribute.php";
     public StreamManager streamManager;
-    /**
-     * Fragment managing the behaviors, interactions and presentation of the navigation drawer.
-     */
     private NavigationDrawerFragment mNavigationDrawerFragment;
     private boolean mBound = false;
     private ServiceConnection mConnection = new ServiceConnection() {
@@ -162,14 +156,6 @@ public class MainActivity extends ActionBarActivity
     @Override
     protected void attachBaseContext(Context newBase) {
         super.attachBaseContext(CalligraphyContextWrapper.wrap(newBase));
-    }
-
-    @Override
-    public void onNavigationDrawerItemSelected(int position) {
-        Navigation.NavigationItem item = Navigation.instance.navigationItems[position];
-
-        // update the main content by replacing fragments
-        item.performCallback(this);
     }
 
     public boolean streamIsBound() {
