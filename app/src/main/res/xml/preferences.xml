@@ -1,5 +1,4 @@
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
-
     <CheckBoxPreference
         android:key="push_notifications"
         android:title="@string/pref_title_push_notifications"
