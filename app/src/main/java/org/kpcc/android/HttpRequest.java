@@ -57,7 +57,7 @@ public class HttpRequest {
         // This class is just for sending impressions. We don't need callbacks, but Volley
         // requires them to be passed in, so we just pass in empty ones.
         // i.e. "Fire and Forget"
-        public static void get(String url) {
+        public static Request get(String url) {
             StringRequest req = new StringRequest(Request.Method.GET, url, new Response.Listener<String>() {
                 @Override
                 public void onResponse(String response) {
@@ -69,16 +69,18 @@ public class HttpRequest {
             });
 
             Manager.instance.requestQueue.add(req);
+            return req;
         }
     }
 
     public static class XmlRequest {
-        public static void get(String url,
+        public static Request get(String url,
                                Response.Listener<String> responseListener,
                                Response.ErrorListener errorListener) {
 
             StringRequest req = new StringRequest(Request.Method.GET, url, responseListener, errorListener);
             Manager.instance.requestQueue.add(req);
+            return req;
         }
     }
 
@@ -98,7 +100,7 @@ public class HttpRequest {
             mHeaders = headers == null ? new HashMap<String, String>() : headers;
         }
 
-        public static void get(String url,
+        public static Request get(String url,
                                Map<String, String> params,
                                Map<String, String> headers,
                                Response.Listener<JSONObject> responseListener,
@@ -107,9 +109,10 @@ public class HttpRequest {
             String queryUrl = HttpRequest.addQueryParams(url, params);
             JsonRequest req = new JsonRequest(Request.Method.GET, queryUrl, headers, responseListener, errorListener);
             Manager.instance.requestQueue.add(req);
+            return req;
         }
 
-        public static void post(String url,
+        public static Request post(String url,
                                 JSONObject params,
                                 Map<String, String> headers,
                                 Response.Listener<JSONObject> responseListener,
@@ -117,6 +120,8 @@ public class HttpRequest {
 
             JsonObjectRequestWithHeaders req = new JsonObjectRequestWithHeaders(headers, Request.Method.POST, url, params, responseListener, errorListener);
             Manager.instance.requestQueue.add(req);
+            return req;
+
         }
 
         @Override

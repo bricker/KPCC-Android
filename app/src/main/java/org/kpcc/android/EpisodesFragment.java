@@ -15,6 +15,7 @@ import android.widget.LinearLayout;
 import android.widget.ListAdapter;
 import android.widget.TextView;
 
+import com.android.volley.Request;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 
@@ -42,6 +43,7 @@ public class EpisodesFragment extends Fragment implements AbsListView.OnItemClic
     private Program mProgram;
     // Unrecoverable error. Just show an error message if this is true.
     private boolean mDidError = false;
+    private Request mRequest;
 
     public static EpisodesFragment newInstance(String programSlug) {
         EpisodesFragment fragment = new EpisodesFragment();
@@ -68,7 +70,7 @@ public class EpisodesFragment extends Fragment implements AbsListView.OnItemClic
         params.put(PARAM_PROGRAM, mProgram.slug);
         params.put(PARAM_LIMIT, EPISODE_LIMIT);
 
-        Episode.Client.getCollection(params, new Response.Listener<JSONObject>() {
+        mRequest = Episode.Client.getCollection(params, new Response.Listener<JSONObject>() {
             @Override
             public void onResponse(JSONObject response) {
                 try {
@@ -197,5 +199,14 @@ public class EpisodesFragment extends Fragment implements AbsListView.OnItemClic
             mListView.setAdapter(mAdapter);
             mProgressBar.setVisibility(View.GONE);
         }
+    }
+
+    @Override
+    public void onPause() {
+        if (mRequest != null) {
+            mRequest.cancel();
+        }
+
+        super.onPause();
     }
 }

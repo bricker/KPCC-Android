@@ -12,6 +12,7 @@ import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
+import com.android.volley.Request;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.NetworkImageView;
@@ -40,6 +41,7 @@ public class LiveFragment extends Fragment {
     private View mPrerollView;
     private ScheduleUpdater mScheduleUpdater;
     private ImageView mBackground;
+    private Request mRequest;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -70,7 +72,7 @@ public class LiveFragment extends Fragment {
         mScheduleUpdater = new ScheduleUpdater(new ScheduleUpdateCallback() {
             @Override
             public void onUpdate() {
-                ScheduleOccurrence.Client.getCurrent(new Response.Listener<JSONObject>() {
+                mRequest = ScheduleOccurrence.Client.getCurrent(new Response.Listener<JSONObject>() {
                     @Override
                     public void onResponse(JSONObject response) {
                         try {
@@ -194,9 +196,16 @@ public class LiveFragment extends Fragment {
     }
 
     @Override
-    public void onDestroyView() {
-        mScheduleUpdater.stop();
-        super.onDestroyView();
+    public void onPause() {
+        if (mRequest != null) {
+            mRequest.cancel();
+        }
+
+        if (mScheduleUpdater != null) {
+            mScheduleUpdater.stop();
+        }
+
+        super.onPause();
     }
 
     private void setDefaultValues(boolean doStatus, boolean doImage) {

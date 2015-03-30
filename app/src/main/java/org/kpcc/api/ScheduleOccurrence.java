@@ -1,5 +1,6 @@
 package org.kpcc.api;
 
+import com.android.volley.Request;
 import com.android.volley.Response;
 
 import org.json.JSONException;
@@ -42,8 +43,8 @@ public class ScheduleOccurrence extends Entity {
             super(endpoint);
         }
 
-        public void getCurrent(Response.Listener<JSONObject> listener, Response.ErrorListener errorListener) {
-            get(CURRENT_ENDPOINT, null, listener, errorListener);
+        public Request getCurrent(Response.Listener<JSONObject> listener, Response.ErrorListener errorListener) {
+            return get(CURRENT_ENDPOINT, null, listener, errorListener);
         }
     }
 

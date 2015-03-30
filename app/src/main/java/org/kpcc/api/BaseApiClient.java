@@ -2,6 +2,7 @@ package org.kpcc.api;
 
 import android.net.Uri;
 
+import com.android.volley.Request;
 import com.android.volley.Response;
 
 import org.json.JSONObject;
@@ -37,20 +38,20 @@ public class BaseApiClient {
     }
 
 
-    public void get(String relativePath,
+    public Request get(String relativePath,
                     Map<String, String> params,
                     Response.Listener<JSONObject> listener,
                     Response.ErrorListener errorListener) {
 
-        HttpRequest.JsonRequest.get(buildUrl(relativePath, params), null, null, listener, errorListener);
+        return HttpRequest.JsonRequest.get(buildUrl(relativePath, params), null, null, listener, errorListener);
     }
 
 
-    public void getCollection(Map<String, String> params,
+    public Request getCollection(Map<String, String> params,
                               Response.Listener<JSONObject> listener,
                               Response.ErrorListener errorListener) {
 
-        HttpRequest.JsonRequest.get(buildUrl("", params), null, null, listener, errorListener);
+        return HttpRequest.JsonRequest.get(buildUrl("", params), null, null, listener, errorListener);
     }
 
 
