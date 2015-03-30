@@ -36,8 +36,6 @@ public class FeedbackManager {
             "App Version: %s (%s)";
     private final HashMap<String, String> mHeaders = new HashMap<>();
 
-    enum Type { BUG, FEEDBACK, SUGGESTION };
-
     private FeedbackManager() {
         // Currently using bricker88@gmail.com account.
         String email = AppConfiguration.instance.getConfig("desk.email");
@@ -94,7 +92,6 @@ public class FeedbackManager {
                 }
         );
     }
-
 
     private void createOrFindCustomer(final String customerName,
                                       final String customerEmail,
@@ -166,7 +163,6 @@ public class FeedbackManager {
             // TODO: Handle JSONException
         }
     }
-
 
     public void sendFeedback(Type type,
                              String comments,
@@ -275,6 +271,8 @@ public class FeedbackManager {
     private String getAbsoluteUrl(String relativePath) {
         return DESK_ROOT + relativePath;
     }
+
+    enum Type {BUG, FEEDBACK, SUGGESTION}
 
     private static interface CustomerResponseCallback {
         public void onSuccess(String customerId);

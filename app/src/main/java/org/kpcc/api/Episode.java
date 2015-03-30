@@ -15,14 +15,13 @@ public class Episode extends Entity implements Comparable<Episode> {
 
     // API Client
     public final static BaseApiClient Client = new BaseApiClient(ENDPOINT);
-
+    public final ArrayList<Segment> segments = new ArrayList<>();
     public String title;
     public Date airDate;
     public String formattedAirDate;
-    private String rawAirDate; // For serializing
     public String publicUrl;
     public Audio audio;
-    public final ArrayList<Segment> segments = new ArrayList<>();
+    private String rawAirDate; // For serializing
 
     public static Episode buildFromJson(String jsonEpisode) throws JSONException {
         return buildFromJson(new JSONObject(jsonEpisode));

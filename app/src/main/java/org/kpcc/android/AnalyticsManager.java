@@ -6,8 +6,6 @@ import com.mixpanel.android.mpmetrics.MixpanelAPI;
 
 import org.json.JSONObject;
 
-import java.util.HashMap;
-
 public class AnalyticsManager {
     // Any key discrepancy is for parity with the iOS app.
     public final static String EVENT_PROGRAM_SELECTED = "programSelected";

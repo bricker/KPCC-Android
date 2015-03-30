@@ -9,9 +9,9 @@ import java.util.Date;
 
 
 public class ScheduleOccurrence extends Entity {
+    public final static String SINGULAR_KEY = "schedule_occurrence";
     private final static String ENDPOINT = "schedule";
     public final static ApiClient Client = new ApiClient(ENDPOINT);
-    public final static String SINGULAR_KEY = "schedule_occurrence";
     private final static String CURRENT_ENDPOINT = "current";
 
     public String title;

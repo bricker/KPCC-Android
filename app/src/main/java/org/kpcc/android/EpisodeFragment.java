@@ -1,11 +1,9 @@
 package org.kpcc.android;
 
-import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -25,10 +23,10 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 
 public class EpisodeFragment extends Fragment {
+    public static final int SHARE_TYPE_REQUEST = 1;
     private static final String ARG_PROGRAM_SLUG = "programSlug";
     private static final String ARG_EPISODE = "episode";
     private static final String SHARE_TEXT = "%s - %s - %s";
-    public static final int SHARE_TYPE_REQUEST = 1;
     public final AtomicBoolean pagerVisible = new AtomicBoolean(false);
     public Episode episode;
     public Program program;
