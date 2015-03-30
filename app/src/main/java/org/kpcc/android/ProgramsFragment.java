@@ -66,6 +66,7 @@ public class ProgramsFragment extends Fragment implements AdapterView.OnItemClic
                         getActivity().getApplicationContext().getPackageName());
 
                 if (resId == 0) {
+                    avatar.setVisibility(View.INVISIBLE);
                     // TODO: Build placeholder avatar.
                 } else {
                     avatar.setImageResource(resId);
