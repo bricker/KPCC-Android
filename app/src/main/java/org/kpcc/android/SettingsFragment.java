@@ -7,7 +7,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-public class SettingsFragment extends PreferenceFragment {
+class SettingsFragment extends PreferenceFragment {
     public static final String PREF_KEY_PUSH_NOTIFICATIONS = "push_notifications";
 
     @Override

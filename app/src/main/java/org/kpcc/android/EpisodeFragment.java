@@ -23,7 +23,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 
 public class EpisodeFragment extends Fragment {
-    public static final int SHARE_TYPE_REQUEST = 1;
+    private static final int SHARE_TYPE_REQUEST = 1;
     private static final String ARG_PROGRAM_SLUG = "programSlug";
     private static final String ARG_EPISODE = "episode";
     private static final String SHARE_TEXT = "%s - %s - %s";
@@ -31,7 +31,6 @@ public class EpisodeFragment extends Fragment {
     public Episode episode;
     public Program program;
     private StreamManager.EpisodeStream mPlayer;
-    private ImageView mShareButton;
     private SeekBar mSeekBar;
     private TextView mCurrentTime;
     private AudioButtonManager mAudioButtonManager;
