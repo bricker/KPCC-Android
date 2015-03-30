@@ -17,7 +17,7 @@
     <RelativeLayout
         android:id="@+id/content_wrapper"
         android:layout_width="match_parent"
-        android:layout_height="250dp"
+        android:layout_height="292dp"
         android:layout_gravity="bottom"
         style="@style/static_content_wrapper">
 
@@ -25,30 +25,38 @@
             android:id="@+id/stream_data"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="20dp"
+            android:layout_marginBottom="13dp"
             android:orientation="vertical">
             <TextView
                 android:id="@+id/live_status"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:gravity="center_horizontal"
-                android:paddingBottom="12dp"
+                android:layout_marginBottom="5dp"
                 style="@style/text_header_small" />
 
             <TextView
                 android:id="@+id/live_title"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                android:layout_height="62dp"
                 android:gravity="center_horizontal"
                 android:textColor="@android:color/white"
-                android:textSize="30sp" />
+                android:textSize="50sp" />
         </LinearLayout>
+
+        <include
+            android:id="@+id/rule"
+            layout="@layout/horizontal_rule"
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginBottom="20dp"
+            android:layout_below="@id/stream_data" />
 
         <include
             layout="@layout/audio_button"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal"
-            android:layout_below="@id/stream_data" />
+            android:layout_below="@id/rule" />
     </RelativeLayout>
 </FrameLayout>

@@ -18,6 +18,14 @@ public class HeadlinesFragment extends Fragment {
 
     private boolean mDidBrowse = false;
     private LinearLayout mProgressBar;
+    private String mCurrentUrl;
+    private String mCurrentTitle;
+
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setRetainInstance(true);
+    }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -26,7 +34,12 @@ public class HeadlinesFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_headlines, container, false);
 
         final MainActivity activity = (MainActivity) getActivity();
-        activity.setTitle(R.string.headlines);
+
+        if (mCurrentTitle != null) {
+            activity.setTitle(mCurrentTitle);
+        } else {
+            activity.setTitle(R.string.headlines);
+        }
 
         WebView browser = (WebView) view.findViewById(R.id.content_wrapper);
         mProgressBar = (LinearLayout) view.findViewById(R.id.progress_layout);
@@ -34,6 +47,7 @@ public class HeadlinesFragment extends Fragment {
         browser.setWebViewClient(new WebViewClient() {
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, String url) {
+                mCurrentUrl = url;
                 view.loadUrl(url);
                 mDidBrowse = true;
                 return false;
@@ -50,6 +64,7 @@ public class HeadlinesFragment extends Fragment {
             @Override
             public void onReceivedTitle(WebView view, String title) {
                 super.onReceivedTitle(view, title);
+                mCurrentTitle = title;
 
                 if (mDidBrowse && !TextUtils.isEmpty(title)) {
                     activity.setTitle(title);
@@ -57,7 +72,11 @@ public class HeadlinesFragment extends Fragment {
             }
         });
 
-        browser.loadUrl(SHORTLIST_URL);
+        if (mCurrentUrl != null) {
+            browser.loadUrl(mCurrentUrl);
+        } else {
+            browser.loadUrl(SHORTLIST_URL);
+        }
 
         browser.setOnKeyListener(new View.OnKeyListener() {
             @Override

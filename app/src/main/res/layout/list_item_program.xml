@@ -21,7 +21,7 @@
         android:layout_height="match_parent"
         android:gravity="center_vertical"
         android:layout_weight="1"
-        android:textAppearance="@style/text_list_item" />
+        style="@style/text_list_item" />
 
     <ImageView
         android:id="@+id/arrow"

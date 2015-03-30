@@ -1,8 +1,11 @@
 package org.kpcc.android;
 
+import android.content.Context;
 import android.graphics.Bitmap;
 import android.support.v4.util.LruCache;
 import android.view.View;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.widget.ImageView;
 
 import com.android.volley.VolleyError;
@@ -26,12 +29,14 @@ public class NetworkImageManager {
         view.setVisibility(View.VISIBLE);
     }
 
-    public void setBitmap(final ImageView view, String slug) {
+    public void setBitmap(final ImageView view, String slug, final Context context) {
         mImageLoader.get(buildTileUrl(slug), new ImageLoader.ImageListener() {
             @Override
             public void onResponse(ImageLoader.ImageContainer response, boolean isImmediate) {
                 if (response.getBitmap() != null) {
+                    Animation fader = AnimationUtils.loadAnimation(context, R.anim.fadein);
                     view.setImageBitmap(response.getBitmap());
+                    view.startAnimation(fader);
                 }
             }
 

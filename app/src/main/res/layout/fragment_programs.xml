@@ -6,7 +6,8 @@
 
     <ImageView
         android:id="@+id/background"
-        style="@style/generic_background_image" />
+        style="@style/generic_background_image"
+        android:alpha="0.4" />
 
     <ListView
         android:id="@+id/content_wrapper"

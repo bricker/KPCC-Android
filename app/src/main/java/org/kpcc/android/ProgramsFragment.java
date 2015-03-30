@@ -26,6 +26,7 @@ public class ProgramsFragment extends Fragment implements AdapterView.OnItemClic
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setRetainInstance(true);
 
         mAdapter = (new ArrayAdapter<Program>(getActivity(),
                 R.layout.list_item_program, ProgramsManager.instance.ALL_PROGRAMS) {

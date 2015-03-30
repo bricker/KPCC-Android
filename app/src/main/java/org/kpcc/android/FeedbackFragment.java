@@ -2,6 +2,7 @@ package org.kpcc.android;
 
 import android.app.Activity;
 import android.os.Bundle;
+import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -10,6 +11,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ProgressBar;
 import android.widget.RadioButton;
 import android.widget.TextView;
 
@@ -25,10 +27,20 @@ public class FeedbackFragment extends Fragment {
     private TextView mValidationMessage;
     private TextView mSuccessMessage;
     private TextView mErrorMessage;
+    private ProgressBar mProgressBar;
+    private FeedbackManager.Type mCurrentType = FeedbackManager.Type.BUG;
+    private String mCurrentName = "";
+    private String mCurrentEmail = "";
+    private String mCurrentComments = "";
+    private boolean mDidSucceed = false;
+    private boolean mDidFail = false;
+    private boolean mDidFailValidation = false;
+    private boolean mIsLoading = false;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setRetainInstance(true);
     }
 
     @Override
@@ -41,7 +53,8 @@ public class FeedbackFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_feedback, container, false);
 
         TextView appVersion = (TextView) view.findViewById(R.id.appVersion);
-        appVersion.setText(BuildConfig.VERSION_NAME);
+        String appName = getString(R.string.app_name);
+        appVersion.setText(appName + " " + BuildConfig.VERSION_NAME);
 
         mSubmitButton = (Button) view.findViewById(R.id.submitButton);
         mFeedbackTypeBug = (RadioButton) view.findViewById(R.id.feedbackTypeBug);
@@ -53,40 +66,85 @@ public class FeedbackFragment extends Fragment {
         mValidationMessage = (TextView) view.findViewById(R.id.validationMessage);
         mSuccessMessage = (TextView) view.findViewById(R.id.successMessage);
         mErrorMessage = (TextView) view.findViewById(R.id.errorMessage);
+        mProgressBar = (ProgressBar) view.findViewById(R.id.progress_circular);
 
-        // Override the button and put it on the right.
-        View.OnClickListener listener = new View.OnClickListener() {
+        mFeedbackTypeBug.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mFeedbackTypeBug.setCompoundDrawablesWithIntrinsicBounds(0, 0, android.R.color.transparent, 0);
-                mFeedbackTypeSuggestion.setCompoundDrawablesWithIntrinsicBounds(0, 0, android.R.color.transparent, 0);
-                mFeedbackTypeFeedback.setCompoundDrawablesWithIntrinsicBounds(0, 0, android.R.color.transparent, 0);
-                ((RadioButton) v).setCompoundDrawablesWithIntrinsicBounds(0, 0, R.drawable.ic_check, 0);
+                hideCheck(mFeedbackTypeSuggestion);
+                hideCheck(mFeedbackTypeFeedback);
+                showCheck(mFeedbackTypeBug);
+                mCurrentType = FeedbackManager.Type.BUG;
             }
-        };
+        });
 
-        mFeedbackTypeBug.setOnClickListener(listener);
-        mFeedbackTypeSuggestion.setOnClickListener(listener);
-        mFeedbackTypeFeedback.setOnClickListener(listener);
-
-        TextWatcher validator = new TextWatcher() {
+        mFeedbackTypeSuggestion.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+            public void onClick(View v) {
+                showCheck(mFeedbackTypeSuggestion);
+                hideCheck(mFeedbackTypeFeedback);
+                hideCheck(mFeedbackTypeBug);
+                mCurrentType = FeedbackManager.Type.SUGGESTION;
             }
+        });
 
+        mFeedbackTypeFeedback.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
+            public void onClick(View v) {
+                hideCheck(mFeedbackTypeSuggestion);
+                showCheck(mFeedbackTypeFeedback);
+                hideCheck(mFeedbackTypeBug);
+                mCurrentType = FeedbackManager.Type.FEEDBACK;
             }
+        });
 
+        mInputComments.addTextChangedListener(new BaseTextWatcher() {
             @Override
             public void afterTextChanged(Editable s) {
-                FeedbackFragment.this.setButtonState();
+                mCurrentComments = getInputVal(mInputComments);
+                setButtonState();
             }
-        };
+        });
 
-        mInputComments.addTextChangedListener(validator);
-        mInputName.addTextChangedListener(validator);
-        mInputEmail.addTextChangedListener(validator);
+        mInputName.addTextChangedListener(new BaseTextWatcher() {
+            @Override
+            public void afterTextChanged(Editable s) {
+                mCurrentName = getInputVal(mInputName);
+                setButtonState();
+            }
+        });
+
+        mInputEmail.addTextChangedListener(new BaseTextWatcher() {
+            @Override
+            public void afterTextChanged(Editable s) {
+                mCurrentEmail = getInputVal(mInputEmail);
+                setButtonState();
+            }
+        });
+
+        // Restore states
+        if (mCurrentType == FeedbackManager.Type.BUG) {
+            mFeedbackTypeBug.callOnClick();
+        } else if (mCurrentType == FeedbackManager.Type.SUGGESTION) {
+            mFeedbackTypeSuggestion.callOnClick();
+        } else if (mCurrentType == FeedbackManager.Type.FEEDBACK) {
+            mFeedbackTypeFeedback.callOnClick();
+        }
+
+        mInputName.setText(mCurrentName);
+        mInputEmail.setText(mCurrentEmail);
+        mInputComments.setText(mCurrentComments);
+
+        if (mIsLoading) {
+            showLoading();
+        } else if (mDidSucceed) {
+            showSuccessMessage();
+        } else if (mDidFail) {
+            showErrorMessage();
+        } else if (mDidFailValidation) {
+            showValidationMessage();
+        }
+
         setButtonState();
 
         mSubmitButton.setOnClickListener(new View.OnClickListener() {
@@ -95,46 +153,42 @@ public class FeedbackFragment extends Fragment {
                 if (mLock) {
                     return;
                 }
-                lockForm();
+                mLock = true;
+
+                mDidFailValidation = false;
+                mDidSucceed = false;
+                mDidFail = false;
 
                 mValidationMessage.setVisibility(View.GONE);
                 mSuccessMessage.setVisibility(View.GONE);
                 mErrorMessage.setVisibility(View.GONE);
 
-                String type = FeedbackManager.TYPE_FEEDBACK; // Default
-                if (mFeedbackTypeBug.isChecked()) {
-                    type = FeedbackManager.TYPE_BUG;
-                }
-                if (mFeedbackTypeFeedback.isChecked()) {
-                    type = FeedbackManager.TYPE_FEEDBACK;
-                }
-                if (mFeedbackTypeSuggestion.isChecked()) {
-                    type = FeedbackManager.TYPE_SUGGESTION;
-                }
-
-                String name = mInputName.getText().toString();
-                String email = mInputEmail.getText().toString();
-                String comments = mInputComments.getText().toString();
-
                 if (!validateInput()) {
-                    mValidationMessage.setVisibility(View.VISIBLE);
-                    unlockForm();
+                    mDidFailValidation = true;
+                    showValidationMessage();
+                    mLock = false;
                     return;
                 }
 
-                FeedbackManager.instance.sendFeedback(type, comments, name, email,
+                mIsLoading = true;
+                showLoading();
+
+                FeedbackManager.instance.sendFeedback(mCurrentType, mCurrentComments, mCurrentName, mCurrentEmail,
                         new FeedbackManager.FeedbackCallback() {
                             @Override
                             public void onSuccess() {
-                                unlockForm();
-                                mSubmitButton.setVisibility(View.GONE);
-                                mSuccessMessage.setVisibility(View.VISIBLE);
+                                mLock = false;
+                                mDidSucceed = true;
+                                mIsLoading = false;
+                                showSuccessMessage();
                             }
 
                             @Override
                             public void onFailure() {
-                                unlockForm();
-                                mErrorMessage.setVisibility(View.VISIBLE);
+                                mLock = false;
+                                mDidFail = true;
+                                mIsLoading = false;
+                                showErrorMessage();
                             }
                         }
                 );
@@ -144,43 +198,82 @@ public class FeedbackFragment extends Fragment {
         return view;
     }
 
-    private void lockForm() {
-        mLock = true;
-
-        if (mSubmitButton != null) {
-            mSubmitButton.setEnabled(false);
-        }
-    }
-
-    private void unlockForm() {
-        mLock = false;
-        if (mSubmitButton != null) {
-            mSubmitButton.setEnabled(true);
-        }
-    }
-
     private void setButtonState() {
         if (mSubmitButton == null) {
             return;
         }
 
         if (validateInput()) {
-            mSubmitButton.setEnabled(true);
+            enableButton();
         } else {
-            mSubmitButton.setEnabled(false);
+            disableButton();
         }
+    }
+
+    private void enableButton() {
+        mSubmitButton.setEnabled(true);
+        mSubmitButton.setClickable(true);
+        mSubmitButton.setAlpha(1.0f);
+    }
+
+    private void disableButton() {
+        mSubmitButton.setEnabled(false);
+        mSubmitButton.setClickable(false);
+        mSubmitButton.setAlpha(0.4f);
     }
 
     private boolean validateInput() {
         // Better safe than crashy.
-        if (mInputName == null || mInputEmail == null || mInputComments == null) {
+        if (mCurrentName == null || mCurrentComments == null || mCurrentEmail == null) {
             return false;
         }
 
-        String name = mInputName.getText().toString();
-        String email = mInputEmail.getText().toString();
-        String comments = mInputComments.getText().toString();
+        return !mCurrentName.isEmpty() && !mCurrentEmail.isEmpty() && !mCurrentComments.isEmpty();
+    }
 
-        return !name.isEmpty() && !email.isEmpty() && !comments.isEmpty();
+    private void showCheck(RadioButton view) {
+        view.setCompoundDrawablesWithIntrinsicBounds(0, 0, R.drawable.ic_check, 0);
+    }
+
+    private void hideCheck(RadioButton view) {
+        view.setCompoundDrawablesWithIntrinsicBounds(0, 0, android.R.color.transparent, 0);
+    }
+
+    private void showSuccessMessage() {
+        mProgressBar.setVisibility(View.GONE);
+        mSuccessMessage.setVisibility(View.VISIBLE);
+    }
+
+    private void showErrorMessage() {
+        mProgressBar.setVisibility(View.GONE);
+        mSubmitButton.setVisibility(View.VISIBLE);
+        mErrorMessage.setVisibility(View.VISIBLE);
+    }
+
+    private void showValidationMessage() {
+        mValidationMessage.setVisibility(View.VISIBLE);
+    }
+
+    private void showLoading() {
+        mSubmitButton.setVisibility(View.GONE);
+        mProgressBar.setVisibility(View.VISIBLE);
+    }
+
+    private String getInputVal(EditText view) {
+        return view.getText().toString();
+    }
+
+    private class BaseTextWatcher implements TextWatcher {
+        @Override
+        public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+        }
+
+        @Override
+        public void onTextChanged(CharSequence s, int start, int before, int count) {
+        }
+
+        @Override
+        public void afterTextChanged(Editable s) {
+        }
     }
 }

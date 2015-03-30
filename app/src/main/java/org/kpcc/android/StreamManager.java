@@ -23,7 +23,7 @@ public class StreamManager extends Service {
     public PrerollStream currentPrerollPlayer;
 
     public static String getTimeFormat(int seconds) {
-        return String.format("%02d:%02d:%02d",
+        return String.format("%01d:%02d:%02d",
                 TimeUnit.SECONDS.toHours(seconds),
                 TimeUnit.SECONDS.toMinutes(seconds) % TimeUnit.HOURS.toMinutes(1),
                 TimeUnit.SECONDS.toSeconds(seconds) % TimeUnit.MINUTES.toSeconds(1)

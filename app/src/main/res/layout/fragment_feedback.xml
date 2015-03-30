@@ -1,14 +1,13 @@
 <FrameLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    tools:context="org.kpcc.android.FeedbackFragment"
+    android:layout_height="wrap_content"
     android:orientation="vertical">
 
     <ImageView
         android:id="@+id/background"
-        style="@style/generic_background_image" />
+        style="@style/generic_background_image"
+        android:alpha="0.4" />
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -18,8 +17,8 @@
         style="@style/static_content_wrapper">
 
         <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_width="match_parent"
+            android:layout_height="20dp"
             style="@style/text_header_small"
             android:text="@string/feedback_header_reason"
             android:id="@+id/header1"
@@ -71,11 +70,12 @@
             android:layout_marginBottom="20dp" />
 
         <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_width="match_parent"
+            android:layout_height="20dp"
             style="@style/text_header_small"
             android:text="@string/feedback_header_comments"
-            android:id="@+id/header2"/>
+            android:id="@+id/header2"
+            android:background="@color/transparent_black"/>
 
         <include
             layout="@layout/horizontal_rule"
@@ -97,11 +97,12 @@
             android:layout_marginBottom="20dp" />
 
         <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_width="match_parent"
+            android:layout_height="20dp"
             style="@style/text_header_small"
             android:text="@string/feedback_header_details"
-            android:id="@+id/header3"/>
+            android:id="@+id/header3"
+            android:background="@color/transparent_black"/>
 
         <include
             layout="@layout/horizontal_rule"
@@ -151,33 +152,44 @@
             android:text="@string/feedback_submit"
             android:id="@+id/submitButton"
             android:layout_gravity="center_horizontal"
-            android:enabled="false"
-            android:background="@color/dark_gray" />
+            android:textColor="@android:color/white" />
+
+        <ProgressBar
+            android:id="@id/progress_circular"
+            style="@style/Widget.AppCompat.ProgressBar"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:layout_gravity="center"
+            android:visibility="gone" />
 
         <TextView
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_height="50dp"
             android:text="@string/feedback_success_message"
             android:id="@+id/successMessage"
+            android:layout_gravity="center_horizontal"
             android:visibility="gone" />
 
         <TextView
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_height="50dp"
             android:text="@string/feedback_error_message"
             android:id="@+id/errorMessage"
+            android:layout_gravity="center_horizontal"
             android:visibility="gone" />
 
         <TextView
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_height="50dp"
             android:text="@string/feedback_validation_message"
             android:id="@+id/validationMessage"
+            android:layout_gravity="center_horizontal"
             android:visibility="gone" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
             android:id="@+id/appVersion"/>
 
     </LinearLayout>

@@ -1,12 +1,16 @@
 package org.kpcc.android;
 
+import android.app.Activity;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.SeekBar;
@@ -23,10 +27,13 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class EpisodeFragment extends Fragment {
     private static final String ARG_PROGRAM_SLUG = "programSlug";
     private static final String ARG_EPISODE = "episode";
+    private static final String SHARE_TEXT = "%s - %s - %s";
+    public static final int SHARE_TYPE_REQUEST = 1;
     public final AtomicBoolean pagerVisible = new AtomicBoolean(false);
     public Episode episode;
     public Program program;
     private StreamManager.EpisodeStream mPlayer;
+    private ImageView mShareButton;
     private SeekBar mSeekBar;
     private TextView mCurrentTime;
     private AudioButtonManager mAudioButtonManager;
@@ -48,8 +55,8 @@ public class EpisodeFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        Bundle args = getArguments();
 
+        Bundle args = getArguments();
         if (args != null) {
             program = ProgramsManager.instance.find(args.getString(ARG_PROGRAM_SLUG));
 
@@ -79,10 +86,38 @@ public class EpisodeFragment extends Fragment {
             return mView;
         }
 
+        ImageView mShareButton = (ImageView) mView.findViewById(R.id.share_btn);
         TextView program_title = (TextView) mView.findViewById(R.id.program_title);
         TextView episode_title = (TextView) mView.findViewById(R.id.episode_title);
         TextView date = (TextView) mView.findViewById(R.id.air_date);
         TextView totalTime = (TextView) mView.findViewById(R.id.audio_total_time);
+
+        mShareButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent sendIntent = new Intent();
+                sendIntent.setAction(Intent.ACTION_SEND);
+                sendIntent.putExtra(Intent.EXTRA_TEXT,
+                        String.format(SHARE_TEXT, episode.title, program.title, episode.publicUrl));
+                sendIntent.setType("text/plain");
+
+                JSONObject params = new JSONObject();
+                try {
+                    params.put(AnalyticsManager.PARAM_PROGRAM_PUBLISHED_AT, episode.airDate);
+                    params.put(AnalyticsManager.PARAM_PROGRAM_TITLE, program.title);
+                    params.put(AnalyticsManager.PARAM_EPISODE_TITLE, episode.title);
+                    params.put(AnalyticsManager.PARAM_ACTIVITY_TYPE, "UNKNOWN");
+                } catch (JSONException e) {
+                    // No params will be sent.
+                }
+
+                getActivity().startActivityForResult(
+                        Intent.createChooser(sendIntent, getString(R.string.share_episode)),
+                        SHARE_TYPE_REQUEST);
+
+                AnalyticsManager.instance.logEvent(AnalyticsManager.EVENT_EPISODE_SHARED, params);
+            }
+        });
 
         mSeekBar = (SeekBar) mView.findViewById(R.id.progress_bar);
         mCurrentTime = (TextView) mView.findViewById(R.id.audio_current_time);
@@ -137,19 +172,6 @@ public class EpisodeFragment extends Fragment {
     public void onPause() {
         super.onPause();
         pagerVisible.set(false);
-    }
-
-    @Override
-    public void onSaveInstanceState(Bundle outState) {
-        outState.putString(ARG_PROGRAM_SLUG, program.slug);
-
-        try {
-            outState.putString(ARG_EPISODE, episode.toJSON().toString());
-        } catch (JSONException e) {
-            // Arg will be empty, a JSONException should be raised, and we'll handle that elsewhere.
-        }
-
-        super.onSaveInstanceState(outState);
     }
 
     void playAudio() {

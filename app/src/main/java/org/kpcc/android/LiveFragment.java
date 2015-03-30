@@ -44,9 +44,10 @@ public class LiveFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setRetainInstance(true);
 
-        if (getArguments() != null) {
-            mPlayNow = getArguments().getBoolean(ARG_PLAY_NOW);
+        if (savedInstanceState != null) {
+            mPlayNow = savedInstanceState.getBoolean(ARG_PLAY_NOW);
         }
     }
 
@@ -79,6 +80,16 @@ public class LiveFragment extends Fragment {
                             // It may be null, if nothing is on right now according to the API.
                             if (schedule != null) {
                                 mScheduleTitle = schedule.title;
+
+                                float length = (float) schedule.title.length();
+                                if (length < 15) {
+                                    mTitle.setTextSize(50);
+                                } else if (length >= 15 && length < 30) {
+                                    mTitle.setTextSize(40);
+                                } else {
+                                    mTitle.setTextSize(30);
+                                }
+
                                 mTitle.setText(schedule.title);
 
                                 // If we're before this occurrence's 'soft start', then say "up next".
@@ -87,10 +98,10 @@ public class LiveFragment extends Fragment {
                                 if (softStartsAt != null && new Date().getTime() < softStartsAt.getTime()) {
                                     mStatus.setText(R.string.up_next);
                                 } else {
-                                    mStatus.setText(R.string.on_now);
+                                    mStatus.setText(R.string.live);
                                 }
 
-                                NetworkImageManager.instance.setBitmap(mBackground, schedule.programSlug);
+                                NetworkImageManager.instance.setBitmap(mBackground, schedule.programSlug, getActivity());
                             } else {
                                 setDefaultValues(true, true);
                             }
@@ -286,7 +297,14 @@ public class LiveFragment extends Fragment {
 
             @Override
             public void onStop() {
-                ((MainActivity) getActivity()).getNavigationDrawerFragment().enableDrawer();
+                MainActivity activity = ((MainActivity) getActivity());
+
+                if (activity != null) {
+                    NavigationDrawerFragment frag = activity.getNavigationDrawerFragment();
+                    if (frag != null) {
+                        frag.enableDrawer();
+                    }
+                }
             }
 
             @Override

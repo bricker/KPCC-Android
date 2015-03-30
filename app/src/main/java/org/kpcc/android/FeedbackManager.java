@@ -13,9 +13,6 @@ import java.util.HashMap;
 
 public class FeedbackManager {
     public static final FeedbackManager instance = new FeedbackManager();
-    public final static String TYPE_BUG = "bug";
-    public final static String TYPE_SUGGESTION = "suggestion";
-    public final static String TYPE_FEEDBACK = "feedback";
     private final static String DESC_BUG = "Bug";
     private final static String DESC_SUGGESTION = "Suggestion";
     private final static String DESC_FEEDBACK = "General Feedback";
@@ -38,6 +35,8 @@ public class FeedbackManager {
             "Device: %s %s %s\n" +
             "App Version: %s (%s)";
     private final HashMap<String, String> mHeaders = new HashMap<>();
+
+    enum Type { BUG, FEEDBACK, SUGGESTION };
 
     private FeedbackManager() {
         // Currently using bricker88@gmail.com account.
@@ -169,7 +168,7 @@ public class FeedbackManager {
     }
 
 
-    public void sendFeedback(String type,
+    public void sendFeedback(Type type,
                              String comments,
                              String customerName,
                              String customerEmail,
@@ -179,15 +178,15 @@ public class FeedbackManager {
             final String description;
 
             switch (type) {
-                case TYPE_BUG:
+                case BUG:
                     priority = PRIORITY_BUG;
                     description = DESC_BUG;
                     break;
-                case TYPE_SUGGESTION:
+                case SUGGESTION:
                     priority = PRIORITY_SUGGESTION;
                     description = DESC_SUGGESTION;
                     break;
-                case TYPE_FEEDBACK:
+                case FEEDBACK:
                     priority = PRIORITY_FEEDBACK;
                     description = DESC_FEEDBACK;
                     break;

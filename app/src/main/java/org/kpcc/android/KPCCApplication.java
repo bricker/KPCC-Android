@@ -38,7 +38,7 @@ public class KPCCApplication extends Application {
         super.onCreate();
 
         CalligraphyConfig.initDefault(new CalligraphyConfig.Builder()
-                        .setDefaultFontPath("fonts/FreigSanProMed.otf")
+                        .setDefaultFontPath("fonts/FreigSanProLig.otf")
                         .setFontAttrId(R.attr.fontPath)
                         .build()
         );

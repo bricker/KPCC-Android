@@ -6,6 +6,8 @@ import com.mixpanel.android.mpmetrics.MixpanelAPI;
 
 import org.json.JSONObject;
 
+import java.util.HashMap;
+
 public class AnalyticsManager {
     // Any key discrepancy is for parity with the iOS app.
     public final static String EVENT_PROGRAM_SELECTED = "programSelected";
@@ -24,6 +26,7 @@ public class AnalyticsManager {
     public final static String EVENT_CLOSED_HEADLINES = "userClosedHeadlines";
     public final static String EVENT_MENU_OPENED = "menuOpened";
     public final static String EVENT_MENU_CLOSED = "menuClosed";
+    public final static String EVENT_EPISODE_SHARED = "programEpisodeShared";
 
     public final static String PARAM_PROGRAM_PUBLISHED_AT = "programPublishedAt";
     public final static String PARAM_PROGRAM_TITLE = "programTitle";
@@ -31,6 +34,7 @@ public class AnalyticsManager {
     public final static String PARAM_PROGRAM_LENGTH = "programLengthInSeconds";
     public final static String PARAM_PLAYED_DURATION = "playedDurationInSeconds";
     public final static String PARAM_SESSION_LENGTH = "sessionLengthInSeconds";
+    public final static String PARAM_ACTIVITY_TYPE = "activityType";
 
     private static final String MIXPANEL_TOKEN = AppConfiguration.instance.getConfig("mixpanel.token");
     public static AnalyticsManager instance = null;

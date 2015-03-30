@@ -1,5 +1,6 @@
 <ScrollView
     xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/episode_page"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -11,27 +12,28 @@
         android:layout_height="wrap_content"
         android:orientation="vertical">
 
-        <include layout="@layout/generic_load_error" android:visibility="gone" />
-
         <FrameLayout
             android:id="@+id/content_wrapper"
             android:layout_width="match_parent"
-            android:layout_height="match_parent">
+            android:layout_height="match_parent"
+            style="@style/static_content_wrapper">
+
+            <include layout="@layout/generic_load_error" android:visibility="gone" />
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_gravity="top"
-                android:orientation="vertical"
-                style="@style/static_content_wrapper">
-
+                android:orientation="vertical">
+                <!-- Override the default orange color for small header -->
                 <TextView
                     android:id="@+id/program_title"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:layout_marginBottom="10dp"
                     android:gravity="start"
-                    android:textColor="@android:color/white"
-                    android:textSize="16sp" />
+                    style="@style/text_header_small"
+                    android:textColor="@android:color/white" />
 
                 <include layout="@layout/horizontal_rule" />
 
@@ -40,49 +42,40 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:gravity="start"
-                    android:textColor="@android:color/white"
-                    android:textSize="20sp"
-                    android:paddingBottom="20dp" />
+                    style="@style/text_header_large" />
 
                 <TextView
                     android:id="@+id/air_date"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:gravity="start"
-                    android:textAppearance="@style/text_date" />
+                    style="@style/text_date" />
 
             </LinearLayout>
 
             <!-- The specific height is to make the play buttons align in live stream and episode player -->
             <RelativeLayout
+                tools:ignore="MissingPrefix"
                 android:layout_width="match_parent"
-                android:layout_height="203dp"
+                android:layout_height="220dp"
                 android:layout_gravity="bottom"
-                style="@style/static_content_wrapper">
-
-                <!-- Tinting of the progress indicators is only supported in API 21+
-                I'm too lazy to build a custom seek bar right now -->
-                <SeekBar
-                    android:id="@+id/progress_bar"
-                    android:layout_width="match_parent"
-                    android:layout_height="30dp"
-                    android:layout_marginBottom="2dp" />
-
+                fontPath="fonts/FreigSanProMed.otf">
                 <LinearLayout
                     android:id="@+id/audio_time"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:gravity="start"
-                    android:paddingBottom="18dp"
+                    android:layout_marginBottom="7dp"
                     android:orientation="horizontal"
-                    android:layout_below="@id/progress_bar">
+                    android:textSize="18sp">
 
                     <TextView
                         android:id="@+id/audio_current_time"
-                        android:layout_width="70dp"
+                        android:layout_width="60dp"
+                        android:minWidth="60dp"
+                        android:maxWidth="60dp"
                         android:layout_height="wrap_content"
                         android:textColor="@android:color/white"
-                        android:textSize="16sp"
                         android:text="@string/audio_default_time" />
 
                     <TextView
@@ -90,8 +83,6 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:textColor="@android:color/white"
-                        android:textSize="16sp"
-                        android:paddingLeft="5dp"
                         android:paddingRight="5dp"
                         android:text="@string/time_separator" />
 
@@ -99,16 +90,36 @@
                         android:id="@+id/audio_total_time"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:textColor="@android:color/white"
-                        android:textSize="16sp" />
+                        android:textColor="@android:color/white" />
 
                 </LinearLayout>
+
+                <!-- Tinting of the progress indicators is only supported in API 21+
+                I'm too lazy to build a custom seek bar right now -->
+                <SeekBar
+                    android:id="@+id/progress_bar"
+                    android:layout_width="match_parent"
+                    android:layout_height="2dp"
+                    android:layout_marginBottom="20dp"
+                    android:layout_below="@id/audio_time"
+                    style="@android:style/Widget.ProgressBar.Horizontal"
+                    android:paddingLeft="0dp"
+                    android:paddingRight="0dp"
+                    android:thumb="@null" />
 
                 <include layout="@layout/audio_button"
                          android:layout_width="match_parent"
                          android:layout_height="wrap_content"
                          android:layout_gravity="center_horizontal"
-                         android:layout_below="@id/audio_time" />
+                         android:layout_below="@id/progress_bar" />
+
+                <ImageView
+                    android:id="@+id/share_btn"
+                    android:layout_width="35dp"
+                    android:layout_height="35dp"
+                    android:src="@drawable/ic_share"
+                    android:layout_centerHorizontal="true"
+                    android:layout_alignParentBottom="true" />
             </RelativeLayout>
         </FrameLayout>
     </FrameLayout>

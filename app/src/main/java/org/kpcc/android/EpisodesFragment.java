@@ -54,9 +54,12 @@ public class EpisodesFragment extends Fragment implements AbsListView.OnItemClic
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setRetainInstance(true);
 
-        if (getArguments() != null) {
-            String programSlug = getArguments().getString(ARG_PROGRAM_SLUG);
+        // This must be getArguments(), not savedInstanceState
+        Bundle args = getArguments();
+        if (args != null) {
+            String programSlug = args.getString(ARG_PROGRAM_SLUG);
             mProgram = ProgramsManager.instance.find(programSlug);
         }
 
@@ -154,7 +157,7 @@ public class EpisodesFragment extends Fragment implements AbsListView.OnItemClic
         View view = inflater.inflate(R.layout.fragment_episodes, container, false);
 
         ImageView background = (ImageView) view.findViewById(R.id.background);
-        NetworkImageManager.instance.setBitmap(background, mProgram.slug);
+        NetworkImageManager.instance.setBitmap(background, mProgram.slug, getActivity());
 
         mProgressBar = (LinearLayout) view.findViewById(R.id.progress_layout);
 
@@ -194,11 +197,5 @@ public class EpisodesFragment extends Fragment implements AbsListView.OnItemClic
             mListView.setAdapter(mAdapter);
             mProgressBar.setVisibility(View.GONE);
         }
-    }
-
-    @Override
-    public void onSaveInstanceState(Bundle outState) {
-        outState.putString(ARG_PROGRAM_SLUG, mProgram.slug);
-        super.onSaveInstanceState(outState);
     }
 }

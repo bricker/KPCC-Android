@@ -20,7 +20,7 @@ public class Episode extends Entity implements Comparable<Episode> {
     public Date airDate;
     public String formattedAirDate;
     private String rawAirDate; // For serializing
-    private String publicUrl;
+    public String publicUrl;
     public Audio audio;
     public final ArrayList<Segment> segments = new ArrayList<>();
 

@@ -1,7 +1,8 @@
 <resources>
     <!-- Base application theme. -->
     <style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">
-        <!--<item name="android:windowBackground">@android:color/black</item>-->
+        <!-- Requires API 21+ :( -->
+        <!-- <item name="android:progressTint">@color/kpcc_orange</item> -->
         <item name="actionBarStyle">@style/AppTheme.ActionBar</item>
         <item name="android:windowBackground">@android:color/black</item>
         <item name="android:textColor">@android:color/white</item>
@@ -9,10 +10,18 @@
         <item name="android:textColorPrimaryDisableOnly">@color/light_gray</item>
         <item name="android:textSize">16sp</item>
         <item name="android:editTextStyle">@style/AppTheme.Widget.EditText</item>
+        <item name="android:titleTextStyle">@style/AppTheme.ActionBar.TitleTextStyle</item>
     </style>
 
     <style name="AppTheme.ActionBar" parent="ThemeOverlay.AppCompat.Dark.ActionBar">
         <item name="background">@color/kpcc_orange</item>
+    </style>
+
+    <style name="AppTheme.ActionBar.TitleTextStyle" parent="@android:style/TextAppearance.Holo.Widget.ActionBar.Title">
+        <item name="fontPath">fonts/FreigSanProMed.otf</item>
+        <item name="android:layout_gravity">center</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textSize">16sp</item>
     </style>
 
     <style name="AppTheme.Widget.EditText" parent="@android:style/Widget.EditText">
@@ -43,8 +52,7 @@
     </style>
 
     <style name="text_list_item">
-        <item name="android:textColor">@android:color/white</item>
-        <item name="android:textSize">18sp</item>
+        <item name="android:textSize">19sp</item>
     </style>
 
     <style name="text_date">
@@ -56,13 +64,18 @@
         <item name="android:textColor">@color/kpcc_orange</item>
         <item name="android:textSize">16sp</item>
         <item name="android:textAllCaps">true</item>
+        <item name="fontPath">fonts/FreigSanProMed.otf</item>
+    </style>
+
+    <style name="text_header_large">
+        <item name="android:textSize">30sp</item>
     </style>
 
     <style name="background_image">
         <item name="android:scaleType">centerCrop</item>
         <item name="android:layout_width">fill_parent</item>
         <item name="android:layout_height">fill_parent</item>
-        <item name="android:alpha">0.7</item>
+        <item name="android:alpha">1</item>
     </style>
 
     <style name="generic_background_image" parent="background_image">

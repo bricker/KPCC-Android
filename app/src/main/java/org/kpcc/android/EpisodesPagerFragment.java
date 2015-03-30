@@ -57,8 +57,8 @@ public class EpisodesPagerFragment extends Fragment {
     @SuppressWarnings("unchecked")
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        Bundle args = getArguments();
 
+        Bundle args = getArguments();
         if (args != null) {
             // This is coming from our args that we're setting above
             // The compiler warns about unchecked cast but it's safe.
@@ -73,7 +73,7 @@ public class EpisodesPagerFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_episodes_pager, container, false);
 
         ImageView background = (ImageView) view.findViewById(R.id.background);
-        NetworkImageManager.instance.setBitmap(background, mProgramSlug);
+        NetworkImageManager.instance.setBitmap(background, mProgramSlug, getActivity());
 
         mAdapter = new EpisodePagerAdapter(getChildFragmentManager());
         pager = (ViewPager) view.findViewById(R.id.pager);
@@ -131,15 +131,6 @@ public class EpisodesPagerFragment extends Fragment {
         pager.setCurrentItem(currentPosition);
 
         return view;
-    }
-
-    @Override
-    public void onSaveInstanceState(Bundle outState) {
-        outState.putSerializable(ARG_EPISODE, mEpisodes);
-        outState.putInt(ARG_POSITION, currentPosition);
-        outState.putString(ARG_PROGRAM_SLUG, mProgramSlug);
-
-        super.onSaveInstanceState(outState);
     }
 
     private class EpisodePagerAdapter extends FragmentPagerAdapter {

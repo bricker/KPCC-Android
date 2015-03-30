@@ -36,10 +36,13 @@ public class NavigationDrawerFragment extends Fragment {
     private int mCurrentSelectedPosition = 0;
     private boolean mFromSavedInstanceState;
     private boolean mUserLearnedDrawer;
+    private Float mWrapperAlpha = null;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setRetainInstance(true);
+
         mAnalyticsManager = AnalyticsManager.instance;
 
         // Read in the flag indicating whether or not the user has demonstrated awareness of the
@@ -125,10 +128,11 @@ public class NavigationDrawerFragment extends Fragment {
         ) {
             @Override
             public void onDrawerSlide(View drawerView, float slideOffset) {
-                View wrapper = mDrawerLayout.findViewById(R.id.content_wrapper);
+                View wrapper = getActivity().findViewById(R.id.content_wrapper);
 
                 if (wrapper != null) {
-                    wrapper.setAlpha(1.0f - slideOffset);
+                    mWrapperAlpha = 1.0f - slideOffset;
+                    wrapper.setAlpha(mWrapperAlpha);
                 }
                 super.onDrawerSlide(drawerView, slideOffset);
             }
@@ -148,6 +152,7 @@ public class NavigationDrawerFragment extends Fragment {
                     updateFragment();
                 }
 
+                mWrapperAlpha = null;
                 mAnalyticsManager.logEvent(AnalyticsManager.EVENT_MENU_CLOSED);
             }
 
@@ -236,6 +241,7 @@ public class NavigationDrawerFragment extends Fragment {
             ActionBar actionBar = getActionBar();
             actionBar.setDisplayShowTitleEnabled(true);
             actionBar.setTitle(R.string.app_name);
+            getActivity().setTitle(R.string.app_name);
         }
 
         super.onCreateOptionsMenu(menu, inflater);
