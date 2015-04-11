@@ -84,8 +84,8 @@ public class EpisodeFragment extends Fragment {
         }
 
         ImageView mShareButton = (ImageView) mView.findViewById(R.id.share_btn);
-        TextView program_title = (TextView) mView.findViewById(R.id.program_title);
-        TextView episode_title = (TextView) mView.findViewById(R.id.episode_title);
+        TextView programTitle = (TextView) mView.findViewById(R.id.program_title);
+        TextView episodeTitle = (TextView) mView.findViewById(R.id.episode_title);
         TextView date = (TextView) mView.findViewById(R.id.air_date);
         TextView totalTime = (TextView) mView.findViewById(R.id.audio_total_time);
 
@@ -141,10 +141,22 @@ public class EpisodeFragment extends Fragment {
             }
         });
 
-        program_title.setText(program.title);
-        episode_title.setText(episode.title);
+        programTitle.setText(program.title);
         date.setText(episode.formattedAirDate);
         totalTime.setText(StreamManager.getTimeFormat(episode.audio.durationSeconds));
+
+        String title = episode.title;
+
+        float length = (float) title.length();
+        if (length < 30) {
+            episodeTitle.setTextSize(30);
+        } else if (length >= 30 && length < 55) {
+            episodeTitle.setTextSize(25);
+        } else {
+            episodeTitle.setTextSize(20);
+        }
+
+        episodeTitle.setText(title);
 
         return mView;
     }
