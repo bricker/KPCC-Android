@@ -69,62 +69,6 @@ public class LiveFragment extends Fragment {
         mPrerollProgressBar = (ProgressBar) view.findViewById(R.id.progress_bar);
         mPrerollView = view.findViewById(R.id.preroll);
 
-        mScheduleUpdater = new ScheduleUpdater(new ScheduleUpdateCallback() {
-            @Override
-            public void onUpdate() {
-                mRequest = ScheduleOccurrence.Client.getCurrent(new Response.Listener<JSONObject>() {
-                    @Override
-                    public void onResponse(JSONObject response) {
-                        try {
-                            JSONObject jsonSchedule = response.getJSONObject(ScheduleOccurrence.SINGULAR_KEY);
-                            ScheduleOccurrence schedule = ScheduleOccurrence.buildFromJson(jsonSchedule);
-
-                            // It may be null, if nothing is on right now according to the API.
-                            if (schedule != null) {
-                                mScheduleTitle = schedule.title;
-
-                                float length = (float) schedule.title.length();
-                                if (length < 15) {
-                                    mTitle.setTextSize(50);
-                                } else if (length >= 15 && length < 30) {
-                                    mTitle.setTextSize(40);
-                                } else {
-                                    mTitle.setTextSize(30);
-                                }
-
-                                mTitle.setText(schedule.title);
-
-                                // If we're before this occurrence's 'soft start', then say "up next".
-                                // Otherwise, set "On Now".
-                                Date softStartsAt = schedule.softStartsAt;
-                                if (softStartsAt != null && new Date().getTime() < softStartsAt.getTime()) {
-                                    mStatus.setText(R.string.up_next);
-                                } else {
-                                    mStatus.setText(R.string.live);
-                                }
-
-                                NetworkImageManager.instance.setBitmap(mBackground, schedule.programSlug, getActivity());
-                            } else {
-                                setDefaultValues(true, true);
-                            }
-
-
-                        } catch (JSONException e) {
-                            setDefaultValues(true, true);
-                        }
-                    }
-                }, new Response.ErrorListener() {
-                    @Override
-                    public void onErrorResponse(VolleyError error) {
-                        setDefaultValues(true, true);
-                    }
-                });
-            }
-        });
-
-        mScheduleUpdater.start();
-        new Thread(mScheduleUpdater).start();
-
         mAudioButtonManager = new AudioButtonManager(view);
         boolean alreadyPlaying = false;
 
@@ -193,6 +137,67 @@ public class LiveFragment extends Fragment {
         }
 
         return view;
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+
+        mScheduleUpdater = new ScheduleUpdater(new ScheduleUpdateCallback() {
+            @Override
+            public void onUpdate() {
+                mRequest = ScheduleOccurrence.Client.getCurrent(new Response.Listener<JSONObject>() {
+                    @Override
+                    public void onResponse(JSONObject response) {
+                        try {
+                            JSONObject jsonSchedule = response.getJSONObject(ScheduleOccurrence.SINGULAR_KEY);
+                            ScheduleOccurrence schedule = ScheduleOccurrence.buildFromJson(jsonSchedule);
+
+                            // It may be null, if nothing is on right now according to the API.
+                            if (schedule != null) {
+                                mScheduleTitle = schedule.title;
+
+                                float length = (float) schedule.title.length();
+                                if (length < 15) {
+                                    mTitle.setTextSize(50);
+                                } else if (length >= 15 && length < 30) {
+                                    mTitle.setTextSize(40);
+                                } else {
+                                    mTitle.setTextSize(30);
+                                }
+
+                                mTitle.setText(schedule.title);
+
+                                // If we're before this occurrence's 'soft start', then say "up next".
+                                // Otherwise, set "On Now".
+                                Date softStartsAt = schedule.softStartsAt;
+                                if (softStartsAt != null && new Date().getTime() < softStartsAt.getTime()) {
+                                    mStatus.setText(R.string.up_next);
+                                } else {
+                                    mStatus.setText(R.string.live);
+                                }
+
+                                NetworkImageManager.instance.setBitmap(mBackground, schedule.programSlug, getActivity());
+                            } else {
+                                setDefaultValues(true, true);
+                            }
+
+
+                        } catch (JSONException e) {
+                            setDefaultValues(true, true);
+                        }
+                    }
+                }, new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        setDefaultValues(true, true);
+                    }
+                });
+            }
+        });
+
+        mScheduleUpdater.start();
+        new Thread(mScheduleUpdater).start();
     }
 
     @Override
