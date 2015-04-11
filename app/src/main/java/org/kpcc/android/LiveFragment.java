@@ -155,18 +155,18 @@ public class LiveFragment extends Fragment {
 
                             // It may be null, if nothing is on right now according to the API.
                             if (schedule != null) {
-                                mScheduleTitle = schedule.title;
+                                mScheduleTitle = "FilmWeek Marquee";
 
-                                float length = (float) schedule.title.length();
-                                if (length < 15) {
+                                float length = (float) mScheduleTitle.length();
+                                if (length < 12) {
                                     mTitle.setTextSize(50);
-                                } else if (length >= 15 && length < 30) {
+                                } else if (length >= 12 && length < 18) {
                                     mTitle.setTextSize(40);
                                 } else {
                                     mTitle.setTextSize(30);
                                 }
 
-                                mTitle.setText(schedule.title);
+                                mTitle.setText(mScheduleTitle);
 
                                 // If we're before this occurrence's 'soft start', then say "up next".
                                 // Otherwise, set "On Now".
