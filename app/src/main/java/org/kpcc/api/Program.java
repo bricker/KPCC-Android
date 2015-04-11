@@ -14,7 +14,7 @@ public class Program extends Entity implements Comparable<Program> {
 
     public String title;
     public String slug;
-    private String normalizedTitle;
+    public String normalizedTitle;
 
 
     public static Program buildFromJson(JSONObject jsonProgram) throws JSONException {

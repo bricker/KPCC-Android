@@ -45,6 +45,7 @@ public class ProgramsFragment extends Fragment implements AdapterView.OnItemClic
                 ImageView avatar = (ImageView) view.findViewById(R.id.program_avatar);
                 ImageView arrow = (ImageView) view.findViewById(R.id.arrow);
                 ImageView audio_icon = (ImageView) view.findViewById(R.id.audio_icon);
+                TextView letter = (TextView) view.findViewById(R.id.program_letter);
 
                 if (activity.streamIsBound()) {
                     StreamManager.EpisodeStream currentPlayer = activity.streamManager.currentEpisodePlayer;
@@ -66,9 +67,11 @@ public class ProgramsFragment extends Fragment implements AdapterView.OnItemClic
                         getActivity().getApplicationContext().getPackageName());
 
                 if (resId == 0) {
-                    avatar.setVisibility(View.INVISIBLE);
-                    // TODO: Build placeholder avatar.
+                    avatar.setImageResource(R.drawable.avatar_placeholder_bg);
+                    letter.setText(String.valueOf(program.normalizedTitle.charAt(0)));
+                    letter.setVisibility(View.VISIBLE);
                 } else {
+                    letter.setVisibility(View.GONE);
                     avatar.setImageResource(resId);
                 }
                 return view;

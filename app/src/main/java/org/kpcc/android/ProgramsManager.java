@@ -9,11 +9,15 @@ import org.json.JSONObject;
 import org.kpcc.api.Program;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 
 public class ProgramsManager {
     public static ProgramsManager instance;
+    private static String[] HIDDEN_PROGRAMS = { "filmweek-marquee", "take-two-evenings" };
+
     public final ArrayList<Program> ALL_PROGRAMS = new ArrayList<>();
 
     private ProgramsManager() {
@@ -25,11 +29,16 @@ public class ProgramsManager {
             public void onResponse(JSONObject response) {
                 try {
                     JSONArray jsonPrograms = response.getJSONArray(Program.PLURAL_KEY);
+                    List<String> hiddenPrograms = Arrays.asList(HIDDEN_PROGRAMS);
 
                     for (int i = 0; i < jsonPrograms.length(); i++) {
                         try {
                             Program program = Program.buildFromJson(jsonPrograms.getJSONObject(i));
-                            ALL_PROGRAMS.add(program);
+
+                            // Skip hidden programs.
+                            if (!hiddenPrograms.contains(program.slug)) {
+                                ALL_PROGRAMS.add(program);
+                            }
                         } catch (JSONException e) {
                             // implicit continue.
                         }
