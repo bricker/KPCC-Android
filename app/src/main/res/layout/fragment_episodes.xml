@@ -8,8 +8,6 @@
         android:id="@+id/background"
         style="@style/background_image" />
 
-    <include layout="@layout/generic_load_error" android:visibility="gone" />
-
     <!-- Don't use static_content_wrapper here or the padding will get nested -->
     <RelativeLayout
         android:id="@+id/content_wrapper"
@@ -35,5 +33,6 @@
             style="@style/list_view" />
 
         <include layout="@layout/progress_spinner" />
+        <include layout="@layout/generic_load_error" android:visibility="gone" />
     </RelativeLayout>
 </FrameLayout>

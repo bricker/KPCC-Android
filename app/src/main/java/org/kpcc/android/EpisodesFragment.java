@@ -30,7 +30,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 
-public class EpisodesFragment extends Fragment implements AbsListView.OnItemClickListener {
+public class EpisodesFragment extends Fragment {
     public final static String STACK_TAG = "episodesList";
     private static final String ARG_PROGRAM_SLUG = "program_slug";
     private static final String PARAM_PROGRAM = "program";
@@ -41,9 +41,9 @@ public class EpisodesFragment extends Fragment implements AbsListView.OnItemClic
     private LinearLayout mProgressBar;
     private ListAdapter mAdapter;
     private Program mProgram;
-    // Unrecoverable error. Just show an error message if this is true.
-    private boolean mDidError = false;
     private Request mRequest;
+    private View mView;
+    private boolean mDidError = false;
 
     public static EpisodesFragment newInstance(String programSlug) {
         EpisodesFragment fragment = new EpisodesFragment();
@@ -57,6 +57,8 @@ public class EpisodesFragment extends Fragment implements AbsListView.OnItemClic
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setRetainInstance(true);
+
+        mDidError = false;
 
         // This must be getArguments(), not savedInstanceState
         Bundle args = getArguments();
@@ -99,9 +101,8 @@ public class EpisodesFragment extends Fragment implements AbsListView.OnItemClic
                         }
                     }
                 } catch (JSONException e) {
-                    // The list will be empty. This will happen if the API returns malformed JSON.
-                    // I don't expect that to happen so it's not worth the time to write a proper
-                    // UI for a failure here.
+                    // This will happen if the API returns malformed JSON.
+                    showError();
                 }
 
                 Collections.sort(mEpisodes);
@@ -110,17 +111,16 @@ public class EpisodesFragment extends Fragment implements AbsListView.OnItemClic
                     @Override
                     public View getView(int position, View convertView, ViewGroup parent) {
                         MainActivity activity = (MainActivity) getActivity();
-                        View view = convertView;
 
-                        if (view == null) {
+                        if (convertView == null) {
                             LayoutInflater inflater = (LayoutInflater) getContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-                            view = inflater.inflate(R.layout.list_item_episode, null);
+                            convertView = inflater.inflate(R.layout.list_item_episode, null);
                         }
 
                         Episode episode = mEpisodes.get(position);
-                        TextView title = (TextView) view.findViewById(R.id.episode_title);
-                        TextView date = (TextView) view.findViewById(R.id.air_date);
-                        ImageView audio_icon = (ImageView) view.findViewById(R.id.audio_icon);
+                        TextView title = (TextView) convertView.findViewById(R.id.episode_title);
+                        TextView date = (TextView) convertView.findViewById(R.id.air_date);
+                        ImageView audio_icon = (ImageView) convertView.findViewById(R.id.audio_icon);
 
                         title.setText(episode.title);
                         date.setText(episode.formattedAirDate);
@@ -134,7 +134,7 @@ public class EpisodesFragment extends Fragment implements AbsListView.OnItemClic
                             }
                         }
 
-                        return view;
+                        return convertView;
                     }
                 });
 
@@ -143,8 +143,7 @@ public class EpisodesFragment extends Fragment implements AbsListView.OnItemClic
         }, new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {
-                // This boolean will be checked in onCreateView() and handled.
-                mDidError = true;
+                showError();
             }
         });
     }
@@ -153,52 +152,41 @@ public class EpisodesFragment extends Fragment implements AbsListView.OnItemClic
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
 
-        final MainActivity activity = (MainActivity) getActivity();
-        activity.setTitle(mProgram.title);
-
-        View view = inflater.inflate(R.layout.fragment_episodes, container, false);
-
-        ImageView background = (ImageView) view.findViewById(R.id.background);
+        mView = inflater.inflate(R.layout.fragment_episodes, container, false);
+        getActivity().setTitle(mProgram.title);
+        ImageView background = (ImageView) mView.findViewById(R.id.background);
         NetworkImageManager.instance.setBitmap(background, mProgram.slug, getActivity());
-
-        mProgressBar = (LinearLayout) view.findViewById(R.id.progress_layout);
+        mProgressBar = (LinearLayout) mView.findViewById(R.id.progress_layout);
 
         if (mDidError) {
-            LinearLayout errorView = (LinearLayout) view.findViewById(R.id.generic_load_error);
-            mProgressBar.setVisibility(View.GONE);
-            errorView.setVisibility(View.VISIBLE);
-        } else {
-            // Set the adapter
-            mListView = (AbsListView) view.findViewById(android.R.id.list);
-
-            // Set OnItemClickListener so we can be notified on item clicks
-            mListView.setOnItemClickListener(this);
-
-            // This should be called here in case onCreate() was bypassed.
-            setAdapter();
+            showError();
+            return mView;
         }
 
-        return view;
-    }
+        // Set the adapter
+        mListView = (AbsListView) mView.findViewById(android.R.id.list);
 
-    @Override
-    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-        getActivity().setTitle(R.string.programs);
+        // Set OnItemClickListener so we can be notified on item clicks
+        mListView.setOnItemClickListener(
+                new AdapterView.OnItemClickListener() {
+                    @Override
+                    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                        getActivity().setTitle(R.string.programs);
 
-        FragmentManager fragmentManager = getActivity().getSupportFragmentManager();
-        fragmentManager.beginTransaction()
-                .replace(R.id.container,
-                        EpisodesPagerFragment.newInstance(mEpisodes, position, mProgram.slug),
-                        EpisodesPagerFragment.STACK_TAG)
-                .addToBackStack(STACK_TAG)
-                .commit();
-    }
+                        FragmentManager fragmentManager = getActivity().getSupportFragmentManager();
+                        fragmentManager.beginTransaction()
+                                .replace(R.id.container,
+                                        EpisodesPagerFragment.newInstance(mEpisodes, position, mProgram.slug),
+                                        EpisodesPagerFragment.STACK_TAG)
+                                .addToBackStack(STACK_TAG)
+                                .commit();
+                    }
+                }
+        );
 
-    void setAdapter() {
-        if (mAdapter != null) {
-            mListView.setAdapter(mAdapter);
-            mProgressBar.setVisibility(View.GONE);
-        }
+        // In case onCreate was not invoked.
+        setAdapter();
+        return mView;
     }
 
     @Override
@@ -208,5 +196,22 @@ public class EpisodesFragment extends Fragment implements AbsListView.OnItemClic
         }
 
         super.onPause();
+    }
+
+    void setAdapter() {
+        if (mAdapter != null) {
+            mListView.setAdapter(mAdapter);
+            mProgressBar.setVisibility(View.GONE);
+        }
+    }
+
+    void showError() {
+        mDidError = true;
+
+        if (mView != null) {
+            LinearLayout errorView = (LinearLayout) mView.findViewById(R.id.generic_load_error);
+            mProgressBar.setVisibility(View.GONE);
+            errorView.setVisibility(View.VISIBLE);
+        }
     }
 }
