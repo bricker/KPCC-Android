@@ -1,5 +1,6 @@
 package org.kpcc.android;
 
+import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.text.TextUtils;
@@ -16,10 +17,10 @@ import android.widget.LinearLayout;
 public class HeadlinesFragment extends Fragment {
     private static final String SHORTLIST_URL = "http://www.scpr.org/short-list/latest#no-prelims";
 
-    private boolean mDidBrowse = false;
     private LinearLayout mProgressBar;
     private String mCurrentUrl;
     private String mCurrentTitle;
+    private boolean mDidGoBack = false;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -32,14 +33,9 @@ public class HeadlinesFragment extends Fragment {
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_headlines, container, false);
-
         final MainActivity activity = (MainActivity) getActivity();
 
-        if (mCurrentTitle != null) {
-            activity.setTitle(mCurrentTitle);
-        } else {
-            activity.setTitle(R.string.headlines);
-        }
+        setWebTitle(mCurrentTitle, mCurrentUrl);
 
         WebView browser = (WebView) view.findViewById(R.id.content_wrapper);
         mProgressBar = (LinearLayout) view.findViewById(R.id.progress_layout);
@@ -49,8 +45,32 @@ public class HeadlinesFragment extends Fragment {
             public boolean shouldOverrideUrlLoading(WebView view, String url) {
                 mCurrentUrl = url;
                 view.loadUrl(url);
-                mDidBrowse = true;
                 return false;
+            }
+
+            @Override
+            public void onPageStarted(WebView view, String url, Bitmap favicon) {
+                super.onPageStarted(view, url, favicon);
+
+                // Load the Headlines title right away. Otherwise, the title will be loaded
+                // somewhere else. This will cover normal use-case.
+                // We can't use getTitle() here because the title hasn't been loaded yet.
+                if (url.equals(SHORTLIST_URL)) {
+                    setWebTitle(null, url);
+                }
+            }
+
+            @Override
+            public void onPageFinished(WebView view, String url) {
+                super.onPageFinished(view, url);
+                // We set this here because onReceivedTitle() isn't called when the goBack()
+                // is invoked.
+                String title = view.getTitle();
+
+                if (mDidGoBack) {
+                    setWebTitle(title, url);
+                    mDidGoBack = false;
+                }
             }
         });
 
@@ -58,12 +78,12 @@ public class HeadlinesFragment extends Fragment {
             @Override
             public void onReceivedTitle(WebView view, String title) {
                 super.onReceivedTitle(view, title);
+                // We're doing this here because it's a good time to stop loading the indicator
+                // so that it doesn't keep spinning over the content.
+                // onPageFinished was too late, because the page would render and then the spinner
+                // would keep going until the page was completely done.
                 mProgressBar.setVisibility(View.GONE);
-                mCurrentTitle = title;
-
-                if (mDidBrowse && !TextUtils.isEmpty(title)) {
-                    activity.setTitle(title);
-                }
+                setWebTitle(title, view.getUrl());
             }
         });
 
@@ -82,6 +102,7 @@ public class HeadlinesFragment extends Fragment {
                     switch (keyCode) {
                         case KeyEvent.KEYCODE_BACK:
                             if (webView.canGoBack()) {
+                                mDidGoBack = true;
                                 webView.goBack();
                                 return true;
                             }
@@ -100,5 +121,15 @@ public class HeadlinesFragment extends Fragment {
     public void onPause() {
         AnalyticsManager.instance.logEvent(AnalyticsManager.EVENT_CLOSED_HEADLINES);
         super.onPause();
+    }
+
+    private void setWebTitle(String title, String url) {
+        mCurrentTitle = title;
+
+        if (title == null || TextUtils.isEmpty(title) || url.equals(SHORTLIST_URL)) {
+            getActivity().setTitle(R.string.headlines);
+        } else {
+            getActivity().setTitle(title);
+        }
     }
 }
