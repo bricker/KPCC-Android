@@ -155,7 +155,7 @@ public class LiveFragment extends Fragment {
 
                             // It may be null, if nothing is on right now according to the API.
                             if (schedule != null) {
-                                mScheduleTitle = "FilmWeek Marquee";
+                                mScheduleTitle = schedule.title;
 
                                 float length = (float) mScheduleTitle.length();
                                 if (length < 12) {
