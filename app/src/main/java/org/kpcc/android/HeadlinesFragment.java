@@ -52,18 +52,13 @@ public class HeadlinesFragment extends Fragment {
                 mDidBrowse = true;
                 return false;
             }
-
-            @Override
-            public void onPageFinished(WebView view, String url) {
-                mProgressBar.setVisibility(View.GONE);
-                super.onPageFinished(view, url);
-            }
         });
 
         browser.setWebChromeClient(new WebChromeClient() {
             @Override
             public void onReceivedTitle(WebView view, String title) {
                 super.onReceivedTitle(view, title);
+                mProgressBar.setVisibility(View.GONE);
                 mCurrentTitle = title;
 
                 if (mDidBrowse && !TextUtils.isEmpty(title)) {
