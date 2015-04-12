@@ -76,6 +76,7 @@ public class StreamManager extends Service {
         final AudioManager mAudioManager;
         final AtomicBoolean mIsDucking = new AtomicBoolean(false);
         final AudioManager.OnAudioFocusChangeListener mAfChangeListener;
+        final StreamManager mStreamManager;
         AudioEventListener mAudioEventListener;
         ProgressObserver mProgressObserver;
         AtomicBoolean isPrepared = new AtomicBoolean(false);
@@ -84,6 +85,7 @@ public class StreamManager extends Service {
             audioPlayer = new MediaPlayer();
             audioPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
             mActivity = (MainActivity) context;
+            mStreamManager = mActivity.streamManager;
             mAudioManager = (AudioManager) mActivity.getSystemService(Context.AUDIO_SERVICE);
 
             mAfChangeListener = new AudioManager.OnAudioFocusChangeListener() {
@@ -201,7 +203,7 @@ public class StreamManager extends Service {
         public final String audioUrl;
         public final String programSlug;
         public final int durationSeconds;
-        private boolean isPaused = false;
+        boolean isPaused = false;
 
         public EpisodeStream(String audioUrl, String programSlug, int durationSeconds, Context context) {
             super(context);
@@ -209,8 +211,8 @@ public class StreamManager extends Service {
             this.durationSeconds = durationSeconds;
             this.programSlug = programSlug;
 
-            if (mActivity.streamIsBound()) {
-                mActivity.streamManager.currentEpisodePlayer = this;
+            if (mStreamManager != null) {
+                mStreamManager.currentEpisodePlayer = this;
             }
         }
 
@@ -221,8 +223,6 @@ public class StreamManager extends Service {
         }
 
         public void play() {
-            if (!mActivity.streamIsBound()) return;
-
             if (isPaused) {
                 start();
                 return;
@@ -327,13 +327,16 @@ public class StreamManager extends Service {
 
         @Override
         public void release() {
-            if (mActivity.streamManager.currentEpisodePlayer == this) {
-                mActivity.streamManager.currentEpisodePlayer = null;
+            if (mStreamManager != null) {
+                if (mStreamManager.currentEpisodePlayer == this) {
+                    mStreamManager.currentEpisodePlayer = null;
+                }
             }
 
-            isPaused = false;
             mAudioEventListener.onStop();
             stopProgressObserver();
+
+            isPaused = false;
             audioPlayer.release();
         }
     }
@@ -347,8 +350,8 @@ public class StreamManager extends Service {
         public LiveStream(Context context) {
             super(context);
 
-            if (mActivity.streamIsBound()) {
-                mActivity.streamManager.currentLivePlayer = this;
+            if (mStreamManager != null) {
+                mStreamManager.currentLivePlayer = this;
             }
         }
 
@@ -358,7 +361,6 @@ public class StreamManager extends Service {
         }
 
         public void playWithPrerollAttempt() {
-            if (!mActivity.streamIsBound()) return;
             mAudioEventListener.onLoading();
 
             // If they just installed the app (less than 10 minutes ago), and have never played the live
@@ -433,14 +435,15 @@ public class StreamManager extends Service {
 
         @Override
         public void release() {
-            // We don't want to call stop here, because in the case where the live stream was
-            // stopped and started again in the same screen, the audio focus is lost at the same
-            // time that the new player is being setup, and the button states collide.
-
-            if (mActivity.streamManager.currentLivePlayer == this) {
-                // The currentLivePlayer may have already been taken over.
-                // If not, clear this one out.
-                mActivity.streamManager.currentLivePlayer = null;
+            if (mStreamManager != null) {
+                // We don't want to call stop here, because in the case where the live stream was
+                // stopped and started again in the same screen, the audio focus is lost at the same
+                // time that the new player is being setup, and the button states collide.
+                if (mStreamManager.currentLivePlayer == this) {
+                    // The currentLivePlayer may have already been taken over.
+                    // If not, clear this one out.
+                    mStreamManager.currentLivePlayer = null;
+                }
             }
 
             audioPlayer.release();
@@ -486,8 +489,8 @@ public class StreamManager extends Service {
             mParentStream = parentStream;
             mPrerollData = prerollData;
 
-            if (mActivity.streamIsBound()) {
-                mActivity.streamManager.currentPrerollPlayer = this;
+            if (mStreamManager != null) {
+                mStreamManager.currentPrerollPlayer = this;
             }
         }
 
@@ -570,8 +573,10 @@ public class StreamManager extends Service {
 
         @Override
         public void release() {
-            if (mActivity.streamManager.currentPrerollPlayer == this) {
-                mActivity.streamManager.currentPrerollPlayer = null;
+            if (mStreamManager != null) {
+                if (mStreamManager.currentPrerollPlayer == this) {
+                    mStreamManager.currentPrerollPlayer = null;
+                }
             }
 
             mAudioEventListener.onStop();

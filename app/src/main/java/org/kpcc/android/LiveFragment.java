@@ -57,7 +57,7 @@ public class LiveFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
 
-        final MainActivity activity = (MainActivity) getActivity();
+        MainActivity activity = (MainActivity) getActivity();
         activity.setTitle(R.string.kpcc_live);
 
         View view = inflater.inflate(R.layout.fragment_live, container, false);
@@ -70,28 +70,28 @@ public class LiveFragment extends Fragment {
         mPrerollView = view.findViewById(R.id.preroll);
 
         mAudioButtonManager = new AudioButtonManager(view);
-        boolean alreadyPlaying = false;
 
-        if (activity.streamManager != null) {
-            StreamManager.LiveStream currentPlayer = activity.streamManager.currentLivePlayer;
-
-            if (currentPlayer != null && currentPlayer.isPlaying()) {
-                mPlayer = currentPlayer;
-                setupAudioStateHandlers();
-
-                alreadyPlaying = true;
-                mAudioButtonManager.togglePlayingForStop();
-            }
-        }
-
-        if (!alreadyPlaying) {
-            mAudioButtonManager.toggleStopped();
+        if (activity.streamIsBound) {
+            initAudioButtonState();
+        } else {
+            activity.addOnStreamBindListener(new MainActivity.OnStreamBindListener() {
+                @Override
+                public void onBind() {
+                    initAudioButtonState();
+                }
+            });
         }
 
         mAudioButtonManager.getPlayButton().setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (activity.streamManager != null && activity.streamManager.currentPrerollPlayer != null) {
+                MainActivity activity = (MainActivity) getActivity();
+
+                if (!activity.streamIsBound) {
+                    return;
+                }
+
+                if (activity.streamManager.currentPrerollPlayer != null) {
                     // Preroll was Paused - start it again.
                     activity.streamManager.currentPrerollPlayer.start();
                 } else {
@@ -112,6 +112,12 @@ public class LiveFragment extends Fragment {
         mAudioButtonManager.getPauseButton().setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                MainActivity activity = (MainActivity) getActivity();
+
+                if (!activity.streamIsBound) {
+                    return;
+                }
+
                 if (activity.streamManager.currentPrerollPlayer != null) {
                     // In this view, only Preroll can be paused.
                     activity.streamManager.currentPrerollPlayer.pause();
@@ -122,6 +128,12 @@ public class LiveFragment extends Fragment {
         mAudioButtonManager.getStopButton().setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                MainActivity activity = (MainActivity) getActivity();
+
+                if (!activity.streamIsBound) {
+                    return;
+                }
+
                 if (activity.streamManager.currentLivePlayer != null) {
                     // In this view, only the Stream can be stopped.
                     // We want to release it immediately too.
@@ -323,6 +335,10 @@ public class LiveFragment extends Fragment {
 
             @Override
             public void onCompletion() {
+                if (getActivity() == null || !((MainActivity) getActivity()).streamIsBound || !isVisible()) {
+                    return;
+                }
+
                 ((MainActivity) getActivity()).getNavigationDrawerFragment().enableDrawer();
                 mAdView.setVisibility(View.GONE);
                 mPrerollView.setVisibility(View.GONE);
@@ -362,6 +378,17 @@ public class LiveFragment extends Fragment {
         }
 
         AnalyticsManager.instance.logEvent(key, params);
+    }
+
+    private void initAudioButtonState() {
+        MainActivity activity = (MainActivity) getActivity();
+
+        StreamManager.LiveStream currentPlayer = activity.streamManager.currentLivePlayer;
+        if (currentPlayer != null && currentPlayer.isPlaying()) {
+            mPlayer = currentPlayer;
+            setupAudioStateHandlers();
+            mAudioButtonManager.togglePlayingForStop();
+        }
     }
 
     private abstract class ScheduleUpdateCallback {

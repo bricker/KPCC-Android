@@ -17,6 +17,8 @@ import android.text.Spannable;
 import android.text.SpannableString;
 import android.text.style.TypefaceSpan;
 
+import java.util.ArrayList;
+
 import uk.co.chrisjenx.calligraphy.CalligraphyContextWrapper;
 
 
@@ -24,23 +26,28 @@ public class MainActivity extends ActionBarActivity {
     private static final String DONATE_URL = "https://scprcontribute.publicradio.org/contribute.php";
     public StreamManager streamManager;
     private NavigationDrawerFragment mNavigationDrawerFragment;
-    private boolean mBound = false;
+    public boolean streamIsBound = false;
+    private ArrayList<OnStreamBindListener> mStreamBindListeners = new ArrayList<>();
+
     private final ServiceConnection mConnection = new ServiceConnection() {
         @Override
-        public void onServiceConnected(ComponentName className,
-                                       IBinder service) {
+        public void onServiceConnected(ComponentName className, IBinder service) {
             StreamManager.LocalBinder binder = (StreamManager.LocalBinder) service;
             streamManager = binder.getService();
-            mBound = true;
+            streamIsBound = true;
+
+            for (OnStreamBindListener listener : mStreamBindListeners) {
+                listener.onBind();
+            }
         }
 
         @Override
         public void onServiceDisconnected(ComponentName arg0) {
-            if (mBound) {
+            if (streamIsBound) {
                 streamManager.releaseAllActiveStreams();
             }
 
-            mBound = false;
+            streamIsBound = false;
         }
     };
 
@@ -49,6 +56,7 @@ public class MainActivity extends ActionBarActivity {
         super.onCreate(savedInstanceState);
 
         Intent intent = new Intent(this, StreamManager.class);
+        startService(intent);
         bindService(intent, mConnection, Context.BIND_AUTO_CREATE);
 
         Navigation.instance.addItem(0, R.string.kpcc_live, R.drawable.menu_antenna,
@@ -162,19 +170,22 @@ public class MainActivity extends ActionBarActivity {
         super.attachBaseContext(CalligraphyContextWrapper.wrap(newBase));
     }
 
-    public boolean streamIsBound() {
-        return mBound;
-    }
-
     @Override
     protected void onDestroy() {
         super.onDestroy();
         AnalyticsManager.instance.flush();
 
-        if (mBound) {
-            streamManager.releaseAllActiveStreams();
+        if (streamIsBound) {
             unbindService(mConnection);
-            mBound = false;
+            streamIsBound = false;
         }
+    }
+
+    void addOnStreamBindListener(OnStreamBindListener listener) {
+        mStreamBindListeners.add(listener);
+    }
+
+    abstract static class OnStreamBindListener {
+        public abstract void onBind();
     }
 }

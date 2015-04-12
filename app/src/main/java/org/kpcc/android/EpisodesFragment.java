@@ -125,7 +125,7 @@ public class EpisodesFragment extends Fragment {
                         title.setText(episode.title);
                         date.setText(episode.formattedAirDate);
 
-                        if (activity.streamIsBound()) {
+                        if (activity.streamIsBound) {
                             StreamManager.EpisodeStream currentPlayer = activity.streamManager.currentEpisodePlayer;
                             if (currentPlayer != null && currentPlayer.audioUrl.equals(episode.audio.url)) {
                                 audio_icon.setVisibility(View.VISIBLE);

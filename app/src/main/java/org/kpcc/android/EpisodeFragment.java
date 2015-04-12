@@ -194,7 +194,7 @@ public class EpisodeFragment extends Fragment {
         // 3. The view isn't visible.
         // ViewPager calls the 'onCreateView' method for surrounding views, so we can't
         // play the audio automatically in this method.
-        if (!activity.streamIsBound() || episode.audio == null) {
+        if (!activity.streamIsBound || episode.audio == null) {
             mAudioButtonManager.toggleError(R.string.audio_error);
             return;
         }
@@ -255,6 +255,10 @@ public class EpisodeFragment extends Fragment {
 
             @Override
             public void onCompletion() {
+                if (getActivity() == null || !((MainActivity) getActivity()).streamIsBound || !isVisible()) {
+                    return;
+                }
+
                 FragmentManager fm = getActivity().getSupportFragmentManager();
                 EpisodesPagerFragment fragment = (EpisodesPagerFragment) fm.findFragmentByTag(EpisodesPagerFragment.STACK_TAG);
 
@@ -318,7 +322,7 @@ public class EpisodeFragment extends Fragment {
 
     private boolean streamNotAvailable() {
         MainActivity activity = (MainActivity) getActivity();
-        return mPlayer == null || !activity.streamIsBound() || activity.streamManager.currentEpisodePlayer == null;
+        return mPlayer == null || !activity.streamIsBound || activity.streamManager.currentEpisodePlayer == null;
     }
 
     private void logEpisodeStreamEvent(String key) {

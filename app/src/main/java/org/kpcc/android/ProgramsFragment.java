@@ -47,7 +47,7 @@ public class ProgramsFragment extends Fragment implements AdapterView.OnItemClic
                 ImageView audio_icon = (ImageView) view.findViewById(R.id.audio_icon);
                 TextView letter = (TextView) view.findViewById(R.id.program_letter);
 
-                if (activity.streamIsBound()) {
+                if (activity.streamIsBound) {
                     StreamManager.EpisodeStream currentPlayer = activity.streamManager.currentEpisodePlayer;
                     if (currentPlayer != null && currentPlayer.programSlug.equals(program.slug)) {
                         arrow.setVisibility(View.GONE);
