@@ -210,10 +210,6 @@ public class StreamManager extends Service {
             this.audioUrl = audioUrl;
             this.durationSeconds = durationSeconds;
             this.programSlug = programSlug;
-
-            if (mStreamManager != null) {
-                mStreamManager.currentEpisodePlayer = this;
-            }
         }
 
         @Override
@@ -223,6 +219,10 @@ public class StreamManager extends Service {
         }
 
         public void play() {
+            if (mStreamManager != null) {
+                mStreamManager.currentEpisodePlayer = this;
+            }
+
             if (isPaused) {
                 start();
                 return;

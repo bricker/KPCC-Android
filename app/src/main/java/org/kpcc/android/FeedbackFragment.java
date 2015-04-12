@@ -15,6 +15,8 @@ import android.widget.RadioButton;
 import android.widget.TextView;
 
 public class FeedbackFragment extends Fragment {
+    public final static String STACK_TAG = "FeedbackFragment";
+
     private boolean mLock = false;
     private Button mSubmitButton;
     private RadioButton mFeedbackTypeBug;

@@ -5,6 +5,7 @@ import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
+import android.support.v4.app.FragmentTransaction;
 import android.support.v4.view.ViewPager;
 import android.util.SparseArray;
 import android.view.LayoutInflater;
@@ -19,7 +20,7 @@ import org.kpcc.api.Episode;
 import java.util.ArrayList;
 
 public class EpisodesPagerFragment extends Fragment {
-    public final static String STACK_TAG = "episodesPager";
+    public final static String STACK_TAG = "EpisodesPagerFragment";
     private final static String ARG_EPISODE = "args_episodes";
     private final static String ARG_POSITION = "args_position";
     private final static String ARG_PROGRAM_SLUG = "args_program_slug";
@@ -121,6 +122,10 @@ public class EpisodesPagerFragment extends Fragment {
                     fragment.pagerVisible.set(true);
                     fragment.onResume();
                 }
+
+                FragmentTransaction trans = getActivity().getSupportFragmentManager().beginTransaction();
+                trans.addToBackStack(STACK_TAG);
+
             }
 
             @Override

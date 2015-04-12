@@ -28,6 +28,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 public class LiveFragment extends Fragment {
     private static final String ARG_PLAY_NOW = "args_play_now";
+    public static final String STACK_TAG = "LiveFragment";
     private static long PLAY_START = 0;
 
     private TextView mTitle;

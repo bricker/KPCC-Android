@@ -31,7 +31,7 @@ import java.util.Collections;
 import java.util.HashMap;
 
 public class EpisodesFragment extends Fragment {
-    public final static String STACK_TAG = "episodesList";
+    public final static String STACK_TAG = "EpisodesFragment";
     private static final String ARG_PROGRAM_SLUG = "program_slug";
     private static final String PARAM_PROGRAM = "program";
     private static final String PARAM_LIMIT = "limit";
@@ -178,7 +178,7 @@ public class EpisodesFragment extends Fragment {
                                 .replace(R.id.container,
                                         EpisodesPagerFragment.newInstance(mEpisodes, position, mProgram.slug),
                                         EpisodesPagerFragment.STACK_TAG)
-                                .addToBackStack(STACK_TAG)
+                                .addToBackStack(EpisodesPagerFragment.STACK_TAG)
                                 .commit();
                     }
                 }

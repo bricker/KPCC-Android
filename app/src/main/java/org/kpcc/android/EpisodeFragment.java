@@ -159,6 +159,22 @@ public class EpisodeFragment extends Fragment {
 
         episodeTitle.setText(title);
 
+        mAudioButtonManager = new AudioButtonManager(mView);
+
+        mAudioButtonManager.getPlayButton().setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mPlayer.play();
+            }
+        });
+
+        mAudioButtonManager.getPauseButton().setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mPlayer.pause();
+            }
+        });
+
         return mView;
     }
 
@@ -171,33 +187,11 @@ public class EpisodeFragment extends Fragment {
             return;
         }
 
-        mAudioButtonManager = new AudioButtonManager(mView);
-
-        if (pagerVisible.get()) {
-            playAudio();
-        }
-    }
-
-    @Override
-    public void onPause() {
-        super.onPause();
-        pagerVisible.set(false);
-    }
-
-    void playAudio() {
+        // We have to load all of this stuff here because the pager doesn't invoke onCreateView
+        // when a view becomes visible, but we need to make new audio players and reset the
+        // listeners.
         MainActivity activity = (MainActivity) getActivity();
         boolean alreadyPlaying = false;
-
-        // No audio will play if:
-        // 1. Stream isn't ready
-        // 2. There is no audio (this shouldn't happen, but just in case...)
-        // 3. The view isn't visible.
-        // ViewPager calls the 'onCreateView' method for surrounding views, so we can't
-        // play the audio automatically in this method.
-        if (!activity.streamIsBound || episode.audio == null) {
-            mAudioButtonManager.toggleError(R.string.audio_error);
-            return;
-        }
 
         StreamManager.EpisodeStream currentPlayer = activity.streamManager.currentEpisodePlayer;
         if (currentPlayer != null && currentPlayer.audioUrl.equals(episode.audio.url)) {
@@ -214,20 +208,6 @@ public class EpisodeFragment extends Fragment {
             mPlayer = new StreamManager.EpisodeStream(episode.audio.url, program.slug,
                     episode.audio.durationSeconds, activity);
         }
-
-        mAudioButtonManager.getPlayButton().setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                mPlayer.play();
-            }
-        });
-
-        mAudioButtonManager.getPauseButton().setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                mPlayer.pause();
-            }
-        });
 
         mPlayer.setOnAudioEventListener(new StreamManager.AudioEventListener() {
             @Override
@@ -292,11 +272,32 @@ public class EpisodeFragment extends Fragment {
             }
         });
 
+        if (!pagerVisible.get()) {
+            return;
+        }
+
+        // No audio will play if:
+        // 1. Stream isn't ready
+        // 2. There is no audio (this shouldn't happen, but just in case...)
+        // 3. The view isn't visible.
+        // ViewPager calls the 'onCreateView' method for surrounding views, so we can't
+        // play the audio automatically in this method.
+        if (!activity.streamIsBound || episode.audio == null) {
+            mAudioButtonManager.toggleError(R.string.audio_error);
+            return;
+        }
+
         if (!alreadyPlaying) {
             mAudioButtonManager.toggleStopped();
             // Start the episode right away unless it's already playing.
             mAudioButtonManager.clickPlay();
         }
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        pagerVisible.set(false);
     }
 
     public boolean episodeWasSkipped() {

@@ -8,6 +8,7 @@ import android.view.View;
 import android.view.ViewGroup;
 
 public class SettingsFragment extends PreferenceFragment {
+    public final static String STACK_TAG = "SettingsFragment";
     public static final String PREF_KEY_PUSH_NOTIFICATIONS = "push_notifications";
 
     @Override

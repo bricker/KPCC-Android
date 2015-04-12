@@ -59,43 +59,62 @@ public class MainActivity extends ActionBarActivity {
         startService(intent);
         bindService(intent, mConnection, Context.BIND_AUTO_CREATE);
 
-        Navigation.instance.addItem(0, R.string.kpcc_live, R.drawable.menu_antenna,
+        Navigation.instance.addItem(0, R.string.kpcc_live, R.drawable.menu_antenna, LiveFragment.STACK_TAG,
                 AnalyticsManager.EVENT_MENU_SELECTION_LIVE_STREAM,
                 new Navigation.NavigationItemSelectedCallback() {
-                    public void perform(FragmentManager fm) {
+                    @Override
+                    public void perform(FragmentManager fm, boolean addToBackStack) {
                         FragmentTransaction trans = fm.beginTransaction();
-                        clearFragmentBackStack(fm);
-                        trans.replace(R.id.container, new LiveFragment()).commit();
+                        trans.replace(R.id.container, new LiveFragment(), LiveFragment.STACK_TAG);
+
+                        if (addToBackStack) {
+                            trans.addToBackStack(LiveFragment.STACK_TAG);
+                        }
+
+                        trans.commit();
                     }
                 }
         );
 
-        Navigation.instance.addItem(1, R.string.programs, R.drawable.menu_microphone,
+        Navigation.instance.addItem(1, R.string.programs, R.drawable.menu_microphone, ProgramsFragment.STACK_TAG,
                 AnalyticsManager.EVENT_MENU_SELECTION_PROGRAMS,
                 new Navigation.NavigationItemSelectedCallback() {
-                    public void perform(FragmentManager fm) {
+                    @Override
+                    public void perform(FragmentManager fm, boolean addToBackStack) {
                         FragmentTransaction trans = fm.beginTransaction();
-                        clearFragmentBackStack(fm);
-                        trans.replace(R.id.container, new ProgramsFragment()).commit();
+                        trans.replace(R.id.container, new ProgramsFragment(), ProgramsFragment.STACK_TAG);
+
+                        if (addToBackStack) {
+                            trans.addToBackStack(ProgramsFragment.STACK_TAG);
+                        }
+
+                        trans.commit();
                     }
                 }
         );
 
-        Navigation.instance.addItem(2, R.string.headlines, R.drawable.menu_glasses,
+        Navigation.instance.addItem(2, R.string.headlines, R.drawable.menu_glasses, HeadlinesFragment.STACK_TAG,
                 AnalyticsManager.EVENT_MENU_SELECTION_HEADLINES,
                 new Navigation.NavigationItemSelectedCallback() {
-                    public void perform(FragmentManager fm) {
+                    @Override
+                    public void perform(FragmentManager fm, boolean addToBackStack) {
                         FragmentTransaction trans = fm.beginTransaction();
-                        clearFragmentBackStack(fm);
-                        trans.replace(R.id.container, new HeadlinesFragment()).commit();
+                        trans.replace(R.id.container, new HeadlinesFragment(), HeadlinesFragment.STACK_TAG);
+
+                        if (addToBackStack) {
+                            trans.addToBackStack(HeadlinesFragment.STACK_TAG);
+                        }
+
+                        trans.commit();
                     }
                 }
         );
 
-        Navigation.instance.addItem(3, R.string.donate, R.drawable.menu_heart_plus,
+        Navigation.instance.addItem(3, R.string.donate, R.drawable.menu_heart_plus, null,
                 AnalyticsManager.EVENT_MENU_SELECTION_DONATE,
                 new Navigation.NavigationItemSelectedCallback() {
-                    public void perform(FragmentManager fm) {
+                    @Override
+                    public void perform(FragmentManager fm, boolean addToBackStack) {
                         Uri uri = Uri.parse(DONATE_URL);
                         Intent intent = new Intent(Intent.ACTION_VIEW, uri);
 
@@ -106,24 +125,36 @@ public class MainActivity extends ActionBarActivity {
                 }
         );
 
-        Navigation.instance.addItem(4, R.string.feedback, R.drawable.menu_feedback,
+        Navigation.instance.addItem(4, R.string.feedback, R.drawable.menu_feedback, FeedbackFragment.STACK_TAG,
                 AnalyticsManager.EVENT_MENU_SELECTION_FEEDBACK,
                 new Navigation.NavigationItemSelectedCallback() {
-                    public void perform(FragmentManager fm) {
+                    @Override
+                    public void perform(FragmentManager fm, boolean addToBackStack) {
                         FragmentTransaction trans = fm.beginTransaction();
-                        clearFragmentBackStack(fm);
-                        trans.replace(R.id.container, new FeedbackFragment()).commit();
+                        trans.replace(R.id.container, new FeedbackFragment(), FeedbackFragment.STACK_TAG);
+
+                        if (addToBackStack) {
+                            trans.addToBackStack(FeedbackFragment.STACK_TAG);
+                        }
+
+                        trans.commit();
                     }
                 }
         );
 
-        Navigation.instance.addItem(5, R.string.settings, R.drawable.menu_settings,
+        Navigation.instance.addItem(5, R.string.settings, R.drawable.menu_settings, SettingsFragment.STACK_TAG,
                 AnalyticsManager.EVENT_MENU_SELECTION_SETTINGS,
                 new Navigation.NavigationItemSelectedCallback() {
-                    public void perform(FragmentManager fm) {
+                    @Override
+                    public void perform(FragmentManager fm, boolean addToBackStack) {
                         FragmentTransaction trans = fm.beginTransaction();
-                        clearFragmentBackStack(fm);
-                        trans.replace(R.id.container, new SettingsFragment()).commit();
+                        trans.replace(R.id.container, new SettingsFragment(), SettingsFragment.STACK_TAG);
+
+                        if (addToBackStack) {
+                            trans.addToBackStack(SettingsFragment.STACK_TAG);
+                        }
+
+                        trans.commit();
                     }
                 }
         );
@@ -157,12 +188,6 @@ public class MainActivity extends ActionBarActivity {
 
     public NavigationDrawerFragment getNavigationDrawerFragment() {
         return mNavigationDrawerFragment;
-    }
-
-    // This gets called when we click a menu item. If a menu item is clicked, the internal
-    // back stack (for program and episode lists) should be cleared out.
-    private void clearFragmentBackStack(FragmentManager fm) {
-        fm.popBackStack(null, FragmentManager.POP_BACK_STACK_INCLUSIVE);
     }
 
     @Override

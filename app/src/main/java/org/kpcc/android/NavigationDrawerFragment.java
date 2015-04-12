@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.res.Configuration;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBarActivity;
@@ -31,7 +32,6 @@ public class NavigationDrawerFragment extends Fragment {
     private ListView mDrawerListView;
     private View mFragmentContainerView;
     private int mCurrentSelectedPosition = 0;
-    private boolean mFromSavedInstanceState;
     private Float mWrapperAlpha = null;
 
     @Override
@@ -43,7 +43,6 @@ public class NavigationDrawerFragment extends Fragment {
 
         if (savedInstanceState != null) {
             mCurrentSelectedPosition = savedInstanceState.getInt(STATE_SELECTED_POSITION);
-            mFromSavedInstanceState = true;
         }
 
         // Select either the default item (0) or the last selected item.
@@ -140,7 +139,8 @@ public class NavigationDrawerFragment extends Fragment {
                     // Handle the fragment transaction.
                     // This was placed here because the drawer was stuttering when it was closed
                     // because of the fragment transaction taking over the UI thread.
-                    updateFragment();
+
+                    updateFragment(true, true);
                 }
 
                 mWrapperAlpha = null;
@@ -179,10 +179,15 @@ public class NavigationDrawerFragment extends Fragment {
         if (isDrawerOpen()) {
             // If the drawer is open, close it. The fragment will be updated afterwards.
             // If the drawer is NOT open, then load the fragment immediately.
-            mDoFragmentTransaction.set(true);
+
+            FragmentManager fm = getActivity().getSupportFragmentManager();
+            Fragment frag = fm.findFragmentByTag(getCurrentItem().stackTag);
+            boolean isAlreadyVisible = frag != null && frag.isVisible();
+            mDoFragmentTransaction.set(!isAlreadyVisible);
+
             mDrawerLayout.closeDrawer(mFragmentContainerView);
         } else {
-            updateFragment();
+            updateFragment(false, false);
         }
     }
 
@@ -232,9 +237,13 @@ public class NavigationDrawerFragment extends Fragment {
         return ((ActionBarActivity) getActivity()).getSupportActionBar();
     }
 
-    private void updateFragment() {
-        Navigation.NavigationItem item = Navigation.instance.navigationItems[mCurrentSelectedPosition];
+    private void updateFragment(boolean logEvent, boolean addToBackStack) {
         // update the main content by replacing fragments
-        item.performCallback(getActivity());
+        getCurrentItem().performCallback(getActivity(), logEvent, addToBackStack);
     }
+
+    private Navigation.NavigationItem getCurrentItem() {
+        return Navigation.instance.navigationItems[mCurrentSelectedPosition];
+    }
+
 }

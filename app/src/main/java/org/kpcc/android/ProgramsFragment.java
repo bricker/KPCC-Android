@@ -19,7 +19,7 @@ import org.json.JSONObject;
 import org.kpcc.api.Program;
 
 public class ProgramsFragment extends Fragment implements AdapterView.OnItemClickListener {
-    private final static String STACK_TAG = "programsList";
+    public final static String STACK_TAG = "ProgramsFragment";
 
     private ListAdapter mAdapter;
 
@@ -117,7 +117,7 @@ public class ProgramsFragment extends Fragment implements AdapterView.OnItemClic
                 .replace(R.id.container,
                         EpisodesFragment.newInstance(program.slug),
                         EpisodesFragment.STACK_TAG)
-                .addToBackStack(STACK_TAG)
+                .addToBackStack(EpisodesFragment.STACK_TAG)
                 .commit();
     }
 }

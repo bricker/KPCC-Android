@@ -16,6 +16,7 @@ import android.widget.LinearLayout;
 
 
 public class HeadlinesFragment extends Fragment {
+    public static final String STACK_TAG = "HeadlinesFragment";
     private static final String SHORTLIST_URL = "http://www.scpr.org/short-list/latest#no-prelims";
 
     private LinearLayout mProgressBar;
@@ -138,7 +139,7 @@ public class HeadlinesFragment extends Fragment {
             return;
         }
 
-        if (title == null || TextUtils.isEmpty(title) || url.equals(SHORTLIST_URL)) {
+        if (title == null || TextUtils.isEmpty(title) || url == null || url.equals(SHORTLIST_URL)) {
             activity.setTitle(R.string.headlines);
         } else {
             activity.setTitle(title);
