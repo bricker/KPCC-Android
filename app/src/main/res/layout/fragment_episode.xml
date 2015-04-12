@@ -57,7 +57,7 @@
             <RelativeLayout
                 tools:ignore="MissingPrefix"
                 android:layout_width="match_parent"
-                android:layout_height="220dp"
+                android:layout_height="238dp"
                 android:layout_gravity="bottom"
                 fontPath="fonts/FreigSanProMed.otf">
                 <LinearLayout
@@ -99,13 +99,13 @@
                 <SeekBar
                     android:id="@+id/progress_bar"
                     android:layout_width="match_parent"
-                    android:layout_height="2dp"
+                    android:layout_height="wrap_content"
                     android:layout_marginBottom="20dp"
                     android:layout_below="@id/audio_time"
-                    style="@android:style/Widget.ProgressBar.Horizontal"
+                    style="@style/AppTheme.ProgressBarHorizontal"
                     android:paddingLeft="0dp"
                     android:paddingRight="0dp"
-                    android:thumb="@null" />
+                    android:thumb="@drawable/seek_thumb" />
 
                 <include layout="@layout/audio_button"
                          android:layout_width="match_parent"

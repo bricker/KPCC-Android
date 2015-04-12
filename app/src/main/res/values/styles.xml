@@ -29,6 +29,11 @@
         <item name="android:textColorHint">@android:color/white</item>
     </style>
 
+    <style name="AppTheme.ProgressBarHorizontal" parent="@android:style/Widget.ProgressBar.Horizontal">
+        <item name="android:minHeight">2dip</item>
+        <item name="android:maxHeight">2dip</item>
+    </style>
+
     <style name="static_content_wrapper">
         <item name="android:layout_marginTop">@dimen/page_padding_vertical</item>
         <item name="android:layout_marginRight">@dimen/page_padding_horizontal</item>
