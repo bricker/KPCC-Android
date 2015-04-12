@@ -78,6 +78,7 @@ public class StreamManager extends Service {
         final AudioManager.OnAudioFocusChangeListener mAfChangeListener;
         AudioEventListener mAudioEventListener;
         ProgressObserver mProgressObserver;
+        AtomicBoolean isPrepared = new AtomicBoolean(false);
 
         public BaseStream(Context context) {
             audioPlayer = new MediaPlayer();
@@ -261,6 +262,7 @@ public class StreamManager extends Service {
             audioPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
                 @Override
                 public void onPrepared(MediaPlayer mp) {
+                    isPrepared.set(true);
                     start();
                 }
             });
@@ -274,15 +276,11 @@ public class StreamManager extends Service {
 
         public void seekTo(int pos) {
             try {
-                // We're pausing/starting the player directly so the button states don't change.
-                if (!isPaused) {
-                    audioPlayer.pause();
-                }
-
-                audioPlayer.seekTo(pos);
-
-                if (!isPaused) {
-                    audioPlayer.start();
+                // If it's not prepared, it'll transfer to the Error state, call onCompletion(),
+                // and mess everything up. Since seeking is a UI action that can be interacted with
+                // before the player is ready, we need to just not do anything if it's not ready.
+                if (isPrepared.get()) {
+                    audioPlayer.seekTo(pos);
                 }
             } catch (IllegalStateException e) {
                 release();
@@ -459,6 +457,7 @@ public class StreamManager extends Service {
             audioPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
                 @Override
                 public void onPrepared(MediaPlayer mp) {
+                    isPrepared.set(true);
                     start();
                 }
             });
@@ -520,6 +519,7 @@ public class StreamManager extends Service {
             audioPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
                 @Override
                 public void onPrepared(MediaPlayer mp) {
+                    isPrepared.set(true);
                     mAudioEventListener.onPrepared();
                     PrerollManager.LAST_PREROLL_PLAY = System.currentTimeMillis();
                     start();

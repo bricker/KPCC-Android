@@ -119,6 +119,7 @@ public class EpisodeFragment extends Fragment {
         mSeekBar = (SeekBar) mView.findViewById(R.id.progress_bar);
         mCurrentTime = (TextView) mView.findViewById(R.id.audio_current_time);
         mSeekBar.setMax(episode.audio.durationSeconds * 1000);
+        mSeekBar.setEnabled(false);
 
         mSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
@@ -201,6 +202,7 @@ public class EpisodeFragment extends Fragment {
         StreamManager.EpisodeStream currentPlayer = activity.streamManager.currentEpisodePlayer;
         if (currentPlayer != null && currentPlayer.audioUrl.equals(episode.audio.url)) {
             mPlayer = currentPlayer;
+            mSeekBar.setEnabled(true);
 
             if (currentPlayer.isPlaying()) {
                 alreadyPlaying = true;
@@ -235,6 +237,7 @@ public class EpisodeFragment extends Fragment {
 
             @Override
             public void onPlay() {
+                mSeekBar.setEnabled(true);
                 mAudioButtonManager.togglePlayingForPause();
                 logEpisodeStreamEvent(AnalyticsManager.EVENT_ON_DEMAND_BEGAN);
             }
