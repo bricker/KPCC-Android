@@ -373,6 +373,12 @@ public class StreamManager extends Service {
             boolean installedRecently = KPCCApplication.INSTALLATION_TIME > (now - PrerollManager.INSTALL_GRACE);
             boolean heardPrerollRecently = PrerollManager.LAST_PREROLL_PLAY > (now - PrerollManager.PREROLL_THRESHOLD);
 
+            try {
+                audioPlayer.setDataSource(LIVESTREAM_URL);
+            } catch (IOException e) {
+                mAudioEventListener.onError();
+            }
+
             if ((!hasPlayedLiveStream && installedRecently) || heardPrerollRecently) {
                 // Skipping Preroll
                 prepareAndStart();
@@ -404,6 +410,17 @@ public class StreamManager extends Service {
         @Override
         public void onPrerollComplete() {
             prepareAndStart();
+        }
+
+        @Override
+        void audioFocusGain() {
+            // Since we STOP the stream, we can't just start() it again. We need to prepare it
+            // first. So we're overriding this method.
+            if (mIsDucking.get() && audioPlayer.isPlaying()) {
+                unduckStream();
+            } else {
+                prepareAndStart();
+            }
         }
 
         @Override
@@ -464,14 +481,14 @@ public class StreamManager extends Service {
                     start();
                 }
             });
+
             prepare();
         }
 
         private void prepare() {
             try {
-                audioPlayer.setDataSource(LIVESTREAM_URL);
                 audioPlayer.prepareAsync();
-            } catch (IOException e) {
+            } catch (IllegalStateException e) {
                 mAudioEventListener.onError();
             }
         }

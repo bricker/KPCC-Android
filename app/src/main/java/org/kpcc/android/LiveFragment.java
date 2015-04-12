@@ -383,11 +383,13 @@ public class LiveFragment extends Fragment {
     private void initAudioButtonState() {
         MainActivity activity = (MainActivity) getActivity();
 
-        StreamManager.LiveStream currentPlayer = activity.streamManager.currentLivePlayer;
-        if (currentPlayer != null && currentPlayer.isPlaying()) {
-            mPlayer = currentPlayer;
-            setupAudioStateHandlers();
-            mAudioButtonManager.togglePlayingForStop();
+        if (activity.streamIsBound) {
+            StreamManager.LiveStream currentPlayer = activity.streamManager.currentLivePlayer;
+            if (currentPlayer != null && currentPlayer.isPlaying()) {
+                mPlayer = currentPlayer;
+                setupAudioStateHandlers();
+                mAudioButtonManager.togglePlayingForStop();
+            }
         }
     }
 
