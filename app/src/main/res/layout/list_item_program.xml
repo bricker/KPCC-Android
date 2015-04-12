@@ -2,7 +2,6 @@
 <!-- We're not using paddingStart or paddingEnd because we need to support API 16 -->
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_height="match_parent"
     android:layout_width="match_parent"
     android:minHeight="65dp"
@@ -12,7 +11,7 @@
         android:id="@+id/program_avatar_wrapper"
         android:layout_width="35dp"
         android:layout_height="35dp"
-        android:layout_marginRight="15dp"
+        android:layout_marginRight="12dp"
         android:layout_gravity="center_vertical">
         <ImageView
             android:id="@+id/program_avatar"
@@ -21,7 +20,6 @@
             android:contentDescription="@null" />
 
         <TextView
-            tools:ignore="MissingPrefix"
             android:id="@+id/program_letter"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
@@ -40,21 +38,25 @@
         android:layout_weight="1"
         style="@style/text_list_item" />
 
-    <ImageView
-        android:id="@+id/arrow"
-        android:layout_width="20dp"
+    <FrameLayout
+        android:layout_width="40dp"
         android:layout_height="20dp"
-        android:contentDescription="@null"
         android:layout_gravity="center_vertical|end"
-        android:src="@drawable/ic_chevron_right" />
+        android:gravity="start" >
 
-    <ImageView
-        android:id="@+id/audio_icon"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:contentDescription="@null"
-        android:layout_gravity="center_vertical|end"
-        android:src="@drawable/ic_circle"
-        android:visibility="gone"/>
+        <ImageView
+            android:id="@+id/arrow"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:contentDescription="@null"
+            android:src="@drawable/ic_chevron_right" />
 
+        <ImageView
+            android:id="@+id/audio_icon"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:contentDescription="@null"
+            android:src="@drawable/seek_thumb"
+            android:visibility="gone" />
+    </FrameLayout>
 </LinearLayout>

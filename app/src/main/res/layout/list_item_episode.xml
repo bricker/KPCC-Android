@@ -28,11 +28,11 @@
 
     <ImageView
         android:id="@+id/audio_icon"
-        android:layout_width="30dp"
-        android:layout_height="30dp"
-        android:contentDescription="@null"
+        android:layout_width="40dp"
+        android:layout_height="20dp"
         android:layout_gravity="center_vertical|end"
-        android:src="@drawable/ic_circle"
+        android:gravity="start"
+        android:contentDescription="@null"
+        android:src="@drawable/seek_thumb"
         android:visibility="gone" />
-
 </LinearLayout>
