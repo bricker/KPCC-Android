@@ -278,7 +278,8 @@ public class EpisodeFragment extends Fragment {
 
             @Override
             public void onBufferingUpdate(int percent) {
-                mSeekBar.setSecondaryProgress(mSeekBar.getMax() * (percent / 100));
+                float currentBuffer = mSeekBar.getMax() * (percent / 100f);
+                mSeekBar.setSecondaryProgress((int) currentBuffer);
             }
 
             @Override
