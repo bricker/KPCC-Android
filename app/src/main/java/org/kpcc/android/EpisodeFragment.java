@@ -34,7 +34,6 @@ public class EpisodeFragment extends Fragment {
     private SeekBar mSeekBar;
     private TextView mCurrentTime;
     private AudioButtonManager mAudioButtonManager;
-    private ViewGroup mView;
     // Unrecoverable error. Just show an error message if this is true.
     private boolean mDidError = false;
 
@@ -70,24 +69,24 @@ public class EpisodeFragment extends Fragment {
                              Bundle savedInstanceState) {
 
         // Inflate the layout for this fragment
-        mView = (ViewGroup) inflater.inflate(R.layout.fragment_episode, container, false);
-        ScrollView episodePage = (ScrollView) mView.findViewById(R.id.episode_page);
+        ViewGroup view = (ViewGroup) inflater.inflate(R.layout.fragment_episode, container, false);
+        ScrollView episodePage = (ScrollView) view.findViewById(R.id.episode_page);
         episodePage.setFillViewport(true);
 
-        FrameLayout contentWrapper = (FrameLayout) mView.findViewById(R.id.content_wrapper);
+        FrameLayout contentWrapper = (FrameLayout) view.findViewById(R.id.content_wrapper);
 
         if (mDidError) {
-            LinearLayout errorView = (LinearLayout) mView.findViewById(R.id.generic_load_error);
+            LinearLayout errorView = (LinearLayout) view.findViewById(R.id.generic_load_error);
             errorView.setVisibility(View.VISIBLE);
             contentWrapper.setVisibility(View.GONE);
-            return mView;
+            return view;
         }
 
-        ImageView mShareButton = (ImageView) mView.findViewById(R.id.share_btn);
-        TextView programTitle = (TextView) mView.findViewById(R.id.program_title);
-        TextView episodeTitle = (TextView) mView.findViewById(R.id.episode_title);
-        TextView date = (TextView) mView.findViewById(R.id.air_date);
-        TextView totalTime = (TextView) mView.findViewById(R.id.audio_total_time);
+        ImageView mShareButton = (ImageView) view.findViewById(R.id.share_btn);
+        TextView programTitle = (TextView) view.findViewById(R.id.program_title);
+        TextView episodeTitle = (TextView) view.findViewById(R.id.episode_title);
+        TextView date = (TextView) view.findViewById(R.id.air_date);
+        TextView totalTime = (TextView) view.findViewById(R.id.audio_total_time);
 
         mShareButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -116,8 +115,8 @@ public class EpisodeFragment extends Fragment {
             }
         });
 
-        mSeekBar = (SeekBar) mView.findViewById(R.id.progress_bar);
-        mCurrentTime = (TextView) mView.findViewById(R.id.audio_current_time);
+        mSeekBar = (SeekBar) view.findViewById(R.id.progress_bar);
+        mCurrentTime = (TextView) view.findViewById(R.id.audio_current_time);
         mSeekBar.setMax(episode.audio.durationSeconds * 1000);
         mSeekBar.setEnabled(false);
 
@@ -159,7 +158,7 @@ public class EpisodeFragment extends Fragment {
 
         episodeTitle.setText(title);
 
-        mAudioButtonManager = new AudioButtonManager(mView);
+        mAudioButtonManager = new AudioButtonManager(view);
 
         mAudioButtonManager.getPlayButton().setOnClickListener(new View.OnClickListener() {
             @Override
@@ -175,7 +174,7 @@ public class EpisodeFragment extends Fragment {
             }
         });
 
-        return mView;
+        return view;
     }
 
     @Override

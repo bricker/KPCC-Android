@@ -36,7 +36,6 @@ public class HeadlinesFragment extends Fragment {
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_headlines, container, false);
-        final MainActivity activity = (MainActivity) getActivity();
         mBrowser = (WebView) view.findViewById(R.id.content_wrapper);
 
         setWebTitle(mCurrentTitle, mCurrentUrl);

@@ -16,7 +16,7 @@ import java.util.List;
 
 public class ProgramsManager {
     public static ProgramsManager instance;
-    private static String[] HIDDEN_PROGRAMS = { "filmweek-marquee", "take-two-evenings" };
+    private static final String[] HIDDEN_PROGRAMS = { "filmweek-marquee", "take-two-evenings" };
 
     public final ArrayList<Program> ALL_PROGRAMS = new ArrayList<>();
 

@@ -79,7 +79,7 @@ public class StreamManager extends Service {
         final StreamManager mStreamManager;
         AudioEventListener mAudioEventListener;
         ProgressObserver mProgressObserver;
-        AtomicBoolean isPrepared = new AtomicBoolean(false);
+        final AtomicBoolean isPrepared = new AtomicBoolean(false);
 
         public BaseStream(Context context) {
             audioPlayer = new MediaPlayer();

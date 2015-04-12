@@ -27,7 +27,7 @@ public class MainActivity extends ActionBarActivity {
     public StreamManager streamManager;
     private NavigationDrawerFragment mNavigationDrawerFragment;
     public boolean streamIsBound = false;
-    private ArrayList<OnStreamBindListener> mStreamBindListeners = new ArrayList<>();
+    private final ArrayList<OnStreamBindListener> mStreamBindListeners = new ArrayList<>();
 
     private final ServiceConnection mConnection = new ServiceConnection() {
         @Override

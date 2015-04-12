@@ -122,10 +122,6 @@ public class EpisodesPagerFragment extends Fragment {
                     fragment.pagerVisible.set(true);
                     fragment.onResume();
                 }
-
-                FragmentTransaction trans = getActivity().getSupportFragmentManager().beginTransaction();
-                trans.addToBackStack(STACK_TAG);
-
             }
 
             @Override
