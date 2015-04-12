@@ -1,5 +1,6 @@
 package org.kpcc.android;
 
+import android.app.Activity;
 import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -21,6 +22,7 @@ public class HeadlinesFragment extends Fragment {
     private String mCurrentUrl;
     private String mCurrentTitle;
     private boolean mDidGoBack = false;
+    private WebView mBrowser;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -34,13 +36,13 @@ public class HeadlinesFragment extends Fragment {
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_headlines, container, false);
         final MainActivity activity = (MainActivity) getActivity();
+        mBrowser = (WebView) view.findViewById(R.id.content_wrapper);
 
         setWebTitle(mCurrentTitle, mCurrentUrl);
 
-        WebView browser = (WebView) view.findViewById(R.id.content_wrapper);
         mProgressBar = (LinearLayout) view.findViewById(R.id.progress_layout);
 
-        browser.setWebViewClient(new WebViewClient() {
+        mBrowser.setWebViewClient(new WebViewClient() {
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, String url) {
                 mCurrentUrl = url;
@@ -74,7 +76,7 @@ public class HeadlinesFragment extends Fragment {
             }
         });
 
-        browser.setWebChromeClient(new WebChromeClient() {
+        mBrowser.setWebChromeClient(new WebChromeClient() {
             @Override
             public void onReceivedTitle(WebView view, String title) {
                 super.onReceivedTitle(view, title);
@@ -88,12 +90,12 @@ public class HeadlinesFragment extends Fragment {
         });
 
         if (mCurrentUrl != null) {
-            browser.loadUrl(mCurrentUrl);
+            mBrowser.loadUrl(mCurrentUrl);
         } else {
-            browser.loadUrl(SHORTLIST_URL);
+            mBrowser.loadUrl(SHORTLIST_URL);
         }
 
-        browser.setOnKeyListener(new View.OnKeyListener() {
+        mBrowser.setOnKeyListener(new View.OnKeyListener() {
             @Override
             public boolean onKey(View v, int keyCode, KeyEvent event) {
                 if (event.getAction() == KeyEvent.ACTION_DOWN) {
@@ -120,16 +122,26 @@ public class HeadlinesFragment extends Fragment {
     @Override
     public void onPause() {
         AnalyticsManager.instance.logEvent(AnalyticsManager.EVENT_CLOSED_HEADLINES);
+
+        if (mBrowser != null) {
+            mBrowser.stopLoading();
+        }
+
         super.onPause();
     }
 
     private void setWebTitle(String title, String url) {
         mCurrentTitle = title;
+        Activity activity = getActivity();
+
+        if (activity == null) {
+            return;
+        }
 
         if (title == null || TextUtils.isEmpty(title) || url.equals(SHORTLIST_URL)) {
-            getActivity().setTitle(R.string.headlines);
+            activity.setTitle(R.string.headlines);
         } else {
-            getActivity().setTitle(title);
+            activity.setTitle(title);
         }
     }
 }
