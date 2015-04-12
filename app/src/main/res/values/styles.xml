@@ -30,6 +30,8 @@
     </style>
 
     <style name="AppTheme.ProgressBarHorizontal" parent="@android:style/Widget.ProgressBar.Horizontal">
+        <item name="android:indeterminateOnly">false</item>
+        <item name="android:progressDrawable">@drawable/progress_horizontal</item>
         <item name="android:minHeight">2dip</item>
         <item name="android:maxHeight">2dip</item>
     </style>

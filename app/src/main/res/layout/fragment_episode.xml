@@ -94,8 +94,6 @@
 
                 </LinearLayout>
 
-                <!-- Tinting of the progress indicators is only supported in API 21+
-                I'm too lazy to build a custom seek bar right now -->
                 <SeekBar
                     android:id="@+id/progress_bar"
                     android:layout_width="match_parent"
