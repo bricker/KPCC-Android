@@ -12,7 +12,8 @@
         android:layout_height="match_parent"
         android:layout_width="0dp"
         android:orientation="vertical"
-        android:layout_weight="1" >
+        android:layout_weight="1"
+        android:paddingRight="12dp">
         <TextView
             android:id="@+id/episode_title"
             android:layout_width="match_parent"
