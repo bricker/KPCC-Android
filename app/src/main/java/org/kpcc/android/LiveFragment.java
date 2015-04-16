@@ -88,7 +88,7 @@ public class LiveFragment extends Fragment {
             public void onClick(View v) {
                 MainActivity activity = (MainActivity) getActivity();
 
-                if (!activity.streamIsBound) {
+                if (!activity.streamIsBound || !activity.isConnectedToNetwork()) {
                     return;
                 }
 
@@ -383,6 +383,11 @@ public class LiveFragment extends Fragment {
 
     private void initAudioButtonState() {
         MainActivity activity = (MainActivity) getActivity();
+
+        if (!activity.isConnectedToNetwork()) {
+            mAudioButtonManager.toggleError(R.string.network_error);
+            return;
+        }
 
         if (activity.streamIsBound) {
             StreamManager.LiveStream currentPlayer = activity.streamManager.currentLivePlayer;

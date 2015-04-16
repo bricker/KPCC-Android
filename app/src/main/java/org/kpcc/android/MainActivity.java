@@ -5,6 +5,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.media.AudioManager;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.IBinder;
@@ -204,6 +206,14 @@ public class MainActivity extends ActionBarActivity {
             unbindService(mConnection);
             streamIsBound = false;
         }
+    }
+
+    boolean isConnectedToNetwork() {
+        ConnectivityManager cm =
+                (ConnectivityManager)getSystemService(Context.CONNECTIVITY_SERVICE);
+
+        NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
+        return activeNetwork != null && activeNetwork.isConnectedOrConnecting();
     }
 
     void addOnStreamBindListener(OnStreamBindListener listener) {
