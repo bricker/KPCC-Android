@@ -41,14 +41,6 @@
         <service android:name="com.parse.PushService" />
 
         <receiver
-            android:name=".StreamManager$ConnectivityBroadcastReceiver"
-            android:exported="false">
-            <intent-filter>
-                <action android:name="android.net.conn.CONNECTIVITY_CHANGE"/>
-            </intent-filter>
-        </receiver>
-
-        <receiver
             android:name=".NotificationManager$BroadcastReceiver"
             android:exported="false">
             <intent-filter>

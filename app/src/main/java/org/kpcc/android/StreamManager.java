@@ -1,7 +1,6 @@
 package org.kpcc.android;
 
 import android.app.Service;
-import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -655,13 +654,6 @@ public class StreamManager extends Service {
                     mIsObserving.set(false);
                 }
             }
-        }
-    }
-
-    public static class ConnectivityBroadcastReceiver extends BroadcastReceiver {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-
         }
     }
 
