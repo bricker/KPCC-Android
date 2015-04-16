@@ -80,6 +80,7 @@ public class StreamManager extends Service {
         AudioEventListener mAudioEventListener;
         ProgressObserver mProgressObserver;
         final AtomicBoolean isPrepared = new AtomicBoolean(false);
+        final AtomicBoolean mDidPauseForAudioLoss = new AtomicBoolean(false);
 
         public BaseStream(Context context) {
             audioPlayer = new MediaPlayer();
@@ -142,18 +143,25 @@ public class StreamManager extends Service {
         }
 
         void audioFocusLossTransient() {
-            pause();
+            if (isPlaying()) {
+                mDidPauseForAudioLoss.set(true);
+                pause();
+            }
         }
 
         void audioFocusGain() {
-            if (mIsDucking.get() && audioPlayer.isPlaying()) {
+            if (mIsDucking.get() && isPlaying()) {
                 unduckStream();
             } else {
-                start();
+                if (mDidPauseForAudioLoss.get()) {
+                    mDidPauseForAudioLoss.set(false);
+                    start();
+                } // Otherwise, just keep it paused.
             }
         }
 
         void audioFocusLoss() {
+            mDidPauseForAudioLoss.set(false);
             release();
             mAudioManager.abandonAudioFocus(mAfChangeListener);
         }
@@ -162,7 +170,7 @@ public class StreamManager extends Service {
             if (!mIsDucking.get()) {
                 mIsDucking.set(true);
 
-                if (audioPlayer.isPlaying()) {
+                if (isPlaying()) {
                     audioPlayer.setVolume(0.25f, 0.25f);
                 }
             }
@@ -172,7 +180,7 @@ public class StreamManager extends Service {
             if (mIsDucking.get()) {
                 mIsDucking.set(false);
 
-                if (audioPlayer.isPlaying()) {
+                if (isPlaying()) {
                     audioPlayer.setVolume(1.0f, 1.0f);
                 }
             }
@@ -193,7 +201,7 @@ public class StreamManager extends Service {
             stopProgressObserver();
             mProgressObserver = new StreamManager.ProgressObserver(audioPlayer, mAudioEventListener);
 
-            if (audioPlayer.isPlaying()) {
+            if (isPlaying()) {
                 startProgressObserver();
             }
         }
@@ -416,7 +424,7 @@ public class StreamManager extends Service {
         void audioFocusGain() {
             // Since we STOP the stream, we can't just start() it again. We need to prepare it
             // first. So we're overriding this method.
-            if (mIsDucking.get() && audioPlayer.isPlaying()) {
+            if (mIsDucking.get() && isPlaying()) {
                 unduckStream();
             } else {
                 prepareAndStart();
