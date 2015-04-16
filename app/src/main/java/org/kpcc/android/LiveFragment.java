@@ -72,16 +72,13 @@ public class LiveFragment extends Fragment {
 
         mAudioButtonManager = new AudioButtonManager(view);
 
-        if (activity.streamIsBound) {
-            initAudioButtonState();
-        } else {
-            activity.addOnStreamBindListener(new MainActivity.OnStreamBindListener() {
-                @Override
-                public void onBind() {
-                    initAudioButtonState();
-                }
-            });
-        }
+        // This will init state immediately if stream is already bound.
+        activity.addOnStreamBindListener(new MainActivity.OnStreamBindListener() {
+            @Override
+            public void onBind() {
+                initAudioButtonState();
+            }
+        });
 
         mAudioButtonManager.getPlayButton().setOnClickListener(new View.OnClickListener() {
             @Override

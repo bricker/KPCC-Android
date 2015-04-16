@@ -41,6 +41,8 @@ public class MainActivity extends ActionBarActivity {
             for (OnStreamBindListener listener : mStreamBindListeners) {
                 listener.onBind();
             }
+
+            mStreamBindListeners.clear();
         }
 
         @Override
@@ -217,7 +219,11 @@ public class MainActivity extends ActionBarActivity {
     }
 
     void addOnStreamBindListener(OnStreamBindListener listener) {
-        mStreamBindListeners.add(listener);
+        if (streamIsBound) {
+            listener.onBind();
+        } else {
+            mStreamBindListeners.add(listener);
+        }
     }
 
     abstract static class OnStreamBindListener {
