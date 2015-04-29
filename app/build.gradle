@@ -8,8 +8,8 @@ android {
         applicationId "com.skyblue.pra.kpcc"
         minSdkVersion 16
         targetSdkVersion 21
-        versionCode 65
-        versionName "3.0.0-beta4"
+        versionCode 66
+        versionName "3.0.0"
     }
     buildTypes {
         release {
