@@ -350,7 +350,11 @@ public class StreamManager extends Service {
 
     public static class LiveStream extends BaseStream {
         // We get preroll directly from Triton so we always use the skip-preroll url.
-        public final static String LIVESTREAM_URL = "http://live.scpr.org/kpcclive?preskip=true";
+        // Also send the UA for logs.
+        public final static String LIVESTREAM_URL = "http://live.scpr.org/kpcclive?preskip=true&ua=KPCCAndroid-" +
+                BuildConfig.VERSION_NAME + "-" +
+                String.valueOf(BuildConfig.VERSION_CODE);
+
         private final static String PREF_USER_PLAYED_LIVESTREAM = "live_stream_played";
         private AudioEventListener mPrerollAudioEventListener;
 
