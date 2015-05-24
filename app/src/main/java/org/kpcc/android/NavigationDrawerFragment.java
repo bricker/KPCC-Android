@@ -81,7 +81,7 @@ public class NavigationDrawerFragment extends Fragment {
                     view = inflater.inflate(R.layout.list_item_drawer, null);
                 }
 
-                Navigation.NavigationItem item = Navigation.instance.navigationItems[position];
+                Navigation.NavigationItem item = Navigation.instance.navigationItems.get(position);
                 ImageView icon = (ImageView) view.findViewById(R.id.icon);
                 TextView title = (TextView) view.findViewById(R.id.title);
 
@@ -111,10 +111,10 @@ public class NavigationDrawerFragment extends Fragment {
         // ActionBarDrawerToggle ties together the the proper interactions
         // between the navigation drawer and the action bar app icon.
         mDrawerToggle = new ActionBarDrawerToggle(
-                getActivity(),                    /* host Activity */
-                mDrawerLayout,                    /* DrawerLayout object */
-                R.string.navigation_drawer_open,  /* "open drawer" description for accessibility */
-                R.string.navigation_drawer_close  /* "close drawer" description for accessibility */
+                getActivity(),
+                mDrawerLayout,
+                R.string.navigation_drawer_open,
+                R.string.navigation_drawer_close
         ) {
             @Override
             public void onDrawerSlide(View drawerView, float slideOffset) {
@@ -243,7 +243,7 @@ public class NavigationDrawerFragment extends Fragment {
     }
 
     private Navigation.NavigationItem getCurrentItem() {
-        return Navigation.instance.navigationItems[mCurrentSelectedPosition];
+        return Navigation.instance.navigationItems.get(mCurrentSelectedPosition);
     }
 
 }

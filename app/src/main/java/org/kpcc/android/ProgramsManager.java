@@ -15,12 +15,20 @@ import java.util.HashMap;
 import java.util.List;
 
 public class ProgramsManager {
-    public static ProgramsManager instance;
+    public static ProgramsManager instance = new ProgramsManager();
     private static final String[] HIDDEN_PROGRAMS = { "filmweek-marquee", "take-two-evenings" };
 
     public final ArrayList<Program> ALL_PROGRAMS = new ArrayList<>();
 
     private ProgramsManager() {
+    }
+
+    public void loadPrograms(final OnProgramsResponseListener listener) {
+        if (!ALL_PROGRAMS.isEmpty()) {
+            listener.onProgramsResponse();
+            return;
+        }
+
         HashMap<String, String> params = new HashMap<>();
         params.put("air_status", "onair");
 
@@ -45,6 +53,8 @@ public class ProgramsManager {
                     }
 
                     Collections.sort(ALL_PROGRAMS);
+
+                    listener.onProgramsResponse();
                 } catch (JSONException e) {
                     // No programs will be available.
                 }
@@ -54,12 +64,9 @@ public class ProgramsManager {
             public void onErrorResponse(VolleyError error) {
                 // No programs will be available.
                 // The fragment should check the status and try to reload the programs.
+                listener.onProgramsError(error);
             }
         });
-    }
-
-    public static void setupInstance() {
-        instance = new ProgramsManager();
     }
 
     public Program find(String slug) {
@@ -74,4 +81,11 @@ public class ProgramsManager {
 
         return foundProgram;
     }
+
+
+    public abstract static interface OnProgramsResponseListener {
+        abstract void onProgramsResponse();
+        abstract void onProgramsError(VolleyError error);
+    }
+
 }

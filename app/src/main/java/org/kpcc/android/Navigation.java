@@ -3,15 +3,17 @@ package org.kpcc.android;
 import android.content.Context;
 import android.support.v4.app.FragmentManager;
 
+import java.util.ArrayList;
+
 public class Navigation {
     public static final Navigation instance = new Navigation();
 
     // We're declaring the size statically so we can use native Array.
-    public final NavigationItem[] navigationItems = new NavigationItem[6];
+    public final ArrayList<NavigationItem> navigationItems = new ArrayList<>();
 
-    public void addItem(int idx, int titleId, int iconId, String stackTag,
+    public void addItem(int titleId, int iconId, String stackTag,
                         String analyticsKey, NavigationItemSelectedCallback callback) {
-        navigationItems[idx] = new NavigationItem(titleId, iconId, stackTag, analyticsKey, callback);
+        navigationItems.add(new NavigationItem(titleId, iconId, stackTag, analyticsKey, callback));
     }
 
     public static abstract class NavigationItemSelectedCallback {

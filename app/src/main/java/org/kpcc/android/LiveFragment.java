@@ -72,20 +72,14 @@ public class LiveFragment extends Fragment {
 
         mAudioButtonManager = new AudioButtonManager(view);
 
-        // This will init state immediately if stream is already bound.
-        activity.addOnStreamBindListener(new MainActivity.OnStreamBindListener() {
-            @Override
-            public void onBind() {
-                initAudioButtonState();
-            }
-        });
-
         mAudioButtonManager.getPlayButton().setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 MainActivity activity = (MainActivity) getActivity();
 
-                if (!activity.streamIsBound || !activity.isConnectedToNetwork()) {
+                if (activity == null || !activity.streamIsBound || !AppConnectivityManager.instance.isConnectedToNetwork()) {
+                    // The Error message should already be showing for connectivity problems.
+                    // Just do nothing.
                     return;
                 }
 
@@ -152,6 +146,17 @@ public class LiveFragment extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
+
+        MainActivity activity = (MainActivity)getActivity();
+
+        // This will init state immediately if stream is already bound.
+        // We're putting it here (in onResume) so it can change for network updates.
+        activity.addOnStreamBindListener(new MainActivity.OnStreamBindListener() {
+            @Override
+            public void onBind() {
+                initAudioButtonState();
+            }
+        });
 
         mScheduleUpdater = new ScheduleUpdater(new ScheduleUpdateCallback() {
             @Override
@@ -381,7 +386,12 @@ public class LiveFragment extends Fragment {
     private void initAudioButtonState() {
         MainActivity activity = (MainActivity) getActivity();
 
-        if (!activity.isConnectedToNetwork()) {
+        if (activity == null) {
+            // FIXME: What should we do here?
+            return;
+        }
+
+        if (!AppConnectivityManager.instance.isConnectedToNetwork()) {
             mAudioButtonManager.toggleError(R.string.network_error);
             return;
         }
@@ -392,8 +402,13 @@ public class LiveFragment extends Fragment {
                 mPlayer = currentPlayer;
                 setupAudioStateHandlers();
                 mAudioButtonManager.togglePlayingForStop();
+                return;
             }
         }
+
+        // Default State.
+        // We put this here to reset any previous error message.
+        mAudioButtonManager.toggleStopped();
     }
 
     private abstract class ScheduleUpdateCallback {

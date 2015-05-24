@@ -37,7 +37,6 @@ public class FeedbackManager {
     private final HashMap<String, String> mHeaders = new HashMap<>();
 
     private FeedbackManager() {
-        // Currently using bricker88@gmail.com account.
         String email = AppConfiguration.instance.getConfig("desk.email");
         String password = AppConfiguration.instance.getConfig("desk.password");
 

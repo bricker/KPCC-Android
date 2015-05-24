@@ -5,8 +5,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.media.AudioManager;
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.IBinder;
@@ -63,7 +61,7 @@ public class MainActivity extends ActionBarActivity {
         startService(intent);
         bindService(intent, mConnection, Context.BIND_AUTO_CREATE);
 
-        Navigation.instance.addItem(0, R.string.kpcc_live, R.drawable.menu_antenna, LiveFragment.STACK_TAG,
+        Navigation.instance.addItem(R.string.kpcc_live, R.drawable.menu_antenna, LiveFragment.STACK_TAG,
                 AnalyticsManager.EVENT_MENU_SELECTION_LIVE_STREAM,
                 new Navigation.NavigationItemSelectedCallback() {
                     @Override
@@ -80,7 +78,7 @@ public class MainActivity extends ActionBarActivity {
                 }
         );
 
-        Navigation.instance.addItem(1, R.string.programs, R.drawable.menu_microphone, ProgramsFragment.STACK_TAG,
+        Navigation.instance.addItem(R.string.programs, R.drawable.menu_microphone, ProgramsFragment.STACK_TAG,
                 AnalyticsManager.EVENT_MENU_SELECTION_PROGRAMS,
                 new Navigation.NavigationItemSelectedCallback() {
                     @Override
@@ -97,7 +95,7 @@ public class MainActivity extends ActionBarActivity {
                 }
         );
 
-        Navigation.instance.addItem(2, R.string.headlines, R.drawable.menu_glasses, HeadlinesFragment.STACK_TAG,
+        Navigation.instance.addItem(R.string.headlines, R.drawable.menu_glasses, HeadlinesFragment.STACK_TAG,
                 AnalyticsManager.EVENT_MENU_SELECTION_HEADLINES,
                 new Navigation.NavigationItemSelectedCallback() {
                     @Override
@@ -114,7 +112,7 @@ public class MainActivity extends ActionBarActivity {
                 }
         );
 
-        Navigation.instance.addItem(3, R.string.donate, R.drawable.menu_heart_plus, null,
+        Navigation.instance.addItem(R.string.donate, R.drawable.menu_heart_plus, null,
                 AnalyticsManager.EVENT_MENU_SELECTION_DONATE,
                 new Navigation.NavigationItemSelectedCallback() {
                     @Override
@@ -129,7 +127,7 @@ public class MainActivity extends ActionBarActivity {
                 }
         );
 
-        Navigation.instance.addItem(4, R.string.feedback, R.drawable.menu_feedback, FeedbackFragment.STACK_TAG,
+        Navigation.instance.addItem(R.string.feedback, R.drawable.menu_feedback, FeedbackFragment.STACK_TAG,
                 AnalyticsManager.EVENT_MENU_SELECTION_FEEDBACK,
                 new Navigation.NavigationItemSelectedCallback() {
                     @Override
@@ -146,7 +144,7 @@ public class MainActivity extends ActionBarActivity {
                 }
         );
 
-        Navigation.instance.addItem(5, R.string.settings, R.drawable.menu_settings, SettingsFragment.STACK_TAG,
+        Navigation.instance.addItem(R.string.settings, R.drawable.menu_settings, SettingsFragment.STACK_TAG,
                 AnalyticsManager.EVENT_MENU_SELECTION_SETTINGS,
                 new Navigation.NavigationItemSelectedCallback() {
                     @Override
@@ -210,14 +208,6 @@ public class MainActivity extends ActionBarActivity {
         }
     }
 
-    boolean isConnectedToNetwork() {
-        ConnectivityManager cm =
-                (ConnectivityManager)getSystemService(Context.CONNECTIVITY_SERVICE);
-
-        NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
-        return activeNetwork != null && activeNetwork.isConnectedOrConnecting();
-    }
-
     void addOnStreamBindListener(OnStreamBindListener listener) {
         if (streamIsBound) {
             listener.onBind();
@@ -226,7 +216,7 @@ public class MainActivity extends ActionBarActivity {
         }
     }
 
-    abstract static class OnStreamBindListener {
+    abstract static interface OnStreamBindListener {
         public abstract void onBind();
     }
 }

@@ -60,7 +60,6 @@
                 <category android:name="com.skyblue.pra.kpcc" />
             </intent-filter>
         </receiver>
-
     </application>
 
 </manifest>

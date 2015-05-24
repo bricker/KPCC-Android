@@ -21,9 +21,9 @@ public class KPCCApplication extends Application {
         }
 
         // The order of these is important.
+        AppConnectivityManager.setupInstance(this);
         AppConfiguration.setupInstance(this);
         HttpRequest.Manager.setupInstance(this);
-        ProgramsManager.setupInstance();
         AnalyticsManager.setupInstance(this);
 
         Parse.initialize(this,

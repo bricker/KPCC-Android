@@ -9,8 +9,17 @@
         style="@style/generic_background_image"
         android:alpha="0.4" />
 
-    <ListView
-        android:id="@+id/content_wrapper"
-        style="@style/list_view" />
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:id="@+id/content_wrapper">
 
+        <ListView
+            style="@style/list_view"
+            android:id="@+id/list_programs" />
+
+        <include layout="@layout/generic_load_error" android:visibility="gone" />
+        <include layout="@layout/progress_spinner" />
+
+    </FrameLayout>
 </FrameLayout>
