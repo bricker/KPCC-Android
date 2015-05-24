@@ -432,8 +432,13 @@ public class StreamManager extends Service {
             if (mIsDucking.get() && isPlaying()) {
                 unduckStream();
             } else {
-                prepareAndStart();
+                if (mDidPauseForAudioLoss.get()) {
+                    prepareAndStart();
+                }
             }
+
+            // Always do this just to be safe.
+            mDidPauseForAudioLoss.set(false);
         }
 
         @Override
