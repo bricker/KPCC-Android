@@ -29,6 +29,8 @@ public class AlarmFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_alarm, container, false);
+        MainActivity activity = (MainActivity) getActivity();
+        activity.setTitle(R.string.wake_sleep);
 
         FragmentPagerAdapter adapter = new FragmentPagerAdapter(getChildFragmentManager()) {
             @Override
