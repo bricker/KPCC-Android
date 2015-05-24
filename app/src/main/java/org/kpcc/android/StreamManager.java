@@ -386,12 +386,6 @@ public class StreamManager extends Service {
             boolean installedRecently = KPCCApplication.INSTALLATION_TIME > (now - PrerollManager.INSTALL_GRACE);
             boolean heardPrerollRecently = PrerollManager.LAST_PREROLL_PLAY > (now - PrerollManager.PREROLL_THRESHOLD);
 
-            try {
-                audioPlayer.setDataSource(LIVESTREAM_URL);
-            } catch (IOException e) {
-                mAudioEventListener.onError();
-            }
-
             if ((!hasPlayedLiveStream && installedRecently) || heardPrerollRecently) {
                 // Skipping Preroll
                 prepareAndStart();
@@ -484,10 +478,11 @@ public class StreamManager extends Service {
             audioPlayer.release();
         }
 
-        private void prepareAndStart() {
+        public void prepareAndStart() {
             try {
+                audioPlayer.setDataSource(LIVESTREAM_URL);
                 requestAudioFocus();
-            } catch (AudioFocusNotGrantedException e) {
+            } catch (IOException | AudioFocusNotGrantedException e) {
                 mAudioEventListener.onError();
                 return;
             }
