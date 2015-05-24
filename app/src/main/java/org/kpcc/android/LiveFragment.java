@@ -41,6 +41,7 @@ public class LiveFragment extends Fragment {
     private ProgressBar mPrerollProgressBar;
     private View mPrerollView;
     private ScheduleUpdater mScheduleUpdater;
+    private Thread mUpdaterThread;
     private ImageView mBackground;
     private Request mRequest;
 
@@ -77,15 +78,15 @@ public class LiveFragment extends Fragment {
             public void onClick(View v) {
                 MainActivity activity = (MainActivity) getActivity();
 
-                if (activity == null || !activity.streamIsBound || !AppConnectivityManager.instance.isConnectedToNetwork()) {
+                if (!AppConnectivityManager.instance.streamIsBound || !AppConnectivityManager.instance.isConnectedToNetwork()) {
                     // The Error message should already be showing for connectivity problems.
                     // Just do nothing.
                     return;
                 }
 
-                if (activity.streamManager.currentPrerollPlayer != null) {
+                if (AppConnectivityManager.instance.streamManager.currentPrerollPlayer != null) {
                     // Preroll was Paused - start it again.
-                    activity.streamManager.currentPrerollPlayer.start();
+                    AppConnectivityManager.instance.streamManager.currentPrerollPlayer.start();
                 } else {
                     // We should always set a new mPlayer here. If the play button was clicked,
                     // either it was handled by the preroll case above or the previous
@@ -106,13 +107,13 @@ public class LiveFragment extends Fragment {
             public void onClick(View v) {
                 MainActivity activity = (MainActivity) getActivity();
 
-                if (!activity.streamIsBound) {
+                if (!AppConnectivityManager.instance.streamIsBound) {
                     return;
                 }
 
-                if (activity.streamManager.currentPrerollPlayer != null) {
+                if (AppConnectivityManager.instance.streamManager.currentPrerollPlayer != null) {
                     // In this view, only Preroll can be paused.
-                    activity.streamManager.currentPrerollPlayer.pause();
+                    AppConnectivityManager.instance.streamManager.currentPrerollPlayer.pause();
                 }
             }
         });
@@ -120,16 +121,14 @@ public class LiveFragment extends Fragment {
         mAudioButtonManager.getStopButton().setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                MainActivity activity = (MainActivity) getActivity();
-
-                if (!activity.streamIsBound) {
+                if (!AppConnectivityManager.instance.streamIsBound) {
                     return;
                 }
 
-                if (activity.streamManager.currentLivePlayer != null) {
+                if (AppConnectivityManager.instance.streamManager.currentLivePlayer != null) {
                     // In this view, only the Stream can be stopped.
                     // We want to release it immediately too.
-                    activity.streamManager.currentLivePlayer.stop();
+                    AppConnectivityManager.instance.streamManager.currentLivePlayer.stop();
                     logLiveStreamEvent(AnalyticsManager.EVENT_LIVE_STREAM_PAUSE);
                 }
             }
@@ -147,11 +146,9 @@ public class LiveFragment extends Fragment {
     public void onResume() {
         super.onResume();
 
-        MainActivity activity = (MainActivity)getActivity();
-
         // This will init state immediately if stream is already bound.
         // We're putting it here (in onResume) so it can change for network updates.
-        activity.addOnStreamBindListener(new MainActivity.OnStreamBindListener() {
+        AppConnectivityManager.instance.addOnStreamBindListener(new AppConnectivityManager.OnStreamBindListener() {
             @Override
             public void onBind() {
                 initAudioButtonState();
@@ -194,25 +191,72 @@ public class LiveFragment extends Fragment {
 
                                 NetworkImageManager.instance.setBitmap(mBackground, schedule.programSlug, getActivity());
                             } else {
-                                setDefaultValues(true, true);
+                                setDefaultValues();
                             }
 
 
                         } catch (JSONException e) {
-                            setDefaultValues(true, true);
+                            setDefaultValues();
                         }
                     }
                 }, new Response.ErrorListener() {
                     @Override
                     public void onErrorResponse(VolleyError error) {
-                        setDefaultValues(true, true);
+                        setDefaultValues();
                     }
                 });
             }
         });
 
-        mScheduleUpdater.start();
-        new Thread(mScheduleUpdater).start();
+        // The callbacks below will get run right away whatever the state is. We want to start it
+        // no matter what to setup the default state, and then let the callbacks handle the
+        // connected state. Calling start() again should be safe and not start a second thread.
+        AppConnectivityManager.instance.addOnNetworkConnectivityListener(LiveFragment.STACK_TAG, new AppConnectivityManager.NetworkConnectivityListener() {
+            @Override
+            public void onConnect() {
+                // We want this here so the schedule will get updated immediately when connectivity
+                // is back, so we'll just restart it.
+                startScheduleUpdater();
+                mAudioButtonManager.hideError();
+            }
+
+            @Override
+            public void onDisconnect() {
+                stopScheduleUpdater();
+                setDefaultValues();
+                mAudioButtonManager.showError(R.string.network_error);
+            }
+        }, true);
+    }
+
+    private void startScheduleUpdater() {
+        stopScheduleUpdater();
+
+        if (mScheduleUpdater != null && !mScheduleUpdater.mIsObserving.get()) {
+            mScheduleUpdater.start();
+
+            if (mUpdaterThread != null && !mUpdaterThread.isInterrupted()) {
+                mUpdaterThread.interrupt();
+                // GC will take care of the dead thread hanging around.
+            }
+
+            mUpdaterThread = new Thread(mScheduleUpdater);
+            mUpdaterThread.start();
+        }
+    }
+
+    private void stopScheduleUpdater() {
+        if (mScheduleUpdater != null) {
+            mScheduleUpdater.stop();
+        }
+
+        if (mUpdaterThread != null) {
+            if (!mUpdaterThread.isInterrupted()) {
+                mUpdaterThread.interrupt();
+            }
+
+            mUpdaterThread = null;
+        }
     }
 
     @Override
@@ -221,20 +265,16 @@ public class LiveFragment extends Fragment {
             mRequest.cancel();
         }
 
-        if (mScheduleUpdater != null) {
-            mScheduleUpdater.stop();
-        }
+        stopScheduleUpdater();
+        AppConnectivityManager.instance.removeOnNetworkConnectivityListener(LiveFragment.STACK_TAG);
 
         super.onPause();
     }
 
-    private void setDefaultValues(boolean doStatus, boolean doImage) {
-        if (doStatus) {
-            mStatus.setText(R.string.live);
-        }
-        if (doImage) {
-            NetworkImageManager.instance.setDefaultBitmap(mBackground);
-        }
+    private void setDefaultValues() {
+        mStatus.setText(R.string.live);
+        NetworkImageManager.instance.setDefaultBitmap(mBackground);
+        mTitle.setText(null);
     }
 
     private void setupAudioStateHandlers() {
@@ -270,7 +310,8 @@ public class LiveFragment extends Fragment {
 
             @Override
             public void onError() {
-                mAudioButtonManager.toggleError(R.string.audio_error);
+                mAudioButtonManager.toggleStopped();
+                mAudioButtonManager.showError(R.string.audio_error);
             }
         });
 
@@ -338,7 +379,7 @@ public class LiveFragment extends Fragment {
 
             @Override
             public void onCompletion() {
-                if (getActivity() == null || !((MainActivity) getActivity()).streamIsBound || !isVisible()) {
+                if (AppConnectivityManager.instance.streamIsBound || !isVisible()) {
                     return;
                 }
 
@@ -391,13 +432,8 @@ public class LiveFragment extends Fragment {
             return;
         }
 
-        if (!AppConnectivityManager.instance.isConnectedToNetwork()) {
-            mAudioButtonManager.toggleError(R.string.network_error);
-            return;
-        }
-
-        if (activity.streamIsBound) {
-            StreamManager.LiveStream currentPlayer = activity.streamManager.currentLivePlayer;
+        if (AppConnectivityManager.instance.streamIsBound) {
+            StreamManager.LiveStream currentPlayer = AppConnectivityManager.instance.streamManager.currentLivePlayer;
             if (currentPlayer != null && currentPlayer.isPlaying()) {
                 mPlayer = currentPlayer;
                 setupAudioStateHandlers();

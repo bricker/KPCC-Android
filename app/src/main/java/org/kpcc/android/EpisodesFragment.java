@@ -30,7 +30,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 
-public class EpisodesFragment extends Fragment {
+public class EpisodesFragment extends Fragment
+        implements AdapterView.OnItemClickListener {
+
     public final static String STACK_TAG = "EpisodesFragment";
     private static final String ARG_PROGRAM_SLUG = "program_slug";
     private static final String PARAM_PROGRAM = "program";
@@ -43,6 +45,9 @@ public class EpisodesFragment extends Fragment {
     private Program mProgram;
     private Request mRequest;
     private View mView;
+    private LinearLayout mErrorView;
+    private TextView mErrorText;
+    private int mErrorMessage;
     private boolean mDidError = false;
 
     public static EpisodesFragment newInstance(String programSlug) {
@@ -65,6 +70,64 @@ public class EpisodesFragment extends Fragment {
         if (args != null) {
             String programSlug = args.getString(ARG_PROGRAM_SLUG);
             mProgram = ProgramsManager.instance.find(programSlug);
+        }
+    }
+
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+                             Bundle savedInstanceState) {
+
+        mView = inflater.inflate(R.layout.fragment_episodes, container, false);
+        getActivity().setTitle(mProgram.title);
+        ImageView background = (ImageView) mView.findViewById(R.id.background);
+        NetworkImageManager.instance.setBitmap(background, mProgram.slug, getActivity());
+        mListView = (AbsListView) mView.findViewById(android.R.id.list);
+        mProgressBar = (LinearLayout) mView.findViewById(R.id.progress_layout);
+        mErrorView = (LinearLayout)mView.findViewById(R.id.generic_load_error);
+        mErrorText = (TextView)mErrorView.findViewById(R.id.error_text);
+
+        AppConnectivityManager.instance.addOnNetworkConnectivityListener(EpisodesFragment.STACK_TAG, new AppConnectivityManager.NetworkConnectivityListener() {
+            @Override
+            public void onConnect() {
+                if (mProgressBar != null) {
+                    mErrorView.setVisibility(View.GONE);
+                    mProgressBar.setVisibility(View.VISIBLE);
+                }
+
+                loadEpisodes();
+            }
+
+            @Override
+            public void onDisconnect() {
+                showError(R.string.network_error);
+            }
+        }, true);
+
+        if (mDidError) {
+            showError(mErrorMessage);
+            return mView;
+        }
+
+        // In case onCreate was not invoked.
+        setAdapter();
+        return mView;
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+
+        if (mRequest != null) {
+            mRequest.cancel();
+        }
+
+        AppConnectivityManager.instance.removeOnNetworkConnectivityListener(EpisodesFragment.STACK_TAG);
+    }
+
+    private void loadEpisodes() {
+        if (!mEpisodes.isEmpty()) {
+            setupAdapter();
+            return;
         }
 
         HashMap<String, String> params = new HashMap<>();
@@ -102,116 +165,92 @@ public class EpisodesFragment extends Fragment {
                     }
                 } catch (JSONException e) {
                     // This will happen if the API returns malformed JSON.
-                    showError();
+                    showError(R.string.load_error);
                 }
 
                 Collections.sort(mEpisodes);
-
-                mAdapter = (new ArrayAdapter<Episode>(getActivity(), R.layout.list_item_episode, mEpisodes) {
-                    @Override
-                    public View getView(int position, View convertView, ViewGroup parent) {
-                        MainActivity activity = (MainActivity) getActivity();
-
-                        if (convertView == null) {
-                            LayoutInflater inflater = (LayoutInflater) getContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-                            convertView = inflater.inflate(R.layout.list_item_episode, null);
-                        }
-
-                        Episode episode = mEpisodes.get(position);
-                        TextView title = (TextView) convertView.findViewById(R.id.episode_title);
-                        TextView date = (TextView) convertView.findViewById(R.id.air_date);
-                        ImageView audio_icon = (ImageView) convertView.findViewById(R.id.audio_icon);
-
-                        title.setText(episode.title);
-                        date.setText(episode.formattedAirDate);
-
-                        if (activity.streamIsBound) {
-                            StreamManager.EpisodeStream currentPlayer = activity.streamManager.currentEpisodePlayer;
-                            if (currentPlayer != null && currentPlayer.audioUrl.equals(episode.audio.url)) {
-                                audio_icon.setVisibility(View.VISIBLE);
-                            } else {
-                                audio_icon.setVisibility(View.GONE);
-                            }
-                        }
-
-                        return convertView;
-                    }
-                });
-
-                setAdapter();
+                setupAdapter();
             }
         }, new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {
-                showError();
+                showError(R.string.load_error);
             }
         });
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
+    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+        getActivity().setTitle(R.string.programs);
 
-        mView = inflater.inflate(R.layout.fragment_episodes, container, false);
-        getActivity().setTitle(mProgram.title);
-        ImageView background = (ImageView) mView.findViewById(R.id.background);
-        NetworkImageManager.instance.setBitmap(background, mProgram.slug, getActivity());
-        mProgressBar = (LinearLayout) mView.findViewById(R.id.progress_layout);
+        FragmentManager fragmentManager = getActivity().getSupportFragmentManager();
+        fragmentManager.beginTransaction()
+                .replace(R.id.container,
+                        EpisodesPagerFragment.newInstance(mEpisodes, position, mProgram.slug),
+                        EpisodesPagerFragment.STACK_TAG)
+                .addToBackStack(EpisodesPagerFragment.STACK_TAG)
+                .commit();
+    }
 
-        if (mDidError) {
-            showError();
-            return mView;
+    private void showError(int stringId) {
+        mDidError = true;
+        mErrorMessage = stringId;
+
+        if (mView == null) {
+            return;
+        }
+
+        mListView.setVisibility(View.GONE);
+        mProgressBar.setVisibility(View.GONE);
+        mErrorText.setText(stringId);
+        mErrorView.setVisibility(View.VISIBLE);
+    }
+
+    private void setupAdapter() {
+        mAdapter = (new ArrayAdapter<Episode>(getActivity(), R.layout.list_item_episode, mEpisodes) {
+            @Override
+            public View getView(int position, View convertView, ViewGroup parent) {
+                if (convertView == null) {
+                    LayoutInflater inflater = (LayoutInflater) getContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+                    convertView = inflater.inflate(R.layout.list_item_episode, null);
+                }
+
+                Episode episode = mEpisodes.get(position);
+                TextView title = (TextView) convertView.findViewById(R.id.episode_title);
+                TextView date = (TextView) convertView.findViewById(R.id.air_date);
+                ImageView audio_icon = (ImageView) convertView.findViewById(R.id.audio_icon);
+
+                title.setText(episode.title);
+                date.setText(episode.formattedAirDate);
+
+                if (AppConnectivityManager.instance.streamIsBound) {
+                    StreamManager.EpisodeStream currentPlayer = AppConnectivityManager.instance.streamManager.currentEpisodePlayer;
+                    if (currentPlayer != null && currentPlayer.audioUrl.equals(episode.audio.url)) {
+                        audio_icon.setVisibility(View.VISIBLE);
+                    } else {
+                        audio_icon.setVisibility(View.GONE);
+                    }
+                }
+
+                return convertView;
+            }
+        });
+
+        setAdapter();
+    }
+
+    private void setAdapter() {
+        if (mView == null || mAdapter == null){
+            // View hasn't been initialized.
+            // This method will be tried again in onCreateView.
+            return;
         }
 
         // Set the adapter
-        mListView = (AbsListView) mView.findViewById(android.R.id.list);
-
-        // Set OnItemClickListener so we can be notified on item clicks
-        mListView.setOnItemClickListener(
-                new AdapterView.OnItemClickListener() {
-                    @Override
-                    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                        getActivity().setTitle(R.string.programs);
-
-                        FragmentManager fragmentManager = getActivity().getSupportFragmentManager();
-                        fragmentManager.beginTransaction()
-                                .replace(R.id.container,
-                                        EpisodesPagerFragment.newInstance(mEpisodes, position, mProgram.slug),
-                                        EpisodesPagerFragment.STACK_TAG)
-                                .addToBackStack(EpisodesPagerFragment.STACK_TAG)
-                                .commit();
-                    }
-                }
-        );
-
-        // In case onCreate was not invoked.
-        setAdapter();
-        return mView;
-    }
-
-    @Override
-    public void onPause() {
-        if (mRequest != null) {
-            mRequest.cancel();
-        }
-
-        super.onPause();
-    }
-
-    void setAdapter() {
-        if (mAdapter != null) {
-            mListView.setAdapter(mAdapter);
-            mProgressBar.setVisibility(View.GONE);
-        }
-    }
-
-    void showError() {
-        mDidError = true;
-
-        if (mView != null) {
-            LinearLayout errorView = (LinearLayout) mView.findViewById(R.id.generic_load_error);
-            mProgressBar.setVisibility(View.GONE);
-            errorView.setVisibility(View.VISIBLE);
-        }
+        mListView.setAdapter(mAdapter);
+        mListView.setOnItemClickListener(this);
+        mProgressBar.setVisibility(View.GONE);
+        mErrorView.setVisibility(View.GONE);
+        mListView.setVisibility(View.VISIBLE);
     }
 }

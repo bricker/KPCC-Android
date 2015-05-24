@@ -1,13 +1,10 @@
 package org.kpcc.android;
 
-import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
-import android.content.ServiceConnection;
 import android.media.AudioManager;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.IBinder;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v4.widget.DrawerLayout;
@@ -17,49 +14,16 @@ import android.text.Spannable;
 import android.text.SpannableString;
 import android.text.style.TypefaceSpan;
 
-import java.util.ArrayList;
-
 import uk.co.chrisjenx.calligraphy.CalligraphyContextWrapper;
 
 
 public class MainActivity extends ActionBarActivity {
     private static final String DONATE_URL = "https://scprcontribute.publicradio.org/contribute.php";
-    public StreamManager streamManager;
     private NavigationDrawerFragment mNavigationDrawerFragment;
-    public boolean streamIsBound = false;
-    private final ArrayList<OnStreamBindListener> mStreamBindListeners = new ArrayList<>();
-
-    private final ServiceConnection mConnection = new ServiceConnection() {
-        @Override
-        public void onServiceConnected(ComponentName className, IBinder service) {
-            StreamManager.LocalBinder binder = (StreamManager.LocalBinder) service;
-            streamManager = binder.getService();
-            streamIsBound = true;
-
-            for (OnStreamBindListener listener : mStreamBindListeners) {
-                listener.onBind();
-            }
-
-            mStreamBindListeners.clear();
-        }
-
-        @Override
-        public void onServiceDisconnected(ComponentName arg0) {
-            if (streamIsBound) {
-                streamManager.releaseAllActiveStreams();
-            }
-
-            streamIsBound = false;
-        }
-    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-        Intent intent = new Intent(this, StreamManager.class);
-        startService(intent);
-        bindService(intent, mConnection, Context.BIND_AUTO_CREATE);
 
         Navigation.instance.addItem(R.string.kpcc_live, R.drawable.menu_antenna, LiveFragment.STACK_TAG,
                 AnalyticsManager.EVENT_MENU_SELECTION_LIVE_STREAM,
@@ -201,22 +165,6 @@ public class MainActivity extends ActionBarActivity {
     protected void onDestroy() {
         super.onDestroy();
         AnalyticsManager.instance.flush();
-
-        if (streamIsBound) {
-            unbindService(mConnection);
-            streamIsBound = false;
-        }
-    }
-
-    void addOnStreamBindListener(OnStreamBindListener listener) {
-        if (streamIsBound) {
-            listener.onBind();
-        } else {
-            mStreamBindListeners.add(listener);
-        }
-    }
-
-    abstract static interface OnStreamBindListener {
-        public abstract void onBind();
+        AppConnectivityManager.instance.unbindService();
     }
 }

@@ -1,9 +1,9 @@
 package org.kpcc.android;
 
-import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.AsyncTask;
+import android.preference.PreferenceManager;
 import android.util.Xml;
 
 import com.android.volley.Response;
@@ -139,7 +139,6 @@ public class PrerollManager {
         protected AdvertisingIdClient.Info doInBackground(Context... contexts) {
             AdvertisingIdClient.Info adIdInfo = null;
             Context context = contexts[0];
-            Activity activity = (Activity) context;
 
             try {
                 adIdInfo = AdvertisingIdClient.getAdvertisingIdInfo(context);
@@ -154,7 +153,7 @@ public class PrerollManager {
                 if (id == null) {
                     type = "app";
 
-                    SharedPreferences sharedPref = activity.getPreferences(Context.MODE_PRIVATE);
+                    SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(context.getApplicationContext());
                     id = sharedPref.getString(PREF_FALLBACK_AD_ID, "");
 
                     if (id.isEmpty()) {

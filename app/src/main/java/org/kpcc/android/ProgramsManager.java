@@ -1,5 +1,6 @@
 package org.kpcc.android;
 
+import com.android.volley.Request;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 
@@ -23,16 +24,16 @@ public class ProgramsManager {
     private ProgramsManager() {
     }
 
-    public void loadPrograms(final OnProgramsResponseListener listener) {
+    public Request loadPrograms(final OnProgramsResponseListener listener) {
         if (!ALL_PROGRAMS.isEmpty()) {
             listener.onProgramsResponse();
-            return;
+            return null;
         }
 
         HashMap<String, String> params = new HashMap<>();
         params.put("air_status", "onair");
 
-        Program.Client.getCollection(params, new Response.Listener<JSONObject>() {
+        return Program.Client.getCollection(params, new Response.Listener<JSONObject>() {
             @Override
             public void onResponse(JSONObject response) {
                 try {
@@ -53,7 +54,6 @@ public class ProgramsManager {
                     }
 
                     Collections.sort(ALL_PROGRAMS);
-
                     listener.onProgramsResponse();
                 } catch (JSONException e) {
                     // No programs will be available.

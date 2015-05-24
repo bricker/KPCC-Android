@@ -1,128 +1,91 @@
-<FrameLayout
+<ScrollView
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="vertical">
+    android:fillViewport="true"
+    >
 
-    <ImageView
-        android:id="@+id/background"
-        style="@style/generic_background_image"
-        android:alpha="0.4" />
-
-    <LinearLayout
+    <FrameLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="vertical"
-        android:id="@+id/content_wrapper"
-        style="@style/static_content_wrapper">
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
 
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="20dp"
-            style="@style/text_header_small"
-            android:text="@string/feedback_header_reason"
-            android:id="@+id/header1"
-            android:background="@color/transparent_black"/>
-
-        <include
-            layout="@layout/horizontal_rule" />
-
-        <RadioGroup
-            android:layout_width="match_parent"
+        <ImageView
+            android:id="@+id/background"
+            style="@style/generic_background_image"
+            android:alpha="0.4"
             android:layout_height="wrap_content"
-            android:layout_marginLeft="20dp">
-
-            <RadioButton
-                android:text="@string/feedback_type_bug"
-                android:id="@+id/feedbackTypeBug"
-                android:checked="true"
-                android:drawableRight="@drawable/ic_check"
-                style="@style/check_radio_button" />
-
-            <include
-                layout="@layout/horizontal_rule"
-                android:layout_height="1dp"
-                android:layout_width="match_parent" />
-
-            <RadioButton
-                android:text="@string/feedback_type_suggestion"
-                android:id="@+id/feedbackTypeSuggestion"
-                android:checked="false"
-                style="@style/check_radio_button" />
-
-            <include
-                layout="@layout/horizontal_rule"
-                android:layout_height="1dp"
-                android:layout_width="match_parent" />
-
-            <RadioButton
-                android:text="@string/feedback_type_feedback"
-                android:id="@+id/feedbackTypeFeedback"
-                android:checked="false"
-                style="@style/check_radio_button" />
-
-        </RadioGroup>
-
-        <include
-            layout="@layout/horizontal_rule"
             android:layout_width="match_parent"
-            android:layout_height="1dp"
-            android:layout_marginBottom="20dp" />
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="20dp"
-            style="@style/text_header_small"
-            android:text="@string/feedback_header_comments"
-            android:id="@+id/header2"
-            android:background="@color/transparent_black"/>
-
-        <include
-            layout="@layout/horizontal_rule"
-            android:layout_width="match_parent"
-            android:layout_height="1dp"
-            android:layout_marginBottom="10dp" />
-
-        <EditText
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:inputType="textLongMessage"
-            android:id="@+id/inputComments"
-            android:hint="@string/feedback_placeholder_comments"/>
-
-        <include
-            layout="@layout/horizontal_rule"
-            android:layout_width="match_parent"
-            android:layout_height="1dp"
-            android:layout_marginBottom="20dp" />
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="20dp"
-            style="@style/text_header_small"
-            android:text="@string/feedback_header_details"
-            android:id="@+id/header3"
-            android:background="@color/transparent_black"/>
-
-        <include
-            layout="@layout/horizontal_rule"
-            android:layout_width="match_parent"
-            android:layout_height="1dp"
-            android:layout_marginBottom="10dp" />
+            android:adjustViewBounds="true"
+            />
 
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="match_parent"
             android:orientation="vertical"
-            android:layout_marginLeft="20dp">
+            android:id="@+id/content_wrapper"
+            style="@style/static_content_wrapper">
 
-            <EditText
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="20dp"
+                style="@style/text_header_small"
+                android:text="@string/feedback_header_reason"
+                android:id="@+id/header1"
+                android:background="@color/transparent_black"/>
+
+            <include
+                layout="@layout/horizontal_rule" />
+
+            <RadioGroup
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:inputType="textPersonName"
-                android:hint="@string/feedback_hint_name"
-                android:ems="10"
-                android:id="@+id/inputName" />
+                android:layout_marginLeft="20dp">
+
+                <RadioButton
+                    android:text="@string/feedback_type_bug"
+                    android:id="@+id/feedbackTypeBug"
+                    android:checked="true"
+                    android:drawableRight="@drawable/ic_check"
+                    style="@style/check_radio_button" />
+
+                <include
+                    layout="@layout/horizontal_rule"
+                    android:layout_height="1dp"
+                    android:layout_width="match_parent" />
+
+                <RadioButton
+                    android:text="@string/feedback_type_suggestion"
+                    android:id="@+id/feedbackTypeSuggestion"
+                    android:checked="false"
+                    style="@style/check_radio_button" />
+
+                <include
+                    layout="@layout/horizontal_rule"
+                    android:layout_height="1dp"
+                    android:layout_width="match_parent" />
+
+                <RadioButton
+                    android:text="@string/feedback_type_feedback"
+                    android:id="@+id/feedbackTypeFeedback"
+                    android:checked="false"
+                    style="@style/check_radio_button" />
+
+            </RadioGroup>
+
+            <include
+                layout="@layout/horizontal_rule"
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginBottom="20dp" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="20dp"
+                style="@style/text_header_small"
+                android:text="@string/feedback_header_comments"
+                android:id="@+id/header2"
+                android:background="@color/transparent_black"/>
 
             <include
                 layout="@layout/horizontal_rule"
@@ -133,64 +96,112 @@
             <EditText
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:inputType="textEmailAddress"
-                android:ems="10"
-                android:id="@+id/inputEmail"
-                android:hint="@string/feedback_hint_email"/>
+                android:inputType="textLongMessage"
+                android:id="@+id/inputComments"
+                android:hint="@string/feedback_placeholder_comments"/>
 
+            <include
+                layout="@layout/horizontal_rule"
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginBottom="20dp" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="20dp"
+                style="@style/text_header_small"
+                android:text="@string/feedback_header_details"
+                android:id="@+id/header3"
+                android:background="@color/transparent_black"/>
+
+            <include
+                layout="@layout/horizontal_rule"
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginBottom="10dp" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:layout_marginLeft="20dp">
+
+                <EditText
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="textPersonName"
+                    android:hint="@string/feedback_hint_name"
+                    android:ems="10"
+                    android:id="@+id/inputName" />
+
+                <include
+                    layout="@layout/horizontal_rule"
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:layout_marginBottom="10dp" />
+
+                <EditText
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="textEmailAddress"
+                    android:ems="10"
+                    android:id="@+id/inputEmail"
+                    android:hint="@string/feedback_hint_email"/>
+
+            </LinearLayout>
+
+            <include
+                layout="@layout/horizontal_rule"
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginBottom="20dp" />
+
+            <Button
+                android:layout_width="match_parent"
+                android:layout_height="50dp"
+                android:text="@string/feedback_submit"
+                android:id="@+id/submitButton"
+                android:layout_gravity="center_horizontal"
+                android:textColor="@android:color/white"
+                android:background="@color/dark_gray"/>
+
+            <ProgressBar
+                android:id="@id/progress_circular"
+                style="@style/Widget.AppCompat.ProgressBar"
+                android:layout_width="50dp"
+                android:layout_height="50dp"
+                android:layout_gravity="center"
+                android:visibility="gone" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="50dp"
+                android:text="@string/feedback_success_message"
+                android:id="@+id/successMessage"
+                android:layout_gravity="center_horizontal"
+                android:visibility="gone" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="50dp"
+                android:text="@string/feedback_error_message"
+                android:id="@+id/errorMessage"
+                android:layout_gravity="center_horizontal"
+                android:visibility="gone" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="50dp"
+                android:text="@string/feedback_validation_message"
+                android:id="@+id/validationMessage"
+                android:layout_gravity="center_horizontal"
+                android:visibility="gone" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:id="@+id/appVersion"
+                android:gravity="bottom"/>
         </LinearLayout>
-
-        <include
-            layout="@layout/horizontal_rule"
-            android:layout_width="match_parent"
-            android:layout_height="1dp"
-            android:layout_marginBottom="20dp" />
-
-        <Button
-            android:layout_width="match_parent"
-            android:layout_height="50dp"
-            android:text="@string/feedback_submit"
-            android:id="@+id/submitButton"
-            android:layout_gravity="center_horizontal"
-            android:textColor="@android:color/white" />
-
-        <ProgressBar
-            android:id="@id/progress_circular"
-            style="@style/Widget.AppCompat.ProgressBar"
-            android:layout_width="50dp"
-            android:layout_height="50dp"
-            android:layout_gravity="center"
-            android:visibility="gone" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="50dp"
-            android:text="@string/feedback_success_message"
-            android:id="@+id/successMessage"
-            android:layout_gravity="center_horizontal"
-            android:visibility="gone" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="50dp"
-            android:text="@string/feedback_error_message"
-            android:id="@+id/errorMessage"
-            android:layout_gravity="center_horizontal"
-            android:visibility="gone" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="50dp"
-            android:text="@string/feedback_validation_message"
-            android:id="@+id/validationMessage"
-            android:layout_gravity="center_horizontal"
-            android:visibility="gone" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="20dp"
-            android:id="@+id/appVersion"/>
-
-    </LinearLayout>
-</FrameLayout>
+    </FrameLayout>
+</ScrollView>

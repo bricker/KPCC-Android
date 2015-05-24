@@ -146,12 +146,13 @@ public class FeedbackManager {
                     }, new Response.ErrorListener() {
                         @Override
                         public void onErrorResponse(VolleyError error) {
-                            // Unprocessable Entity
-                            if (error.networkResponse.statusCode == 422) {
-                                // User already exists.
+                            if (error.networkResponse != null && error.networkResponse.statusCode == 422) {
+                                // Unprocessable Entity, User already exists.
                                 // Search for a customer with this e-mail address, get the href attribute.
                                 searchCustomer(customerEmail, responseHandler);
                             } else {
+                                // This will cover when there's no network connection or any other
+                                // error from Desk.
                                 responseHandler.onFailure();
                             }
                         }

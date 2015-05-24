@@ -23,6 +23,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 
 public class EpisodeFragment extends Fragment {
+    public static final String STACK_TAG = "EpisodeFragment";
     private static final int SHARE_TYPE_REQUEST = 1;
     private static final String ARG_PROGRAM_SLUG = "programSlug";
     private static final String ARG_EPISODE = "episode";
@@ -174,6 +175,28 @@ public class EpisodeFragment extends Fragment {
             }
         });
 
+        AppConnectivityManager.instance.addOnNetworkConnectivityListener(episode.publicUrl, new AppConnectivityManager.NetworkConnectivityListener() {
+            @Override
+            public void onConnect() {
+                if (mAudioButtonManager == null) {
+                    return;
+                }
+
+                // We want this here so the schedule will get updated immediately when connectivity
+                // is back, so we'll just restart it.
+                mAudioButtonManager.hideError();
+            }
+
+            @Override
+            public void onDisconnect() {
+                if (mAudioButtonManager == null) {
+                    return;
+                }
+
+                mAudioButtonManager.showError(R.string.network_error);
+            }
+        }, true);
+
         return view;
     }
 
@@ -192,7 +215,7 @@ public class EpisodeFragment extends Fragment {
         MainActivity activity = (MainActivity) getActivity();
         boolean alreadyPlaying = false;
 
-        StreamManager.EpisodeStream currentPlayer = activity.streamManager.currentEpisodePlayer;
+        StreamManager.EpisodeStream currentPlayer = AppConnectivityManager.instance.streamManager.currentEpisodePlayer;
         if (currentPlayer != null && currentPlayer.audioUrl.equals(episode.audio.url)) {
             mPlayer = currentPlayer;
             mSeekBar.setEnabled(true);
@@ -234,7 +257,7 @@ public class EpisodeFragment extends Fragment {
 
             @Override
             public void onCompletion() {
-                if (getActivity() == null || !((MainActivity) getActivity()).streamIsBound || !isVisible()) {
+                if (!AppConnectivityManager.instance.streamIsBound || !isVisible()) {
                     return;
                 }
 
@@ -267,7 +290,8 @@ public class EpisodeFragment extends Fragment {
 
             @Override
             public void onError() {
-                mAudioButtonManager.toggleError(R.string.audio_error);
+                mAudioButtonManager.toggleStopped();
+                mAudioButtonManager.showError(R.string.audio_error);
             }
         });
 
@@ -281,8 +305,9 @@ public class EpisodeFragment extends Fragment {
         // 3. The view isn't visible.
         // ViewPager calls the 'onCreateView' method for surrounding views, so we can't
         // play the audio automatically in this method.
-        if (!activity.streamIsBound || episode.audio == null) {
-            mAudioButtonManager.toggleError(R.string.audio_error);
+        if (!AppConnectivityManager.instance.streamIsBound || episode.audio == null) {
+            mAudioButtonManager.toggleStopped();
+            mAudioButtonManager.showError(R.string.audio_error);
             return;
         }
 
@@ -297,6 +322,7 @@ public class EpisodeFragment extends Fragment {
     public void onPause() {
         super.onPause();
         pagerVisible.set(false);
+        AppConnectivityManager.instance.removeOnNetworkConnectivityListener(episode.publicUrl);
     }
 
     public boolean episodeWasSkipped() {
@@ -321,8 +347,7 @@ public class EpisodeFragment extends Fragment {
     }
 
     private boolean streamNotAvailable() {
-        MainActivity activity = (MainActivity) getActivity();
-        return mPlayer == null || !activity.streamIsBound || activity.streamManager.currentEpisodePlayer == null;
+        return mPlayer == null || !AppConnectivityManager.instance.streamIsBound || AppConnectivityManager.instance.streamManager.currentEpisodePlayer == null;
     }
 
     private void logEpisodeStreamEvent(String key) {

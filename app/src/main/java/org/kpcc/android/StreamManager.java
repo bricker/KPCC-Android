@@ -9,6 +9,7 @@ import android.media.MediaPlayer;
 import android.os.Binder;
 import android.os.Handler;
 import android.os.IBinder;
+import android.preference.PreferenceManager;
 
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
@@ -71,22 +72,24 @@ public class StreamManager extends Service {
 
     public abstract static class BaseStream {
         public final MediaPlayer audioPlayer;
-        final MainActivity mActivity;
+        final Context mContext;
         final AudioManager mAudioManager;
         final AtomicBoolean mIsDucking = new AtomicBoolean(false);
         final AudioManager.OnAudioFocusChangeListener mAfChangeListener;
         final StreamManager mStreamManager;
         AudioEventListener mAudioEventListener;
         ProgressObserver mProgressObserver;
+        Thread mProgressThread;
         final AtomicBoolean isPrepared = new AtomicBoolean(false);
         final AtomicBoolean mDidPauseForAudioLoss = new AtomicBoolean(false);
+        final AtomicBoolean mPlayingOnDisconnect = new AtomicBoolean(false);
 
         public BaseStream(Context context) {
             audioPlayer = new MediaPlayer();
             audioPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
-            mActivity = (MainActivity) context;
-            mStreamManager = mActivity.streamManager;
-            mAudioManager = (AudioManager) mActivity.getSystemService(Context.AUDIO_SERVICE);
+            mContext = context;
+            mStreamManager = AppConnectivityManager.instance.streamManager;
+            mAudioManager = (AudioManager) mContext.getSystemService(Context.AUDIO_SERVICE);
 
             mAfChangeListener = new AudioManager.OnAudioFocusChangeListener() {
                 @Override
@@ -128,6 +131,8 @@ public class StreamManager extends Service {
             return audioPlayer.isPlaying();
         }
 
+        public void reset() { audioPlayer.reset(); }
+
         void requestAudioFocus() throws AudioFocusNotGrantedException {
             int result = mAudioManager.requestAudioFocus(mAfChangeListener,
                     AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN);
@@ -149,6 +154,7 @@ public class StreamManager extends Service {
         }
 
         void audioFocusGain() {
+            // NOTE: This is overridden in LiveStream
             if (mIsDucking.get() && isPlaying()) {
                 unduckStream();
             } else {
@@ -188,14 +194,23 @@ public class StreamManager extends Service {
         }
 
         void startProgressObserver() {
+            stopProgressObserver();
             mProgressObserver.start();
-            new Thread(mProgressObserver).start();
+
+            mProgressThread = new Thread(mProgressObserver);
+            mProgressThread.start();
         }
 
         void stopProgressObserver() {
             if (mProgressObserver != null) {
                 mProgressObserver.stop();
             }
+
+            if (mProgressThread != null && !mProgressThread.isInterrupted()) {
+                mProgressThread.interrupt();
+            }
+
+            mProgressThread = null;
         }
 
         void resetProgressObserver() {
@@ -248,7 +263,7 @@ public class StreamManager extends Service {
 
             try {
                 audioPlayer.setDataSource(audioUrl);
-            } catch (IOException e) {
+            } catch (IOException | IllegalStateException e) {
                 mAudioEventListener.onError();
                 return;
             }
@@ -353,7 +368,10 @@ public class StreamManager extends Service {
     public static class LiveStream extends BaseStream {
         // We get preroll directly from Triton so we always use the skip-preroll url.
         // Also send the UA for logs.
-        public final static String LIVESTREAM_URL = "http://live.scpr.org/kpcclive?preskip=true&ua=KPCCAndroid-" +
+        // Using Uri.parse because there seems to be a bug in Lollipop that causes
+        // the stream to take 20 seconds to start playing. Uri.parse is a workaround.
+        public final static String LIVESTREAM_URL =
+                "http://live.scpr.org/kpcclive?preskip=true&ua=KPCCAndroid-" +
                 BuildConfig.VERSION_NAME + "-" +
                 String.valueOf(BuildConfig.VERSION_CODE);
 
@@ -380,9 +398,9 @@ public class StreamManager extends Service {
             // stream, don't play preroll.
             // Otherwise do the normal preroll flow.
             final long now = System.currentTimeMillis();
-            SharedPreferences sharedPref = mActivity.getPreferences(Context.MODE_PRIVATE);
+            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(mContext.getApplicationContext());
 
-            boolean hasPlayedLiveStream = sharedPref.getBoolean(PREF_USER_PLAYED_LIVESTREAM, false);
+            boolean hasPlayedLiveStream = prefs.getBoolean(PREF_USER_PLAYED_LIVESTREAM, false);
             boolean installedRecently = KPCCApplication.INSTALLATION_TIME > (now - PrerollManager.INSTALL_GRACE);
             boolean heardPrerollRecently = PrerollManager.LAST_PREROLL_PLAY > (now - PrerollManager.PREROLL_THRESHOLD);
 
@@ -391,7 +409,7 @@ public class StreamManager extends Service {
                 prepareAndStart();
             } else {
                 // Normal preroll flow (preroll still may not play, based on Triton response)
-                PrerollManager.instance.getPrerollData(mActivity, new PrerollManager.PrerollCallbackListener() {
+                PrerollManager.instance.getPrerollData(mContext, new PrerollManager.PrerollCallbackListener() {
                     @Override
                     public void onPrerollResponse(final PrerollManager.PrerollData prerollData) {
                         if (prerollData == null || prerollData.audioUrl == null) {
@@ -399,7 +417,7 @@ public class StreamManager extends Service {
                         } else {
                             mPrerollAudioEventListener.onPrerollData(prerollData);
 
-                            PrerollStream preroll = new PrerollStream(mActivity,
+                            PrerollStream preroll = new PrerollStream(mContext,
                                     prerollData, LiveStream.this);
 
                             preroll.setOnAudioEventListener(mPrerollAudioEventListener);
@@ -410,7 +428,7 @@ public class StreamManager extends Service {
             }
 
             if (!hasPlayedLiveStream) {
-                sharedPref.edit().putBoolean(PREF_USER_PLAYED_LIVESTREAM, true).apply();
+                prefs.edit().putBoolean(PREF_USER_PLAYED_LIVESTREAM, true).apply();
             }
         }
 
@@ -479,13 +497,28 @@ public class StreamManager extends Service {
         }
 
         public void prepareAndStart() {
+            // Since this method can be called directly, we need to trigger loading state here too.
+            mAudioEventListener.onLoading();
+
             try {
                 audioPlayer.setDataSource(LIVESTREAM_URL);
                 requestAudioFocus();
-            } catch (IOException | AudioFocusNotGrantedException e) {
+            } catch (IOException | IllegalStateException | AudioFocusNotGrantedException e) {
                 mAudioEventListener.onError();
                 return;
             }
+
+            // When the network changes, the stream will eventually "complete" because of the
+            // gap in data. So we just reboot the stream. It's not ideal but at least it restarts
+            // by itself instead of just stopping all together.
+            audioPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+                @Override
+                public void onCompletion(MediaPlayer mp) {
+                    stop();
+                    reset();
+                    prepareAndStart();
+                }
+            });
 
             audioPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
                 @Override
@@ -542,7 +575,7 @@ public class StreamManager extends Service {
 
             try {
                 audioPlayer.setDataSource(mPrerollData.audioUrl);
-            } catch (IOException e) {
+            } catch (IOException | IllegalStateException e) {
                 // No preroll.
                 return;
             }

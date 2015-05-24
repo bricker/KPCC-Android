@@ -69,6 +69,30 @@ public class FeedbackFragment extends Fragment {
         mErrorMessage = (TextView) view.findViewById(R.id.errorMessage);
         mProgressBar = (ProgressBar) view.findViewById(R.id.progress_circular);
 
+        AppConnectivityManager.instance.addOnNetworkConnectivityListener(FeedbackFragment.STACK_TAG,
+                new AppConnectivityManager.NetworkConnectivityListener() {
+            @Override
+            public void onConnect() {
+                if (mErrorMessage == null) {
+                    return;
+                }
+
+                setButtonState();
+                mErrorMessage.setVisibility(View.GONE);
+            }
+
+            @Override
+            public void onDisconnect() {
+                if (mErrorMessage == null) {
+                    return;
+                }
+
+                disableButton();
+                mErrorMessage.setText(R.string.network_error);
+                mErrorMessage.setVisibility(View.VISIBLE);
+            }
+        }, true);
+
         mFeedbackTypeBug.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -199,6 +223,13 @@ public class FeedbackFragment extends Fragment {
         return view;
     }
 
+    @Override
+    public void onPause() {
+        super.onPause();
+        // Cleanup our reference.
+        AppConnectivityManager.instance.removeOnNetworkConnectivityListener(FeedbackFragment.STACK_TAG);
+    }
+
     private void setButtonState() {
         if (mSubmitButton == null) {
             return;
@@ -212,9 +243,11 @@ public class FeedbackFragment extends Fragment {
     }
 
     private void enableButton() {
-        mSubmitButton.setEnabled(true);
-        mSubmitButton.setClickable(true);
-        mSubmitButton.setAlpha(1.0f);
+        if (AppConnectivityManager.instance.isConnectedToNetwork()) {
+            mSubmitButton.setEnabled(true);
+            mSubmitButton.setClickable(true);
+            mSubmitButton.setAlpha(1.0f);
+        }
     }
 
     private void disableButton() {
@@ -248,6 +281,7 @@ public class FeedbackFragment extends Fragment {
     private void showErrorMessage() {
         mProgressBar.setVisibility(View.GONE);
         mSubmitButton.setVisibility(View.VISIBLE);
+        mErrorMessage.setText(R.string.feedback_error_message);
         mErrorMessage.setVisibility(View.VISIBLE);
     }
 

@@ -26,7 +26,6 @@ class AudioButtonManager {
         mPauseButton.setVisibility(View.GONE);
         mLoadingInd.setVisibility(View.VISIBLE);
         mPlayButton.setVisibility(View.GONE);
-        mErrorMsg.setVisibility(View.GONE);
     }
 
     public void togglePlayingForPause() {
@@ -34,7 +33,6 @@ class AudioButtonManager {
         mPauseButton.setVisibility(View.VISIBLE);
         mLoadingInd.setVisibility(View.GONE);
         mPlayButton.setVisibility(View.GONE);
-        mErrorMsg.setVisibility(View.GONE);
     }
 
     public void togglePlayingForStop() {
@@ -42,7 +40,6 @@ class AudioButtonManager {
         mPauseButton.setVisibility(View.GONE);
         mLoadingInd.setVisibility(View.GONE);
         mPlayButton.setVisibility(View.GONE);
-        mErrorMsg.setVisibility(View.GONE);
     }
 
     public void togglePaused() {
@@ -50,7 +47,6 @@ class AudioButtonManager {
         mPauseButton.setVisibility(View.GONE);
         mLoadingInd.setVisibility(View.GONE);
         mPlayButton.setVisibility(View.VISIBLE);
-        mErrorMsg.setVisibility(View.GONE);
     }
 
     public void toggleStopped() {
@@ -58,17 +54,18 @@ class AudioButtonManager {
         mPauseButton.setVisibility(View.GONE);
         mLoadingInd.setVisibility(View.GONE);
         mPlayButton.setVisibility(View.VISIBLE);
-        mErrorMsg.setVisibility(View.GONE);
     }
 
-    public void toggleError(int stringId) {
-        mStopButton.setVisibility(View.GONE);
-        mPauseButton.setVisibility(View.GONE);
-        mLoadingInd.setVisibility(View.GONE);
-        mPlayButton.setVisibility(View.VISIBLE);
-
+    // These are a way to just manage the error message, because sometimes there are
+    // other things managing the button and we just want to deal with the error message
+    // so we don't get conflicting buttons... you know?
+    public void showError(int stringId) {
         mErrorMsg.setText(stringId);
         mErrorMsg.setVisibility(View.VISIBLE);
+    }
+
+    public void hideError() {
+        mErrorMsg.setVisibility(View.GONE);
     }
 
     public ImageButton getPlayButton() {

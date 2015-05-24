@@ -15,6 +15,7 @@ import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
 
+import com.android.volley.Request;
 import com.android.volley.VolleyError;
 
 import org.json.JSONException;
@@ -30,12 +31,32 @@ public class ProgramsFragment extends Fragment
     private View mView;
     private ListView mListView;
     private LinearLayout mProgressBar;
+    private LinearLayout mErrorView;
+    private TextView mErrorText;
+    private Request mRequest;
+    private int mErrorMessage = R.string.load_error;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setRetainInstance(true);
-        ProgramsManager.instance.loadPrograms(this);
+
+        AppConnectivityManager.instance.addOnNetworkConnectivityListener(ProgramsFragment.STACK_TAG, new AppConnectivityManager.NetworkConnectivityListener() {
+            @Override
+            public void onConnect() {
+                if (mProgressBar != null) {
+                    mErrorView.setVisibility(View.GONE);
+                    mProgressBar.setVisibility(View.VISIBLE);
+                }
+
+                mRequest = ProgramsManager.instance.loadPrograms(ProgramsFragment.this);
+            }
+
+            @Override
+            public void onDisconnect() {
+                showError(R.string.network_error);
+            }
+        }, true);
     }
 
     @Override
@@ -48,18 +69,27 @@ public class ProgramsFragment extends Fragment
         mView = inflater.inflate(R.layout.fragment_programs, container, false);
         mListView = (ListView) mView.findViewById(R.id.list_programs);
         mProgressBar = (LinearLayout) mView.findViewById(R.id.progress_layout);
+        mErrorView = (LinearLayout)mView.findViewById(R.id.generic_load_error);
+        mErrorText = (TextView)mErrorView.findViewById(R.id.error_text);
 
         if (mDidError) {
-            showError();
+            showError(mErrorMessage);
             return mView;
         }
 
         setAdapter();
-
-        // Set OnItemClickListener so we can be notified on item clicks
-        mListView.setOnItemClickListener(this);
-
         return mView;
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+
+        if (mRequest != null) {
+            mRequest.cancel();
+        }
+
+        AppConnectivityManager.instance.removeOnNetworkConnectivityListener(ProgramsFragment.STACK_TAG);
     }
 
     @Override
@@ -95,7 +125,7 @@ public class ProgramsFragment extends Fragment
                 View view = convertView;
 
                 if (view == null) {
-                    LayoutInflater inflater = (LayoutInflater) getContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+                    LayoutInflater inflater = (LayoutInflater) activity.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
                     view = inflater.inflate(R.layout.list_item_program, null);
                 }
 
@@ -106,8 +136,8 @@ public class ProgramsFragment extends Fragment
                 ImageView audio_icon = (ImageView) view.findViewById(R.id.audio_icon);
                 TextView letter = (TextView) view.findViewById(R.id.program_letter);
 
-                if (activity.streamIsBound) {
-                    StreamManager.EpisodeStream currentPlayer = activity.streamManager.currentEpisodePlayer;
+                if (AppConnectivityManager.instance.streamIsBound) {
+                    StreamManager.EpisodeStream currentPlayer = AppConnectivityManager.instance.streamManager.currentEpisodePlayer;
                     if (currentPlayer != null && currentPlayer.programSlug.equals(program.slug)) {
                         arrow.setVisibility(View.GONE);
                         audio_icon.setVisibility(View.VISIBLE);
@@ -123,7 +153,7 @@ public class ProgramsFragment extends Fragment
                 int resId = getResources().getIdentifier(
                         "program_avatar_" + underscoreSlug,
                         "drawable",
-                        getActivity().getApplicationContext().getPackageName());
+                        activity.getApplicationContext().getPackageName());
 
                 if (resId == 0) {
                     avatar.setImageResource(R.drawable.avatar_placeholder_bg);
@@ -142,18 +172,21 @@ public class ProgramsFragment extends Fragment
 
     @Override
     public void onProgramsError(VolleyError error) {
-        showError();
+        showError(R.string.load_error);
     }
 
-    private void showError() {
+    private void showError(int stringId) {
         mDidError = true;
+        mErrorMessage = stringId;
 
-        if (mView != null) {
-            LinearLayout errorView = (LinearLayout) mView.findViewById(R.id.generic_load_error);
-            mListView.setVisibility(View.GONE);
-            mProgressBar.setVisibility(View.GONE);
-            errorView.setVisibility(View.VISIBLE);
+        if (mView == null) {
+            return;
         }
+
+        mListView.setVisibility(View.GONE);
+        mProgressBar.setVisibility(View.GONE);
+        mErrorText.setText(stringId);
+        mErrorView.setVisibility(View.VISIBLE);
     }
 
     private void setAdapter() {
@@ -165,6 +198,9 @@ public class ProgramsFragment extends Fragment
 
         // Set the adapter
         mListView.setAdapter(mAdapter);
+        mListView.setOnItemClickListener(this);
         mProgressBar.setVisibility(View.GONE);
+        mErrorView.setVisibility(View.GONE);
+        mListView.setVisibility(View.VISIBLE);
     }
 }
