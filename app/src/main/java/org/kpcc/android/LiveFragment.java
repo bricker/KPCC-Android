@@ -105,8 +105,6 @@ public class LiveFragment extends Fragment {
         mAudioButtonManager.getPauseButton().setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                MainActivity activity = (MainActivity) getActivity();
-
                 if (!AppConnectivityManager.instance.streamIsBound) {
                     return;
                 }

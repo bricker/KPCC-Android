@@ -82,7 +82,6 @@ public class StreamManager extends Service {
         Thread mProgressThread;
         final AtomicBoolean isPrepared = new AtomicBoolean(false);
         final AtomicBoolean mDidPauseForAudioLoss = new AtomicBoolean(false);
-        final AtomicBoolean mPlayingOnDisconnect = new AtomicBoolean(false);
 
         public BaseStream(Context context) {
             audioPlayer = new MediaPlayer();

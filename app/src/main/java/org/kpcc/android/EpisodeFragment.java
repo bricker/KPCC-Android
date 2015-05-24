@@ -23,7 +23,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 
 public class EpisodeFragment extends Fragment {
-    public static final String STACK_TAG = "EpisodeFragment";
     private static final int SHARE_TYPE_REQUEST = 1;
     private static final String ARG_PROGRAM_SLUG = "programSlug";
     private static final String ARG_EPISODE = "episode";

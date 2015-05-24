@@ -76,7 +76,7 @@ public class AppConnectivityManager {
 
             for (NetworkConnectivityListener listener : AppConnectivityManager.instance.networkConnectivityListeners.values()) {
                 if (isFailover) {
-                    // Do something?
+                    // TODO Do something?
                 } else if (noConnection || !AppConnectivityManager.instance.isConnectedToNetwork()) {
                     listener.onDisconnect();
                 } else {
