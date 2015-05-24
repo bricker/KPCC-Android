@@ -153,10 +153,12 @@ public class StreamManager extends Service {
                 unduckStream();
             } else {
                 if (mDidPauseForAudioLoss.get()) {
-                    mDidPauseForAudioLoss.set(false);
                     start();
                 } // Otherwise, just keep it paused.
             }
+
+            // Always do this just to be safe.
+            mDidPauseForAudioLoss.set(false);
         }
 
         void audioFocusLoss() {
@@ -166,7 +168,7 @@ public class StreamManager extends Service {
         }
 
         void duckStream() {
-            if (!mIsDucking.get()) {
+            if (!mIsDucking.get() && isPlaying()) {
                 mIsDucking.set(true);
 
                 if (isPlaying()) {
@@ -176,7 +178,7 @@ public class StreamManager extends Service {
         }
 
         void unduckStream() {
-            if (mIsDucking.get()) {
+            if (mIsDucking.get() && isPlaying()) {
                 mIsDucking.set(false);
 
                 if (isPlaying()) {
