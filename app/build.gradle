@@ -32,5 +32,6 @@ dependencies {
     compile 'com.mixpanel.android:mixpanel-android:4.5.3'
     compile 'com.android.support:support-v4:21.0.3'
     compile 'uk.co.chrisjenx:calligraphy:2.0.2'
+    compile 'com.astuetz:pagerslidingtabstrip:1.0.1'
     compile project(':support-v4-preferencefragment-1.0.0')
 }

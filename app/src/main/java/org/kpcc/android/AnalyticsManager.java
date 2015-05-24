@@ -12,6 +12,7 @@ public class AnalyticsManager {
     public final static String EVENT_MENU_SELECTION_LIVE_STREAM = "menuSelectionLiveStream";
     public final static String EVENT_MENU_SELECTION_PROGRAMS = "menuSelectionPrograms";
     public final static String EVENT_MENU_SELECTION_HEADLINES = "menuSelectionHeadlines";
+    public final static String EVENT_MENU_SELECTION_WAKE_SLEEP = "menuSelectionWakeSleep";
     public final static String EVENT_MENU_SELECTION_DONATE = "menuSelectionDonate";
     public final static String EVENT_MENU_SELECTION_FEEDBACK = "menuSelectionFeedback";
     public final static String EVENT_MENU_SELECTION_SETTINGS = "menuSelectionSettings";

@@ -76,6 +76,23 @@ public class MainActivity extends ActionBarActivity {
                 }
         );
 
+        Navigation.instance.addItem(R.string.wake_sleep, R.drawable.menu_feedback, AlarmFragment.STACK_TAG,
+                AnalyticsManager.EVENT_MENU_SELECTION_WAKE_SLEEP,
+                new Navigation.NavigationItemSelectedCallback() {
+                    @Override
+                    public void perform(FragmentManager fm, boolean addToBackStack) {
+                        FragmentTransaction trans = fm.beginTransaction();
+                        trans.replace(R.id.container, new AlarmFragment(), AlarmFragment.STACK_TAG);
+
+                        if (addToBackStack) {
+                            trans.addToBackStack(AlarmFragment.STACK_TAG);
+                        }
+
+                        trans.commit();
+                    }
+                }
+        );
+
         Navigation.instance.addItem(R.string.donate, R.drawable.menu_heart_plus, null,
                 AnalyticsManager.EVENT_MENU_SELECTION_DONATE,
                 new Navigation.NavigationItemSelectedCallback() {
