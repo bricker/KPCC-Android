@@ -377,7 +377,7 @@ public class LiveFragment extends Fragment {
 
             @Override
             public void onCompletion() {
-                if (AppConnectivityManager.instance.streamIsBound || !isVisible()) {
+                if (!isVisible()) {
                     return;
                 }
 
