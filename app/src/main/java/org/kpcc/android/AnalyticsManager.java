@@ -26,6 +26,10 @@ public class AnalyticsManager {
     public final static String EVENT_MENU_OPENED = "menuOpened";
     public final static String EVENT_MENU_CLOSED = "menuClosed";
     public final static String EVENT_EPISODE_SHARED = "programEpisodeShared";
+    public final static String EVENT_SLEEP_TIMER_ARMED = "sleepTimerArmed";
+    public final static String EVENT_SLEEP_TIMER_CANCELED = "sleepTimerCanceled";
+    public final static String EVENT_ALARM_ARMED = "alarmArmed";
+    public final static String EVENT_ALARM_CANCELED = "alarmCanceled";
 
     public final static String PARAM_PROGRAM_PUBLISHED_AT = "programPublishedAt";
     public final static String PARAM_PROGRAM_TITLE = "programTitle";

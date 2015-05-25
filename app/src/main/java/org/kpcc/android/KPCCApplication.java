@@ -26,6 +26,7 @@ public class KPCCApplication extends Application {
         DataManager.setupInstance(this);
         HttpRequest.Manager.setupInstance(this);
         AnalyticsManager.setupInstance(this);
+        WakeSleepManager.setupInstance(this);
 
         Parse.initialize(this,
                 AppConfiguration.instance.getConfig("parse.applicationId"),

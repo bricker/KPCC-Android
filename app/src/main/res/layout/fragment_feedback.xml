@@ -157,13 +157,10 @@
                 android:layout_marginBottom="20dp" />
 
             <Button
-                android:layout_width="match_parent"
-                android:layout_height="50dp"
+                style="@style/active_btn"
                 android:text="@string/feedback_submit"
                 android:id="@+id/submitButton"
-                android:layout_gravity="center_horizontal"
-                android:textColor="@android:color/white"
-                android:background="@color/dark_gray"/>
+                android:layout_gravity="center_horizontal"/>
 
             <ProgressBar
                 android:id="@id/progress_circular"

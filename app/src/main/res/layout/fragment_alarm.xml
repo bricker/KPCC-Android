@@ -7,7 +7,7 @@
     <ImageView
         android:id="@+id/background"
         style="@style/generic_background_image"
-        android:alpha="0.4" />
+        android:alpha="0.3" />
 
     <RelativeLayout
         android:layout_width="match_parent"
@@ -24,7 +24,6 @@
             app:pstsTextAllCaps="false"
             app:pstsUnderlineColor="@color/horizontal_rule"
             app:pstsUnderlineHeight="1dp"
-            android:layout_marginBottom="20dp"
             style="@style/tab" />
 
         <android.support.v4.view.ViewPager

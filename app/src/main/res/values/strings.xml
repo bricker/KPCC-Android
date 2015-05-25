@@ -5,7 +5,7 @@
     <string name="kpcc_live">KPCC Live</string>
     <string name="programs">Programs</string>
     <string name="headlines">Headlines</string>
-    <string name="wake_sleep">Wake/Sleep</string>
+    <string name="wake_sleep">Wake / Sleep</string>
     <string name="feedback">Feedback</string>
     <string name="donate">Donate</string>
     <string name="settings">Settings</string>
@@ -14,6 +14,7 @@
     <string name="alarm_clock">Alarm Clock</string>
     <string name="set_alarm_time">Set Alarm Time</string>
     <string name="cancel_alarm">Cancel Alarm</string>
+    <string name="will_wake_on">Will Wake On:</string>
 
     <string name="recent_episodes">Recent Episodes</string>
     <string name="share_episode">Share this Program</string>

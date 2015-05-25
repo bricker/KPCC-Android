@@ -33,6 +33,7 @@ public class MainActivity extends ActionBarActivity {
                         @Override
                         public void perform(FragmentManager fm, boolean addToBackStack) {
                             FragmentTransaction trans = fm.beginTransaction();
+                            trans.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
                             trans.replace(R.id.container, new LiveFragment(), LiveFragment.STACK_TAG);
 
                             if (addToBackStack) {
@@ -50,6 +51,7 @@ public class MainActivity extends ActionBarActivity {
                         @Override
                         public void perform(FragmentManager fm, boolean addToBackStack) {
                             FragmentTransaction trans = fm.beginTransaction();
+                            trans.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
                             trans.replace(R.id.container, new ProgramsFragment(), ProgramsFragment.STACK_TAG);
 
                             if (addToBackStack) {
@@ -67,6 +69,7 @@ public class MainActivity extends ActionBarActivity {
                         @Override
                         public void perform(FragmentManager fm, boolean addToBackStack) {
                             FragmentTransaction trans = fm.beginTransaction();
+                            trans.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
                             trans.replace(R.id.container, new HeadlinesFragment(), HeadlinesFragment.STACK_TAG);
 
                             if (addToBackStack) {
@@ -84,6 +87,7 @@ public class MainActivity extends ActionBarActivity {
                         @Override
                         public void perform(FragmentManager fm, boolean addToBackStack) {
                             FragmentTransaction trans = fm.beginTransaction();
+                            trans.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
                             trans.replace(R.id.container, new AlarmFragment(), AlarmFragment.STACK_TAG);
 
                             if (addToBackStack) {
@@ -116,6 +120,7 @@ public class MainActivity extends ActionBarActivity {
                         @Override
                         public void perform(FragmentManager fm, boolean addToBackStack) {
                             FragmentTransaction trans = fm.beginTransaction();
+                            trans.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
                             trans.replace(R.id.container, new FeedbackFragment(), FeedbackFragment.STACK_TAG);
 
                             if (addToBackStack) {
@@ -133,6 +138,7 @@ public class MainActivity extends ActionBarActivity {
                         @Override
                         public void perform(FragmentManager fm, boolean addToBackStack) {
                             FragmentTransaction trans = fm.beginTransaction();
+                            trans.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
                             trans.replace(R.id.container, new SettingsFragment(), SettingsFragment.STACK_TAG);
 
                             if (addToBackStack) {

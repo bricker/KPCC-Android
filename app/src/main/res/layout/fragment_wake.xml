@@ -1,21 +1,55 @@
-<LinearLayout
+<RelativeLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical">
 
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:gravity="center|top"
+        android:id="@+id/time_picker_fragment_container"
+        android:layout_marginBottom="10dp"
+        android:layout_above="@+id/set_button" />
+
     <Button
         android:id="@+id/set_button"
-        android:layout_width="match_parent"
-        android:layout_height="45dp"
+        style="@style/active_btn"
         android:text="@string/set_alarm_time"
-        android:background="@color/dark_gray"/>
+        android:layout_alignParentBottom="true" />
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:id="@+id/current_alarm_data"
+        android:layout_above="@+id/set_button">
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/current_alarm_header"
+            android:text="@string/will_wake_on"
+            android:layout_above="@+id/current_alarm_time"
+            android:gravity="center"
+            style="@style/text_header_small"
+            android:visibility="gone"/>
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/current_alarm_time"
+            android:layout_centerVertical="true"
+            android:gravity="center"
+            android:layout_marginTop="10dp"
+            style="@style/text_header_large"
+            android:textSize="40sp"
+            android:visibility="gone"/>
+    </RelativeLayout>
 
     <Button
         android:id="@+id/cancel_button"
-        android:layout_width="match_parent"
-        android:layout_height="45dp"
+        style="@style/active_btn"
+        android:layout_alignParentBottom="true"
         android:text="@string/cancel_alarm"
-        android:background="@color/dark_gray"/>
+        android:visibility="gone"/>
 
-</LinearLayout>
+</RelativeLayout>

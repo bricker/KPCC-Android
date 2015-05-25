@@ -4,13 +4,31 @@ package org.kpcc.android;
 import android.os.Bundle;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentTransaction;
+import android.text.format.DateFormat;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.FrameLayout;
+import android.widget.TextView;
+import android.widget.TimePicker;
+
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.Locale;
+import java.util.concurrent.TimeUnit;
 
 public class WakeFragment extends Fragment {
     public final static String STACK_TAG = "WakeFragment";
+    private Button mSetButton;
+    private Button mCancelButton;
+    private TextView mCurrentAlarmHeader;
+    private TextView mCurrentAlarmTime;
+    private FrameLayout mTimePickerContainer;
+    private View mView;
+    private TimePicker mTimePicker;
 
     public WakeFragment() {
     }
@@ -23,19 +41,105 @@ public class WakeFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_wake, container, false);
-        Button button = (Button)view.findViewById(R.id.set_button);
+        mView = inflater.inflate(R.layout.fragment_wake, container, false);
+        mTimePickerContainer= (FrameLayout)mView.findViewById(R.id.time_picker_fragment_container);
+        mSetButton = (Button)mView.findViewById(R.id.set_button);
+        mCancelButton = (Button)mView.findViewById(R.id.cancel_button);
+        mCurrentAlarmHeader = (TextView)mView.findViewById(R.id.current_alarm_header);
+        mCurrentAlarmTime = (TextView)mView.findViewById(R.id.current_alarm_time);
 
-        button.setOnClickListener(new View.OnClickListener() {
+        // Embed the timepicker
+        getChildFragmentManager().beginTransaction()
+                .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN)
+                .add(R.id.time_picker_fragment_container, new TimePickerFragment())
+                .addToBackStack(TimePickerFragment.STACK_TAG)
+                .commit();
+
+        mSetButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                DialogFragment fragment = new TimePickerFragment();
-                fragment.show(getChildFragmentManager(), TimePickerFragment.STACK_TAG);
+                mTimePicker = (TimePicker) mView.findViewById(R.id.time_picker);
+                int hourOfDay = mTimePicker.getCurrentHour();
+                int minute = mTimePicker.getCurrentMinute();
+
+                WakeSleepManager.instance.setAlarm(hourOfDay, minute);
+                showCurrentAlarmData();
             }
         });
 
-        return view;
+        mCancelButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                WakeSleepManager.instance.cancelAlarm();
+                showTimePickerPrompt();
+            }
+        });
+
+        if (WakeSleepManager.instance.alarmIsRunning()) {
+            showCurrentAlarmData();
+        } else {
+            showTimePickerPrompt();
+        }
+
+        return mView;
     }
 
 
+    private void showCurrentAlarmData() {
+        mSetButton.setVisibility(View.GONE);
+        mTimePickerContainer.setVisibility(View.GONE);
+
+        mCancelButton.setVisibility(View.VISIBLE);
+        mCurrentAlarmHeader.setVisibility(View.VISIBLE);
+        mCurrentAlarmTime.setVisibility(View.VISIBLE);
+
+        Date date = DataManager.instance.getAlarmDate();
+
+        String hour;
+        String ampm;
+
+        // Support 24 hour format.
+        if (DateFormat.is24HourFormat(getActivity())) {
+            hour = "HH";
+            ampm = "";
+        } else {
+            hour = "hh";
+            ampm = " a";
+        }
+
+        SimpleDateFormat df = new SimpleDateFormat("E "+hour+":mm"+ampm, Locale.US);
+        mCurrentAlarmTime.setText(df.format(date));
+    }
+
+    private void showTimePickerPrompt() {
+        mSetButton.setVisibility(View.VISIBLE);
+        mTimePickerContainer.setVisibility(View.VISIBLE);
+
+        mCancelButton.setVisibility(View.GONE);
+        mCurrentAlarmHeader.setVisibility(View.GONE);
+        mCurrentAlarmTime.setVisibility(View.GONE);
+    }
+
+
+    public static class TimePickerFragment extends DialogFragment {
+        public static final String STACK_TAG = "TimePickerFragment";
+
+        @Override
+        public View onCreateView(LayoutInflater inflater, ViewGroup container,
+                                 Bundle savedInstanceState) {
+
+            final View view = inflater.inflate(R.layout.fragment_time_picker, container, false);
+            TimePicker timePicker = (TimePicker) view.findViewById(R.id.time_picker);
+
+            final Calendar c = Calendar.getInstance();
+            c.setTimeInMillis(System.currentTimeMillis() + TimeUnit.HOURS.toMillis(8));
+            int hour = c.get(Calendar.HOUR_OF_DAY);
+            int minute = c.get(Calendar.MINUTE);
+
+            timePicker.setIs24HourView(DateFormat.is24HourFormat(getActivity()));
+            timePicker.setCurrentHour(hour);
+            timePicker.setCurrentMinute(minute);
+            return view;
+        }
+    }
 }
