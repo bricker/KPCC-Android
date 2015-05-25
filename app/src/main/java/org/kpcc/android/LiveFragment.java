@@ -27,7 +27,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 
 public class LiveFragment extends Fragment {
-    private static final String ARG_PLAY_NOW = "args_play_now";
     public static final String STACK_TAG = "LiveFragment";
     private static long PLAY_START = 0;
 
@@ -36,7 +35,6 @@ public class LiveFragment extends Fragment {
     private NetworkImageView mAdView;
     private String mScheduleTitle;
     private StreamManager.LiveStream mPlayer;
-    private boolean mPlayNow;
     private AudioButtonManager mAudioButtonManager;
     private ProgressBar mPrerollProgressBar;
     private View mPrerollView;
@@ -49,10 +47,6 @@ public class LiveFragment extends Fragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setRetainInstance(true);
-
-        if (savedInstanceState != null) {
-            mPlayNow = savedInstanceState.getBoolean(ARG_PLAY_NOW);
-        }
     }
 
     @Override
@@ -132,9 +126,11 @@ public class LiveFragment extends Fragment {
             }
         });
 
-        if (mPlayNow) {
+        if (DataManager.instance.getPlayNow()) {
+            DataManager.instance.setPlayNow(false);
+
             // Play right away
-            mAudioButtonManager.getPlayButton().callOnClick();
+            mAudioButtonManager.clickPlay();
         }
 
         return view;

@@ -3,13 +3,11 @@ package org.kpcc.android;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.os.Binder;
 import android.os.Handler;
 import android.os.IBinder;
-import android.preference.PreferenceManager;
 
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
@@ -374,7 +372,6 @@ public class StreamManager extends Service {
                 BuildConfig.VERSION_NAME + "-" +
                 String.valueOf(BuildConfig.VERSION_CODE);
 
-        private final static String PREF_USER_PLAYED_LIVESTREAM = "live_stream_played";
         private AudioEventListener mPrerollAudioEventListener;
 
         public LiveStream(Context context) {
@@ -397,9 +394,8 @@ public class StreamManager extends Service {
             // stream, don't play preroll.
             // Otherwise do the normal preroll flow.
             final long now = System.currentTimeMillis();
-            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(mContext.getApplicationContext());
 
-            boolean hasPlayedLiveStream = prefs.getBoolean(PREF_USER_PLAYED_LIVESTREAM, false);
+            boolean hasPlayedLiveStream = DataManager.instance.getHasPlayedLiveStream();
             boolean installedRecently = KPCCApplication.INSTALLATION_TIME > (now - PrerollManager.INSTALL_GRACE);
             boolean heardPrerollRecently = PrerollManager.LAST_PREROLL_PLAY > (now - PrerollManager.PREROLL_THRESHOLD);
 
@@ -427,7 +423,7 @@ public class StreamManager extends Service {
             }
 
             if (!hasPlayedLiveStream) {
-                prefs.edit().putBoolean(PREF_USER_PLAYED_LIVESTREAM, true).apply();
+                DataManager.instance.setHasPlayedLiveStream(true);
             }
         }
 

@@ -1,11 +1,21 @@
-<FrameLayout
+<LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:orientation="vertical">
 
-    <TextView
+    <Button
+        android:id="@+id/set_button"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:text="Wake"/>
+        android:layout_height="45dp"
+        android:text="@string/set_alarm_time"
+        android:background="@color/dark_gray"/>
 
-</FrameLayout>
+    <Button
+        android:id="@+id/cancel_button"
+        android:layout_width="match_parent"
+        android:layout_height="45dp"
+        android:text="@string/cancel_alarm"
+        android:background="@color/dark_gray"/>
+
+</LinearLayout>

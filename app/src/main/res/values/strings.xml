@@ -12,6 +12,8 @@
 
     <string name="sleep_timer">Sleep Timer</string>
     <string name="alarm_clock">Alarm Clock</string>
+    <string name="set_alarm_time">Set Alarm Time</string>
+    <string name="cancel_alarm">Cancel Alarm</string>
 
     <string name="recent_episodes">Recent Episodes</string>
     <string name="share_episode">Share this Program</string>
