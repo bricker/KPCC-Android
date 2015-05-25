@@ -10,7 +10,13 @@
         android:gravity="center|top"
         android:id="@+id/time_picker_fragment_container"
         android:layout_marginBottom="10dp"
-        android:layout_above="@+id/set_button" />
+        android:layout_above="@+id/set_button">
+        <TimePicker
+            android:id="@+id/time_picker"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center" />
+    </FrameLayout>
 
     <Button
         android:id="@+id/set_button"
@@ -22,7 +28,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:id="@+id/current_alarm_data"
-        android:layout_above="@+id/set_button">
+        android:layout_above="@+id/cancel_button">
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"

@@ -14,6 +14,13 @@
         android:visibility="gone"
         style="@style/static_content_wrapper" />
 
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/timer_remaining"
+        android:layout_gravity="top|left"
+        android:visibility="gone"/>
+
     <RelativeLayout
         android:id="@+id/content_wrapper"
         android:layout_width="match_parent"

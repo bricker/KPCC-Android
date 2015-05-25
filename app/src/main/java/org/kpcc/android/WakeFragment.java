@@ -2,9 +2,7 @@ package org.kpcc.android;
 
 
 import android.os.Bundle;
-import android.support.v4.app.DialogFragment;
 import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentTransaction;
 import android.text.format.DateFormat;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -34,35 +32,23 @@ public class WakeFragment extends Fragment {
     }
 
     @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-    }
-
-    @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         mView = inflater.inflate(R.layout.fragment_wake, container, false);
-        mTimePickerContainer= (FrameLayout)mView.findViewById(R.id.time_picker_fragment_container);
+        mTimePickerContainer = (FrameLayout)mView.findViewById(R.id.time_picker_fragment_container);
+        mTimePicker = (TimePicker) mView.findViewById(R.id.time_picker);
         mSetButton = (Button)mView.findViewById(R.id.set_button);
         mCancelButton = (Button)mView.findViewById(R.id.cancel_button);
         mCurrentAlarmHeader = (TextView)mView.findViewById(R.id.current_alarm_header);
         mCurrentAlarmTime = (TextView)mView.findViewById(R.id.current_alarm_time);
 
-        // Embed the timepicker
-        getChildFragmentManager().beginTransaction()
-                .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN)
-                .add(R.id.time_picker_fragment_container, new TimePickerFragment())
-                .addToBackStack(TimePickerFragment.STACK_TAG)
-                .commit();
-
         mSetButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mTimePicker = (TimePicker) mView.findViewById(R.id.time_picker);
                 int hourOfDay = mTimePicker.getCurrentHour();
                 int minute = mTimePicker.getCurrentMinute();
 
-                WakeSleepManager.instance.setAlarm(hourOfDay, minute);
+                BaseAlarmManager.WakeManager.instance.set(hourOfDay, minute);
                 showCurrentAlarmData();
             }
         });
@@ -70,14 +56,23 @@ public class WakeFragment extends Fragment {
         mCancelButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                WakeSleepManager.instance.cancelAlarm();
+                BaseAlarmManager.WakeManager.instance.cancel();
                 showTimePickerPrompt();
             }
         });
 
-        if (WakeSleepManager.instance.alarmIsRunning()) {
+        if (BaseAlarmManager.WakeManager.instance.isRunning()) {
             showCurrentAlarmData();
         } else {
+            final Calendar c = Calendar.getInstance();
+            c.setTimeInMillis(System.currentTimeMillis() + TimeUnit.HOURS.toMillis(8));
+            int hour = c.get(Calendar.HOUR_OF_DAY);
+            int minute = c.get(Calendar.MINUTE);
+
+            mTimePicker.setIs24HourView(DateFormat.is24HourFormat(getActivity()));
+            mTimePicker.setCurrentHour(hour);
+            mTimePicker.setCurrentMinute(minute);
+
             showTimePickerPrompt();
         }
 
@@ -100,10 +95,10 @@ public class WakeFragment extends Fragment {
 
         // Support 24 hour format.
         if (DateFormat.is24HourFormat(getActivity())) {
-            hour = "HH";
+            hour = "H";
             ampm = "";
         } else {
-            hour = "hh";
+            hour = "h";
             ampm = " a";
         }
 
@@ -118,28 +113,5 @@ public class WakeFragment extends Fragment {
         mCancelButton.setVisibility(View.GONE);
         mCurrentAlarmHeader.setVisibility(View.GONE);
         mCurrentAlarmTime.setVisibility(View.GONE);
-    }
-
-
-    public static class TimePickerFragment extends DialogFragment {
-        public static final String STACK_TAG = "TimePickerFragment";
-
-        @Override
-        public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                                 Bundle savedInstanceState) {
-
-            final View view = inflater.inflate(R.layout.fragment_time_picker, container, false);
-            TimePicker timePicker = (TimePicker) view.findViewById(R.id.time_picker);
-
-            final Calendar c = Calendar.getInstance();
-            c.setTimeInMillis(System.currentTimeMillis() + TimeUnit.HOURS.toMillis(8));
-            int hour = c.get(Calendar.HOUR_OF_DAY);
-            int minute = c.get(Calendar.MINUTE);
-
-            timePicker.setIs24HourView(DateFormat.is24HourFormat(getActivity()));
-            timePicker.setCurrentHour(hour);
-            timePicker.setCurrentMinute(minute);
-            return view;
-        }
     }
 }

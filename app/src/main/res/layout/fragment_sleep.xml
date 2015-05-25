@@ -1,11 +1,87 @@
-<FrameLayout
+<RelativeLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:orientation="vertical">
 
-    <TextView
+    <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:text="Sleep"/>
+        android:gravity="center"
+        android:id="@+id/seekbar_container"
+        android:layout_marginBottom="10dp"
+        android:layout_above="@+id/set_button">
 
-</FrameLayout>
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/selection_time"
+            android:gravity="center"
+            android:layout_marginBottom="20dp">
+
+            <TextView
+                style="@style/text_header_large"
+                android:textSize="50dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:minWidth="100dp"
+                android:gravity="center"
+                android:id="@+id/selection_time_hr"/>
+
+            <TextView
+                style="@style/text_header_large"
+                android:textSize="50dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:minWidth="100dp"
+                android:gravity="center"
+                android:id="@+id/selection_time_min"
+                android:layout_toRightOf="@+id/selection_time_hr"/>
+
+            <TextView
+                style="@style/text_header_large"
+                android:textSize="50dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:minWidth="100dp"
+                android:gravity="center"
+                android:id="@+id/selection_time_sec"
+                android:layout_toRightOf="@+id/selection_time_min"
+                android:visibility="gone"/>
+        </RelativeLayout>
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/current_timer_header"
+            android:text="@string/remaining"
+            android:gravity="center"
+            style="@style/text_header_small"
+            android:visibility="gone"
+            android:layout_below="@+id/selection_time" />
+
+        <SeekBar
+            android:id="@+id/seek_bar"
+            android:layout_gravity="center"
+            android:layout_width="match_parent"
+            android:layout_height="90dp"
+            style="@style/AppTheme.ProgressBarHorizontal"
+            android:layout_marginLeft="0dp"
+            android:layout_marginRight="0dp"
+            android:thumb="@null"
+            android:layout_below="@+id/selection_time" />
+    </RelativeLayout>
+
+    <Button
+        android:id="@+id/set_button"
+        style="@style/active_btn"
+        android:text="@string/start_sleep_timer"
+        android:layout_alignParentBottom="true" />
+
+    <Button
+        android:id="@+id/cancel_button"
+        style="@style/active_btn"
+        android:layout_alignParentBottom="true"
+        android:text="@string/cancel_sleep_timer"
+        android:visibility="gone"/>
+</RelativeLayout>

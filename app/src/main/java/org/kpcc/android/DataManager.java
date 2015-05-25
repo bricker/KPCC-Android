@@ -10,7 +10,8 @@ public class DataManager {
     private final static String PREF_FALLBACK_AD_ID = "fallback_ad_id";
     private final static String PREF_USER_PLAYED_LIVESTREAM = "live_stream_played";
     private final static String PREF_LIVESTREAM_PLAY_NOW = "live_stream_play_now";
-    private final static String PREF_ALARM_DATE= "alarm_date";
+    private final static String PREF_ALARM_DATE = "alarm_date";
+    private final static String PREF_TIMER_MILLIS = "timer_date";
 
     public static DataManager instance;
     private final Context mContext;
@@ -60,5 +61,18 @@ public class DataManager {
 
     public void clearAlarmDate() {
         mPrefs.edit().remove(PREF_ALARM_DATE).apply();
+    }
+
+
+    public long getTimerMillis() {
+        return mPrefs.getLong(PREF_TIMER_MILLIS, 0);
+    }
+
+    public void setTimerMillis(long millis) {
+        mPrefs.edit().putLong(PREF_TIMER_MILLIS, millis).apply();
+    }
+
+    public void clearTimerMillis() {
+        mPrefs.edit().remove(PREF_TIMER_MILLIS).apply();
     }
 }
