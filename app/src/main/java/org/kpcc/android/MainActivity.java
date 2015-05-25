@@ -20,110 +20,136 @@ import uk.co.chrisjenx.calligraphy.CalligraphyContextWrapper;
 public class MainActivity extends ActionBarActivity {
     private static final String DONATE_URL = "https://scprcontribute.publicradio.org/contribute.php";
     private NavigationDrawerFragment mNavigationDrawerFragment;
+    private Bundle mArgs;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        Navigation.instance.addItem(R.string.kpcc_live, R.drawable.menu_antenna, LiveFragment.STACK_TAG,
-                AnalyticsManager.EVENT_MENU_SELECTION_LIVE_STREAM,
-                new Navigation.NavigationItemSelectedCallback() {
-                    @Override
-                    public void perform(FragmentManager fm, boolean addToBackStack) {
-                        FragmentTransaction trans = fm.beginTransaction();
-                        trans.replace(R.id.container, new LiveFragment(), LiveFragment.STACK_TAG);
+        if (Navigation.instance.navigationItems.isEmpty()) {
+            Navigation.instance.addItem(R.string.kpcc_live, R.drawable.menu_antenna, LiveFragment.STACK_TAG,
+                    AnalyticsManager.EVENT_MENU_SELECTION_LIVE_STREAM,
+                    new Navigation.NavigationItemSelectedCallback() {
+                        @Override
+                        public void perform(FragmentManager fm, boolean addToBackStack) {
+                            FragmentTransaction trans = fm.beginTransaction();
+                            trans.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
+                            trans.replace(R.id.container, new LiveFragment(), LiveFragment.STACK_TAG);
 
-                        if (addToBackStack) {
-                            trans.addToBackStack(LiveFragment.STACK_TAG);
-                        }
+                            if (addToBackStack) {
+                                trans.addToBackStack(LiveFragment.STACK_TAG);
+                            }
 
-                        trans.commit();
-                    }
-                }
-        );
-
-        Navigation.instance.addItem(R.string.programs, R.drawable.menu_microphone, ProgramsFragment.STACK_TAG,
-                AnalyticsManager.EVENT_MENU_SELECTION_PROGRAMS,
-                new Navigation.NavigationItemSelectedCallback() {
-                    @Override
-                    public void perform(FragmentManager fm, boolean addToBackStack) {
-                        FragmentTransaction trans = fm.beginTransaction();
-                        trans.replace(R.id.container, new ProgramsFragment(), ProgramsFragment.STACK_TAG);
-
-                        if (addToBackStack) {
-                            trans.addToBackStack(ProgramsFragment.STACK_TAG);
-                        }
-
-                        trans.commit();
-                    }
-                }
-        );
-
-        Navigation.instance.addItem(R.string.headlines, R.drawable.menu_glasses, HeadlinesFragment.STACK_TAG,
-                AnalyticsManager.EVENT_MENU_SELECTION_HEADLINES,
-                new Navigation.NavigationItemSelectedCallback() {
-                    @Override
-                    public void perform(FragmentManager fm, boolean addToBackStack) {
-                        FragmentTransaction trans = fm.beginTransaction();
-                        trans.replace(R.id.container, new HeadlinesFragment(), HeadlinesFragment.STACK_TAG);
-
-                        if (addToBackStack) {
-                            trans.addToBackStack(HeadlinesFragment.STACK_TAG);
-                        }
-
-                        trans.commit();
-                    }
-                }
-        );
-
-        Navigation.instance.addItem(R.string.donate, R.drawable.menu_heart_plus, null,
-                AnalyticsManager.EVENT_MENU_SELECTION_DONATE,
-                new Navigation.NavigationItemSelectedCallback() {
-                    @Override
-                    public void perform(FragmentManager fm, boolean addToBackStack) {
-                        Uri uri = Uri.parse(DONATE_URL);
-                        Intent intent = new Intent(Intent.ACTION_VIEW, uri);
-
-                        if (intent.resolveActivity(getPackageManager()) != null) {
-                            startActivity(intent);
+                            trans.commit();
                         }
                     }
-                }
-        );
+            );
 
-        Navigation.instance.addItem(R.string.feedback, R.drawable.menu_feedback, FeedbackFragment.STACK_TAG,
-                AnalyticsManager.EVENT_MENU_SELECTION_FEEDBACK,
-                new Navigation.NavigationItemSelectedCallback() {
-                    @Override
-                    public void perform(FragmentManager fm, boolean addToBackStack) {
-                        FragmentTransaction trans = fm.beginTransaction();
-                        trans.replace(R.id.container, new FeedbackFragment(), FeedbackFragment.STACK_TAG);
+            Navigation.instance.addItem(R.string.programs, R.drawable.menu_microphone, ProgramsFragment.STACK_TAG,
+                    AnalyticsManager.EVENT_MENU_SELECTION_PROGRAMS,
+                    new Navigation.NavigationItemSelectedCallback() {
+                        @Override
+                        public void perform(FragmentManager fm, boolean addToBackStack) {
+                            FragmentTransaction trans = fm.beginTransaction();
+                            trans.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
+                            trans.replace(R.id.container, new ProgramsFragment(), ProgramsFragment.STACK_TAG);
 
-                        if (addToBackStack) {
-                            trans.addToBackStack(FeedbackFragment.STACK_TAG);
+                            if (addToBackStack) {
+                                trans.addToBackStack(ProgramsFragment.STACK_TAG);
+                            }
+
+                            trans.commit();
                         }
-
-                        trans.commit();
                     }
-                }
-        );
+            );
 
-        Navigation.instance.addItem(R.string.settings, R.drawable.menu_settings, SettingsFragment.STACK_TAG,
-                AnalyticsManager.EVENT_MENU_SELECTION_SETTINGS,
-                new Navigation.NavigationItemSelectedCallback() {
-                    @Override
-                    public void perform(FragmentManager fm, boolean addToBackStack) {
-                        FragmentTransaction trans = fm.beginTransaction();
-                        trans.replace(R.id.container, new SettingsFragment(), SettingsFragment.STACK_TAG);
+            Navigation.instance.addItem(R.string.headlines, R.drawable.menu_glasses, HeadlinesFragment.STACK_TAG,
+                    AnalyticsManager.EVENT_MENU_SELECTION_HEADLINES,
+                    new Navigation.NavigationItemSelectedCallback() {
+                        @Override
+                        public void perform(FragmentManager fm, boolean addToBackStack) {
+                            FragmentTransaction trans = fm.beginTransaction();
+                            trans.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
+                            trans.replace(R.id.container, new HeadlinesFragment(), HeadlinesFragment.STACK_TAG);
 
-                        if (addToBackStack) {
-                            trans.addToBackStack(SettingsFragment.STACK_TAG);
+                            if (addToBackStack) {
+                                trans.addToBackStack(HeadlinesFragment.STACK_TAG);
+                            }
+
+                            trans.commit();
                         }
-
-                        trans.commit();
                     }
-                }
-        );
+            );
+
+            Navigation.instance.addItem(R.string.wake_sleep, R.drawable.menu_feedback, AlarmFragment.STACK_TAG,
+                    AnalyticsManager.EVENT_MENU_SELECTION_WAKE_SLEEP,
+                    new Navigation.NavigationItemSelectedCallback() {
+                        @Override
+                        public void perform(FragmentManager fm, boolean addToBackStack) {
+                            FragmentTransaction trans = fm.beginTransaction();
+                            trans.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
+                            trans.replace(R.id.container, new AlarmFragment(), AlarmFragment.STACK_TAG);
+
+                            if (addToBackStack) {
+                                trans.addToBackStack(AlarmFragment.STACK_TAG);
+                            }
+
+                            trans.commit();
+                        }
+                    }
+            );
+
+            Navigation.instance.addItem(R.string.donate, R.drawable.menu_heart_plus, null,
+                    AnalyticsManager.EVENT_MENU_SELECTION_DONATE,
+                    new Navigation.NavigationItemSelectedCallback() {
+                        @Override
+                        public void perform(FragmentManager fm, boolean addToBackStack) {
+                            Uri uri = Uri.parse(DONATE_URL);
+                            Intent intent = new Intent(Intent.ACTION_VIEW, uri);
+
+                            if (intent.resolveActivity(getPackageManager()) != null) {
+                                startActivity(intent);
+                            }
+                        }
+                    }
+            );
+
+            Navigation.instance.addItem(R.string.feedback, R.drawable.menu_feedback, FeedbackFragment.STACK_TAG,
+                    AnalyticsManager.EVENT_MENU_SELECTION_FEEDBACK,
+                    new Navigation.NavigationItemSelectedCallback() {
+                        @Override
+                        public void perform(FragmentManager fm, boolean addToBackStack) {
+                            FragmentTransaction trans = fm.beginTransaction();
+                            trans.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
+                            trans.replace(R.id.container, new FeedbackFragment(), FeedbackFragment.STACK_TAG);
+
+                            if (addToBackStack) {
+                                trans.addToBackStack(FeedbackFragment.STACK_TAG);
+                            }
+
+                            trans.commit();
+                        }
+                    }
+            );
+
+            Navigation.instance.addItem(R.string.settings, R.drawable.menu_settings, SettingsFragment.STACK_TAG,
+                    AnalyticsManager.EVENT_MENU_SELECTION_SETTINGS,
+                    new Navigation.NavigationItemSelectedCallback() {
+                        @Override
+                        public void perform(FragmentManager fm, boolean addToBackStack) {
+                            FragmentTransaction trans = fm.beginTransaction();
+                            trans.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
+                            trans.replace(R.id.container, new SettingsFragment(), SettingsFragment.STACK_TAG);
+
+                            if (addToBackStack) {
+                                trans.addToBackStack(SettingsFragment.STACK_TAG);
+                            }
+
+                            trans.commit();
+                        }
+                    }
+            );
+        }
 
         setContentView(R.layout.activity_main);
         setVolumeControlStream(AudioManager.STREAM_MUSIC);

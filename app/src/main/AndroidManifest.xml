@@ -37,6 +37,17 @@
             </intent-filter>
         </activity>
 
+        <service android:name="org.kpcc.android.StreamManager" />
+        <service android:name="com.parse.PushService" />
+
+        <receiver
+            android:name=".AlarmReceiver$AlarmClock"
+            android:exported="false" />
+
+        <receiver
+            android:name=".AlarmReceiver$SleepTimer"
+            android:exported="false" />
+
         <receiver
             android:name=".AppConnectivityManager$ConnectivityReceiver"
             android:exported="false">
@@ -44,9 +55,6 @@
                 <action android:name="android.net.conn.CONNECTIVITY_CHANGE"/>
             </intent-filter>
         </receiver>
-
-        <service android:name="org.kpcc.android.StreamManager" />
-        <service android:name="com.parse.PushService" />
 
         <receiver
             android:name=".NotificationManager$BroadcastReceiver"

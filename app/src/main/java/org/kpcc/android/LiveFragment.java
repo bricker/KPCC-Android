@@ -27,7 +27,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 
 public class LiveFragment extends Fragment {
-    private static final String ARG_PLAY_NOW = "args_play_now";
     public static final String STACK_TAG = "LiveFragment";
     private static long PLAY_START = 0;
 
@@ -36,7 +35,6 @@ public class LiveFragment extends Fragment {
     private NetworkImageView mAdView;
     private String mScheduleTitle;
     private StreamManager.LiveStream mPlayer;
-    private boolean mPlayNow;
     private AudioButtonManager mAudioButtonManager;
     private ProgressBar mPrerollProgressBar;
     private View mPrerollView;
@@ -44,15 +42,14 @@ public class LiveFragment extends Fragment {
     private Thread mUpdaterThread;
     private ImageView mBackground;
     private Request mRequest;
+    private SleepFragment.ProgressObserver mTimerProgressObserver;
+    private Thread mTimerProgressThread;
+    private TextView mTimerRemaining;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setRetainInstance(true);
-
-        if (savedInstanceState != null) {
-            mPlayNow = savedInstanceState.getBoolean(ARG_PLAY_NOW);
-        }
     }
 
     @Override
@@ -70,6 +67,7 @@ public class LiveFragment extends Fragment {
         mAdView = (NetworkImageView) view.findViewById(R.id.preroll_ad);
         mPrerollProgressBar = (ProgressBar) view.findViewById(R.id.progress_bar);
         mPrerollView = view.findViewById(R.id.preroll);
+        mTimerRemaining = (TextView)view.findViewById(R.id.timer_remaining);
 
         mAudioButtonManager = new AudioButtonManager(view);
 
@@ -132,9 +130,11 @@ public class LiveFragment extends Fragment {
             }
         });
 
-        if (mPlayNow) {
+        if (DataManager.instance.getPlayNow()) {
+            DataManager.instance.setPlayNow(false);
+
             // Play right away
-            mAudioButtonManager.getPlayButton().callOnClick();
+            mAudioButtonManager.clickPlay();
         }
 
         return view;
@@ -206,6 +206,34 @@ public class LiveFragment extends Fragment {
             }
         });
 
+        if (BaseAlarmManager.SleepManager.instance.isRunning()) {
+            mTimerRemaining.setVisibility(View.VISIBLE);
+
+            mTimerProgressObserver = new SleepFragment.ProgressObserver(new SleepFragment.SleepTimerUpdater() {
+                @Override
+                public void onTimerUpdate(int hours, int mins, int secs) {
+                    String mStrHr = getActivity().getResources().getString(R.string.timer_hr);
+                    String mStrMin = getActivity().getResources().getString(R.string.timer_min);
+                    String mStrSec = getActivity().getResources().getString(R.string.timer_sec);
+
+                    mTimerRemaining.setText(
+                            String.valueOf(hours) + mStrHr + " " +
+                                    String.valueOf(mins) + mStrMin + " " +
+                                    String.valueOf(secs) + mStrSec
+                    );
+                }
+
+                @Override
+                public void onTimerComplete() {
+                    mTimerRemaining.setVisibility(View.GONE);
+                }
+            });
+
+            startTimerUpdater();
+        } else {
+            mTimerRemaining.setVisibility(View.GONE);
+        }
+
         // The callbacks below will get run right away whatever the state is. We want to start it
         // no matter what to setup the default state, and then let the callbacks handle the
         // connected state. Calling start() again should be safe and not start a second thread.
@@ -257,6 +285,36 @@ public class LiveFragment extends Fragment {
         }
     }
 
+    private void startTimerUpdater() {
+        stopTimerUpdater();
+
+        if (mTimerProgressObserver != null && !mTimerProgressObserver.isObserving()) {
+            mTimerProgressObserver.start();
+
+            if (mTimerProgressThread != null && !mTimerProgressThread.isInterrupted()) {
+                mTimerProgressThread.interrupt();
+                // GC will take care of the dead thread hanging around.
+            }
+
+            mTimerProgressThread = new Thread(mTimerProgressObserver);
+            mTimerProgressThread.start();
+        }
+    }
+
+    private void stopTimerUpdater() {
+        if (mTimerProgressObserver != null) {
+            mTimerProgressObserver.stop();
+        }
+
+        if (mTimerProgressThread != null) {
+            if (!mTimerProgressThread.isInterrupted()) {
+                mTimerProgressThread.interrupt();
+            }
+
+            mTimerProgressThread = null;
+        }
+    }
+
     @Override
     public void onPause() {
         if (mRequest != null) {
@@ -264,6 +322,7 @@ public class LiveFragment extends Fragment {
         }
 
         stopScheduleUpdater();
+        stopTimerUpdater();
         AppConnectivityManager.instance.removeOnNetworkConnectivityListener(LiveFragment.STACK_TAG);
 
         super.onPause();
@@ -377,7 +436,7 @@ public class LiveFragment extends Fragment {
 
             @Override
             public void onCompletion() {
-                if (AppConnectivityManager.instance.streamIsBound || !isVisible()) {
+                if (!isVisible()) {
                     return;
                 }
 

@@ -1,9 +1,7 @@
 package org.kpcc.android;
 
 import android.content.Context;
-import android.content.SharedPreferences;
 import android.os.AsyncTask;
-import android.preference.PreferenceManager;
 import android.util.Xml;
 
 import com.android.volley.Response;
@@ -24,7 +22,6 @@ public class PrerollManager {
     public final static long INSTALL_GRACE = 1000 * 60 * 10; // 10 minutes
     public final static PrerollManager instance = new PrerollManager();
     private final static String TRITON_BASE = "http://cmod.live.streamtheworld.com/ondemand/ars?type=preroll&stid=83153&lsid=%s:%s";
-    private final static String PREF_FALLBACK_AD_ID = "fallback_ad_id";
     public static long LAST_PREROLL_PLAY = 0;
 
     private PrerollCallbackListener mCallback;
@@ -153,12 +150,11 @@ public class PrerollManager {
                 if (id == null) {
                     type = "app";
 
-                    SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(context.getApplicationContext());
-                    id = sharedPref.getString(PREF_FALLBACK_AD_ID, "");
+                    id = DataManager.instance.getAdId();
 
                     if (id.isEmpty()) {
                         id = UUID.randomUUID().toString();
-                        sharedPref.edit().putString(PREF_FALLBACK_AD_ID, id).apply();
+                        DataManager.instance.setAdId(id);
                     }
                 } else {
                     type = "gaid";
