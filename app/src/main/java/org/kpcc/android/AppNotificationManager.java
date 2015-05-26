@@ -12,13 +12,13 @@ import com.parse.GcmBroadcastReceiver;
 import com.parse.ParsePush;
 import com.parse.ParsePushBroadcastReceiver;
 
-class NotificationManager implements SharedPreferences.OnSharedPreferenceChangeListener {
+class AppNotificationManager implements SharedPreferences.OnSharedPreferenceChangeListener {
     private static final String CHANNEL_LISTEN_LIVE = "listenLive";
-    private static NotificationManager instance = null;
+    private static AppNotificationManager instance = null;
 
     private final Application application;
 
-    private NotificationManager(Application application) {
+    private AppNotificationManager(Application application) {
         this.application = application;
 
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(application);
@@ -33,7 +33,7 @@ class NotificationManager implements SharedPreferences.OnSharedPreferenceChangeL
 
     public static void setupInstance(Application application) {
         if (instance == null) {
-            instance = new NotificationManager(application);
+            instance = new AppNotificationManager(application);
         }
     }
 

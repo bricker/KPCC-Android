@@ -35,7 +35,7 @@ public class KPCCApplication extends Application {
         ParseInstallation.getCurrentInstallation().saveInBackground();
 
         // Parse must be initialized first.
-        NotificationManager.setupInstance(this);
+        AppNotificationManager.setupInstance(this);
 
         super.onCreate();
 
