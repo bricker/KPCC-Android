@@ -390,6 +390,7 @@ public class LiveFragment extends Fragment {
                 mPrerollView.setVisibility(View.VISIBLE);
                 mStatus.setVisibility(View.INVISIBLE);
                 mTitle.setVisibility(View.INVISIBLE);
+                mTimerRemaining.setVisibility(View.GONE);
 
                 if (prerollData.assetUrl != null) {
                     NetworkImageManager.instance.setPrerollImage(mAdView, prerollData.assetUrl);
@@ -457,6 +458,11 @@ public class LiveFragment extends Fragment {
                 mPrerollView.setVisibility(View.GONE);
                 mStatus.setVisibility(View.VISIBLE);
                 mTitle.setVisibility(View.VISIBLE);
+
+                if (BaseAlarmManager.SleepManager.instance.isRunning()) {
+                    mTimerRemaining.setVisibility(View.VISIBLE);
+                }
+
                 // Toggle loading so we get a loading icon while live stream is loading.
                 mAudioButtonManager.toggleLoading();
             }
