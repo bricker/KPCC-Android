@@ -99,11 +99,16 @@ public class SleepFragment extends Fragment {
                 BaseAlarmManager.SleepManager.instance.set(relativeMillis);
                 showCurrentTimerData();
 
-                // Start the live stream.
-                Intent activityIntent = new Intent(getActivity(), MainActivity.class);
-                activityIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                DataManager.instance.setPlayNow(true);
-                startActivity(activityIntent);
+                // Go to the live stream if an episode isn't already playing.
+                if (AppConnectivityManager.instance.streamManager != null) {
+                    StreamManager.EpisodeStream currentEpisodePlayer = AppConnectivityManager.instance.streamManager.currentEpisodePlayer;
+                    if (currentEpisodePlayer == null || !currentEpisodePlayer.isPlaying()) {
+                        Intent activityIntent = new Intent(getActivity(), MainActivity.class);
+                        activityIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                        DataManager.instance.setPlayNow(true);
+                        startActivity(activityIntent);
+                    }
+                }
             }
         });
 
