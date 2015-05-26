@@ -53,7 +53,7 @@
     <string name="advertisement">Advertisement</string>
     <string name="preroll_message">A KPCC Underwriter Message</string>
 
-    <string name="audio_error">There was an error playing the stream. Please try again in a few minutes.</string>
+    <string name="audio_error">There was an error playing the stream.</string>
     <string name="network_error">Not Connected to the Internet.</string>
     <string name="load_error">There was an error loading the data. Please try again in a few minutes.</string>
     <string name="feedback_error_message">There was an error submitting your feedback. Please e-mail mobilefeedback@scpr.org.</string>
