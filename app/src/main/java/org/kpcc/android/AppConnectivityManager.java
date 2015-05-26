@@ -53,12 +53,6 @@ public class AppConnectivityManager {
     private AppConnectivityManager(Context context) {
         mConnectivityManager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
         mContext = context;
-
-        // Start the stream service.
-        // There is probably a more intuitive place to put this.
-        Intent intent = new Intent(mContext, StreamManager.class);
-        context.startService(intent);
-        context.bindService(intent, mConnection, Context.BIND_AUTO_CREATE);
     }
 
     boolean isConnectedToNetwork() {
@@ -95,7 +89,13 @@ public class AppConnectivityManager {
         }
     }
 
-    void unbindService() {
+    void bindStreamService() {
+        Intent intent = new Intent(mContext, StreamManager.class);
+        mContext.startService(intent);
+        mContext.bindService(intent, mConnection, Context.BIND_AUTO_CREATE);
+    }
+
+    void unbindStreamService() {
         if (streamIsBound) {
             mContext.unbindService(mConnection);
             streamIsBound = false;

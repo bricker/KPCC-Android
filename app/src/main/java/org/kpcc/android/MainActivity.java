@@ -26,6 +26,8 @@ public class MainActivity extends ActionBarActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        AppConnectivityManager.instance.bindStreamService();
+
         if (Navigation.instance.navigationItems.isEmpty()) {
             Navigation.instance.addItem(R.string.kpcc_live, R.drawable.menu_antenna, LiveFragment.STACK_TAG,
                     AnalyticsManager.EVENT_MENU_SELECTION_LIVE_STREAM,
@@ -191,6 +193,6 @@ public class MainActivity extends ActionBarActivity {
     protected void onDestroy() {
         super.onDestroy();
         AnalyticsManager.instance.flush();
-        AppConnectivityManager.instance.unbindService();
+        AppConnectivityManager.instance.unbindStreamService();
     }
 }
