@@ -484,13 +484,6 @@ public class LiveFragment extends Fragment {
     }
 
     private void initAudioButtonState() {
-        MainActivity activity = (MainActivity) getActivity();
-
-        if (activity == null) {
-            // FIXME: What should we do here?
-            return;
-        }
-
         if (AppConnectivityManager.instance.streamIsBound) {
             StreamManager.LiveStream currentPlayer = AppConnectivityManager.instance.streamManager.currentLivePlayer;
             if (currentPlayer != null && currentPlayer.isPlaying()) {
