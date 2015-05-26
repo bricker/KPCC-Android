@@ -130,13 +130,6 @@ public class LiveFragment extends Fragment {
             }
         });
 
-        if (DataManager.instance.getPlayNow()) {
-            DataManager.instance.setPlayNow(false);
-
-            // Play right away
-            mAudioButtonManager.clickPlay();
-        }
-
         return view;
     }
 
@@ -150,6 +143,15 @@ public class LiveFragment extends Fragment {
             @Override
             public void onBind() {
                 initAudioButtonState();
+
+                // This must come after calling initAudioButtonState(), otherwise the play button could be
+                // clicked before we have the chance to hide it if necessary.
+                if (DataManager.instance.getPlayNow()) {
+                    DataManager.instance.setPlayNow(false);
+
+                    // Play right away
+                    mAudioButtonManager.clickPlay();
+                }
             }
         });
 

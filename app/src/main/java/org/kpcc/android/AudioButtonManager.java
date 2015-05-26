@@ -81,6 +81,8 @@ class AudioButtonManager {
     }
 
     public void clickPlay() {
-        mPlayButton.callOnClick();
+       if (mPlayButton.getVisibility() == View.VISIBLE) {
+           mPlayButton.callOnClick();
+       }
     }
 }
