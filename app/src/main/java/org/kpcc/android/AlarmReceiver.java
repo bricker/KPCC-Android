@@ -22,7 +22,7 @@ public class AlarmReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
             if (AppConnectivityManager.instance.streamIsBound) {
-                AppConnectivityManager.instance.streamManager.releaseAllActiveStreams();
+                AppConnectivityManager.instance.streamManager.stopAllActiveStreams();
             }
 
             // TODO: What is the above fails? Should we retry?

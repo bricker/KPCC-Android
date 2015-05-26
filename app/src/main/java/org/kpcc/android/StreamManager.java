@@ -28,10 +28,18 @@ public class StreamManager extends Service {
         );
     }
 
+    // The nuclear option - this isn't guaranteed to update button states. It's a cleanup task.
     public void releaseAllActiveStreams() {
         if (currentEpisodePlayer != null) currentEpisodePlayer.release();
         if (currentLivePlayer != null) currentLivePlayer.release();
         if (currentPrerollPlayer != null) currentPrerollPlayer.release();
+    }
+
+    // This is better to use, it will update button states.
+    public void stopAllActiveStreams() {
+        if (currentEpisodePlayer != null) currentEpisodePlayer.stop();
+        if (currentLivePlayer != null) currentLivePlayer.stop();
+        if (currentPrerollPlayer != null) currentPrerollPlayer.stop();
     }
 
     @Override
@@ -488,6 +496,8 @@ public class StreamManager extends Service {
                 }
             }
 
+            // Bryan: Don't call onStop() here.
+            // Audio Focus rules cause the button states to collide.
             audioPlayer.release();
         }
 
