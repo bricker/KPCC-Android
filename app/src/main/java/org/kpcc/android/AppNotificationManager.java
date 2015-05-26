@@ -99,6 +99,10 @@ class AppNotificationManager implements SharedPreferences.OnSharedPreferenceChan
 
         @Override
         protected void onPushOpen(Context context, Intent intent) {
+            // Parse automatically opens the MainActivity, which fortunately goes directly
+            // to the live fragment so we don't have to do that ourselves. All we have to do is
+            // tell the live stream to start playing right away.
+            DataManager.instance.setPlayNow(true);
             super.onPushOpen(context, intent);
         }
 
