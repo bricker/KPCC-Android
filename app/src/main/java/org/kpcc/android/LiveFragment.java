@@ -130,6 +130,16 @@ public class LiveFragment extends Fragment {
             }
         });
 
+        mTimerRemaining.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Integer index = Navigation.NavigationItem.getIndexByStackTag(AlarmFragment.STACK_TAG);
+
+                if (index != null) {
+                    ((MainActivity) getActivity()).getNavigationDrawerFragment().selectItem(index);
+                }
+            }
+        });
         return view;
     }
 

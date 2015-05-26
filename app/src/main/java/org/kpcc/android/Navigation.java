@@ -27,6 +27,21 @@ public class Navigation {
         private final String analyticsKey;
         private final NavigationItemSelectedCallback callback;
 
+        public static Integer getIndexByStackTag(String stackTag) {
+            Integer found = null;
+
+            for (int i=0; i < Navigation.instance.navigationItems.size(); i++) {
+                NavigationItem navigationItem = Navigation.instance.navigationItems.get(i);
+
+                if (navigationItem.stackTag.equals(stackTag)) {
+                    found = i;
+                    break;
+                }
+            }
+
+            return found;
+        }
+
         NavigationItem(int titleId, int iconId, String stackTag,
                        String analyticsKey, NavigationItemSelectedCallback callback) {
             this.titleId = titleId;
