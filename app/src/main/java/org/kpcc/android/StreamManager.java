@@ -35,11 +35,16 @@ public class StreamManager extends Service {
         if (currentPrerollPlayer != null) currentPrerollPlayer.release();
     }
 
-    // This is better to use, it will update button states.
     public void stopAllActiveStreams() {
         if (currentEpisodePlayer != null) currentEpisodePlayer.stop();
         if (currentLivePlayer != null) currentLivePlayer.stop();
         if (currentPrerollPlayer != null) currentPrerollPlayer.stop();
+    }
+
+    public void pauseAllActiveStreams() {
+        if (currentEpisodePlayer != null) currentEpisodePlayer.pause();
+        if (currentLivePlayer != null) currentLivePlayer.pause();
+        if (currentPrerollPlayer != null) currentPrerollPlayer.pause();
     }
 
     @Override

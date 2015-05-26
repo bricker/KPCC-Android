@@ -91,6 +91,7 @@ public class SleepFragment extends Fragment {
 
             }
         });
+
         mSetButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
