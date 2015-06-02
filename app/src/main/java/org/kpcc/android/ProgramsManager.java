@@ -16,7 +16,7 @@ import java.util.HashMap;
 import java.util.List;
 
 public class ProgramsManager {
-    public static ProgramsManager instance = new ProgramsManager();
+    public static final ProgramsManager instance = new ProgramsManager();
     private static final String[] HIDDEN_PROGRAMS = { "filmweek-marquee", "take-two-evenings" };
 
     public final ArrayList<Program> ALL_PROGRAMS = new ArrayList<>();
@@ -64,7 +64,7 @@ public class ProgramsManager {
             public void onErrorResponse(VolleyError error) {
                 // No programs will be available.
                 // The fragment should check the status and try to reload the programs.
-                listener.onProgramsError(error);
+                listener.onProgramsError();
             }
         });
     }
@@ -85,7 +85,7 @@ public class ProgramsManager {
 
     public abstract static interface OnProgramsResponseListener {
         abstract void onProgramsResponse();
-        abstract void onProgramsError(VolleyError error);
+        abstract void onProgramsError();
     }
 
 }

@@ -17,7 +17,6 @@ import android.widget.ListView;
 import android.widget.TextView;
 
 import com.android.volley.Request;
-import com.android.volley.VolleyError;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -173,7 +172,7 @@ public class ProgramsFragment extends Fragment
     }
 
     @Override
-    public void onProgramsError(VolleyError error) {
+    public void onProgramsError() {
         showError(R.string.load_error);
     }
 

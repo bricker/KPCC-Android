@@ -15,9 +15,6 @@ import com.astuetz.PagerSlidingTabStrip;
 public class AlarmFragment extends Fragment {
     public final static String STACK_TAG = "AlarmFragment";
 
-    public AlarmFragment() {
-    }
-
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);

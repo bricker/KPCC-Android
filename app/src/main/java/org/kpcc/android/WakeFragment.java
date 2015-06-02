@@ -19,14 +19,11 @@ import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 
 public class WakeFragment extends Fragment {
-    public final static String STACK_TAG = "WakeFragment";
-    private Button mSetButton;
     private FrameLayout mSetButtonWrapper;
     private Button mCancelButton;
     private TextView mCurrentAlarmHeader;
     private TextView mCurrentAlarmTime;
     private FrameLayout mTimePickerContainer;
-    private View mView;
     private TimePicker mTimePicker;
 
     public WakeFragment() {
@@ -35,16 +32,16 @@ public class WakeFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        mView = inflater.inflate(R.layout.fragment_wake, container, false);
-        mTimePickerContainer = (FrameLayout)mView.findViewById(R.id.time_picker_fragment_container);
-        mTimePicker = (TimePicker) mView.findViewById(R.id.time_picker);
-        mSetButton = (Button)mView.findViewById(R.id.set_button);
-        mSetButtonWrapper = (FrameLayout)mView.findViewById(R.id.set_button_wrapper);
-        mCancelButton = (Button)mView.findViewById(R.id.cancel_button);
-        mCurrentAlarmHeader = (TextView)mView.findViewById(R.id.current_alarm_header);
-        mCurrentAlarmTime = (TextView)mView.findViewById(R.id.current_alarm_time);
+        View view = inflater.inflate(R.layout.fragment_wake, container, false);
+        mTimePickerContainer = (FrameLayout) view.findViewById(R.id.time_picker_fragment_container);
+        mTimePicker = (TimePicker) view.findViewById(R.id.time_picker);
+        Button setButton = (Button) view.findViewById(R.id.set_button);
+        mSetButtonWrapper = (FrameLayout) view.findViewById(R.id.set_button_wrapper);
+        mCancelButton = (Button) view.findViewById(R.id.cancel_button);
+        mCurrentAlarmHeader = (TextView) view.findViewById(R.id.current_alarm_header);
+        mCurrentAlarmTime = (TextView) view.findViewById(R.id.current_alarm_time);
 
-        mSetButton.setOnClickListener(new View.OnClickListener() {
+        setButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 int hourOfDay = mTimePicker.getCurrentHour();
@@ -78,7 +75,7 @@ public class WakeFragment extends Fragment {
             showTimePickerPrompt();
         }
 
-        return mView;
+        return view;
     }
 
 

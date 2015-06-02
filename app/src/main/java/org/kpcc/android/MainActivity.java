@@ -20,7 +20,6 @@ import uk.co.chrisjenx.calligraphy.CalligraphyContextWrapper;
 public class MainActivity extends ActionBarActivity {
     private static final String DONATE_URL = "https://scprcontribute.publicradio.org/contribute.php";
     private NavigationDrawerFragment mNavigationDrawerFragment;
-    private Bundle mArgs;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

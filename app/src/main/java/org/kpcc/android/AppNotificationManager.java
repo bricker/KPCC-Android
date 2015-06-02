@@ -92,10 +92,6 @@ class AppNotificationManager implements SharedPreferences.OnSharedPreferenceChan
     }
 
     public static class BroadcastReceiver extends ParsePushBroadcastReceiver {
-        @Override
-        protected void onPushReceive(Context context, Intent intent) {
-            super.onPushReceive(context, intent);
-        }
 
         @Override
         protected void onPushOpen(Context context, Intent intent) {
@@ -106,9 +102,5 @@ class AppNotificationManager implements SharedPreferences.OnSharedPreferenceChan
             super.onPushOpen(context, intent);
         }
 
-        @Override
-        protected void onPushDismiss(Context context, Intent intent) {
-            super.onPushDismiss(context, intent);
-        }
     }
 }

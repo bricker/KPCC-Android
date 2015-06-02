@@ -14,16 +14,14 @@ public class DataManager {
     private final static String PREF_TIMER_MILLIS = "timer_date";
 
     public static DataManager instance;
-    private final Context mContext;
     private final SharedPreferences mPrefs;
 
     public static void setupInstance(Context context) {
         instance = new DataManager(context);
     }
 
-    protected DataManager(Context context) {
-        mContext = context;
-        mPrefs = PreferenceManager.getDefaultSharedPreferences(mContext.getApplicationContext());
+    private DataManager(Context context) {
+        mPrefs = PreferenceManager.getDefaultSharedPreferences(context.getApplicationContext());
     }
 
     public String getAdId() {

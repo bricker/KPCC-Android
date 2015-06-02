@@ -21,7 +21,7 @@
 
             <TextView
                 style="@style/text_header_large"
-                android:textSize="50dp"
+                android:textSize="50sp"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:minWidth="100dp"
@@ -30,7 +30,7 @@
 
             <TextView
                 style="@style/text_header_large"
-                android:textSize="50dp"
+                android:textSize="50sp"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:minWidth="100dp"
@@ -40,7 +40,7 @@
 
             <TextView
                 style="@style/text_header_large"
-                android:textSize="50dp"
+                android:textSize="50sp"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:minWidth="100dp"

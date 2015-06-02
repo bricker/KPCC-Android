@@ -18,9 +18,9 @@ public class AppConnectivityManager {
     private final ConnectivityManager mConnectivityManager;
     public boolean streamIsBound = false;
     private final ArrayList<OnStreamBindListener> mStreamBindListeners = new ArrayList<>();
-    public final HashMap<String, NetworkConnectivityListener> networkConnectivityListeners = new HashMap<>();
+    private final HashMap<String, NetworkConnectivityListener> networkConnectivityListeners = new HashMap<>();
     public StreamManager streamManager;
-    private Context mContext;
+    private final Context mContext;
 
     private final ServiceConnection mConnection = new ServiceConnection() {
         @Override

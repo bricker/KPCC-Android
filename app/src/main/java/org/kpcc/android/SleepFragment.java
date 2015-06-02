@@ -17,14 +17,11 @@ import android.widget.TextView;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class SleepFragment extends Fragment {
-    public final static String STACK_TAG = "SleepFragment";
 
-    private Button mSetButton;
     private FrameLayout mSetButtonWrapper;
     private Button mCancelButton;
     private TextView mCurrentTimerHeader;
     private SeekBar mSeekbar;
-    private View mView;
     private ProgressObserver mProgressObserver;
     private TextView mSelectionHr;
     private TextView mSelectionMin;
@@ -40,16 +37,16 @@ public class SleepFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        mView = inflater.inflate(R.layout.fragment_sleep, container, false);
-        mSeekbar = (SeekBar) mView.findViewById(R.id.seek_bar);
-        mSetButton = (Button)mView.findViewById(R.id.set_button);
-        mSetButtonWrapper = (FrameLayout)mView.findViewById(R.id.set_button_wrapper);
-        mCancelButton = (Button)mView.findViewById(R.id.cancel_button);
-        mCurrentTimerHeader = (TextView)mView.findViewById(R.id.current_timer_header);
+        View view = inflater.inflate(R.layout.fragment_sleep, container, false);
+        mSeekbar = (SeekBar) view.findViewById(R.id.seek_bar);
+        Button setButton = (Button) view.findViewById(R.id.set_button);
+        mSetButtonWrapper = (FrameLayout) view.findViewById(R.id.set_button_wrapper);
+        mCancelButton = (Button) view.findViewById(R.id.cancel_button);
+        mCurrentTimerHeader = (TextView) view.findViewById(R.id.current_timer_header);
 
-        mSelectionHr = (TextView)mView.findViewById(R.id.selection_time_hr);
-        mSelectionMin = (TextView)mView.findViewById(R.id.selection_time_min);
-        mSelectionSec = (TextView)mView.findViewById(R.id.selection_time_sec);
+        mSelectionHr = (TextView) view.findViewById(R.id.selection_time_hr);
+        mSelectionMin = (TextView) view.findViewById(R.id.selection_time_min);
+        mSelectionSec = (TextView) view.findViewById(R.id.selection_time_sec);
 
         mSeekbar.setMax(96); // 8 hours in 5m intervals.
 
@@ -95,7 +92,7 @@ public class SleepFragment extends Fragment {
             }
         });
 
-        mSetButton.setOnClickListener(new View.OnClickListener() {
+        setButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 int interval = mSeekbar.getProgress();
@@ -130,7 +127,7 @@ public class SleepFragment extends Fragment {
             showSeekPrompt();
         }
 
-        return mView;
+        return view;
     }
 
 
@@ -187,7 +184,7 @@ public class SleepFragment extends Fragment {
     public static class ProgressObserver implements Runnable {
         private final AtomicBoolean mIsObserving = new AtomicBoolean(false);
         private final Handler mHandler = new Handler();
-        private SleepTimerUpdater mUpdater;
+        private final SleepTimerUpdater mUpdater;
 
         public ProgressObserver(SleepTimerUpdater updater) {
             mUpdater = updater;

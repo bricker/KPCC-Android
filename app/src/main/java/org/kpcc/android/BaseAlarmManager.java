@@ -11,15 +11,15 @@ import java.util.Calendar;
 import java.util.concurrent.TimeUnit;
 
 public class BaseAlarmManager {
-    protected Context mContext;
-    protected AlarmManager mAlarmManager;
+    final Context mContext;
+    final AlarmManager mAlarmManager;
 
     public static void setupInstance(Context context) {
         WakeManager.setupInstance(context);
         SleepManager.setupInstance(context);
     }
 
-    protected BaseAlarmManager(Context context) {
+    BaseAlarmManager(Context context) {
         mContext = context;
         mAlarmManager = (AlarmManager)mContext.getSystemService(Context.ALARM_SERVICE);
     }
@@ -36,7 +36,7 @@ public class BaseAlarmManager {
             instance = new WakeManager(context);
         }
 
-        protected WakeManager(Context context) {
+        WakeManager(Context context) {
             super(context);
         }
 
@@ -115,7 +115,7 @@ public class BaseAlarmManager {
             instance = new SleepManager(context);
         }
 
-        protected SleepManager(Context context) {
+        SleepManager(Context context) {
             super(context);
         }
 
