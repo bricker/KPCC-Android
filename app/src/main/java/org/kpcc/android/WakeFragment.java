@@ -21,6 +21,7 @@ import java.util.concurrent.TimeUnit;
 public class WakeFragment extends Fragment {
     public final static String STACK_TAG = "WakeFragment";
     private Button mSetButton;
+    private FrameLayout mSetButtonWrapper;
     private Button mCancelButton;
     private TextView mCurrentAlarmHeader;
     private TextView mCurrentAlarmTime;
@@ -38,6 +39,7 @@ public class WakeFragment extends Fragment {
         mTimePickerContainer = (FrameLayout)mView.findViewById(R.id.time_picker_fragment_container);
         mTimePicker = (TimePicker) mView.findViewById(R.id.time_picker);
         mSetButton = (Button)mView.findViewById(R.id.set_button);
+        mSetButtonWrapper = (FrameLayout)mView.findViewById(R.id.set_button_wrapper);
         mCancelButton = (Button)mView.findViewById(R.id.cancel_button);
         mCurrentAlarmHeader = (TextView)mView.findViewById(R.id.current_alarm_header);
         mCurrentAlarmTime = (TextView)mView.findViewById(R.id.current_alarm_time);
@@ -81,7 +83,7 @@ public class WakeFragment extends Fragment {
 
 
     private void showCurrentAlarmData() {
-        mSetButton.setVisibility(View.GONE);
+        mSetButtonWrapper.setVisibility(View.GONE);
         mTimePickerContainer.setVisibility(View.GONE);
 
         mCancelButton.setVisibility(View.VISIBLE);
@@ -107,7 +109,7 @@ public class WakeFragment extends Fragment {
     }
 
     private void showTimePickerPrompt() {
-        mSetButton.setVisibility(View.VISIBLE);
+        mSetButtonWrapper.setVisibility(View.VISIBLE);
         mTimePickerContainer.setVisibility(View.VISIBLE);
 
         mCancelButton.setVisibility(View.GONE);

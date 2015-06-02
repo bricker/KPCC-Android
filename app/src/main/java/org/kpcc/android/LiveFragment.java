@@ -9,6 +9,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
@@ -45,6 +46,7 @@ public class LiveFragment extends Fragment {
     private SleepFragment.ProgressObserver mTimerProgressObserver;
     private Thread mTimerProgressThread;
     private TextView mTimerRemaining;
+    private LinearLayout mTimerRemainingWrapper;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -68,6 +70,7 @@ public class LiveFragment extends Fragment {
         mPrerollProgressBar = (ProgressBar) view.findViewById(R.id.progress_bar);
         mPrerollView = view.findViewById(R.id.preroll);
         mTimerRemaining = (TextView)view.findViewById(R.id.timer_remaining);
+        mTimerRemainingWrapper = (LinearLayout)view.findViewById(R.id.timer_remaining_wrapper);
 
         mAudioButtonManager = new AudioButtonManager(view);
 
@@ -130,7 +133,7 @@ public class LiveFragment extends Fragment {
             }
         });
 
-        mTimerRemaining.setOnClickListener(new View.OnClickListener() {
+        mTimerRemainingWrapper.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 Integer index = Navigation.NavigationItem.getIndexByStackTag(AlarmFragment.STACK_TAG);
@@ -219,31 +222,27 @@ public class LiveFragment extends Fragment {
         });
 
         if (BaseAlarmManager.SleepManager.instance.isRunning()) {
-            mTimerRemaining.setVisibility(View.VISIBLE);
+            mTimerRemainingWrapper.setVisibility(View.VISIBLE);
 
             mTimerProgressObserver = new SleepFragment.ProgressObserver(new SleepFragment.SleepTimerUpdater() {
                 @Override
                 public void onTimerUpdate(int hours, int mins, int secs) {
-                    String mStrHr = getActivity().getResources().getString(R.string.timer_hr);
-                    String mStrMin = getActivity().getResources().getString(R.string.timer_min);
-                    String mStrSec = getActivity().getResources().getString(R.string.timer_sec);
-
                     mTimerRemaining.setText(
-                            String.valueOf(hours) + mStrHr + " " +
-                                    String.valueOf(mins) + mStrMin + " " +
-                                    String.valueOf(secs) + mStrSec
+                            String.valueOf(hours) + ":" +
+                                    String.format("%02d", mins) + ":" +
+                                    String.format("%02d", secs)
                     );
                 }
 
                 @Override
                 public void onTimerComplete() {
-                    mTimerRemaining.setVisibility(View.GONE);
+                    mTimerRemainingWrapper.setVisibility(View.GONE);
                 }
             });
 
             startTimerUpdater();
         } else {
-            mTimerRemaining.setVisibility(View.GONE);
+            mTimerRemainingWrapper.setVisibility(View.GONE);
         }
 
         // The callbacks below will get run right away whatever the state is. We want to start it
@@ -390,7 +389,7 @@ public class LiveFragment extends Fragment {
                 mPrerollView.setVisibility(View.VISIBLE);
                 mStatus.setVisibility(View.INVISIBLE);
                 mTitle.setVisibility(View.INVISIBLE);
-                mTimerRemaining.setVisibility(View.GONE);
+                mTimerRemainingWrapper.setVisibility(View.GONE);
 
                 if (prerollData.assetUrl != null) {
                     NetworkImageManager.instance.setPrerollImage(mAdView, prerollData.assetUrl);
@@ -460,7 +459,7 @@ public class LiveFragment extends Fragment {
                 mTitle.setVisibility(View.VISIBLE);
 
                 if (BaseAlarmManager.SleepManager.instance.isRunning()) {
-                    mTimerRemaining.setVisibility(View.VISIBLE);
+                    mTimerRemainingWrapper.setVisibility(View.VISIBLE);
                 }
 
                 // Toggle loading so we get a loading icon while live stream is loading.

@@ -10,6 +10,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.FrameLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
@@ -19,6 +20,7 @@ public class SleepFragment extends Fragment {
     public final static String STACK_TAG = "SleepFragment";
 
     private Button mSetButton;
+    private FrameLayout mSetButtonWrapper;
     private Button mCancelButton;
     private TextView mCurrentTimerHeader;
     private SeekBar mSeekbar;
@@ -41,6 +43,7 @@ public class SleepFragment extends Fragment {
         mView = inflater.inflate(R.layout.fragment_sleep, container, false);
         mSeekbar = (SeekBar) mView.findViewById(R.id.seek_bar);
         mSetButton = (Button)mView.findViewById(R.id.set_button);
+        mSetButtonWrapper = (FrameLayout)mView.findViewById(R.id.set_button_wrapper);
         mCancelButton = (Button)mView.findViewById(R.id.cancel_button);
         mCurrentTimerHeader = (TextView)mView.findViewById(R.id.current_timer_header);
 
@@ -132,7 +135,7 @@ public class SleepFragment extends Fragment {
 
 
     private void showCurrentTimerData() {
-        mSetButton.setVisibility(View.GONE);
+        mSetButtonWrapper.setVisibility(View.GONE);
         mSeekbar.setVisibility(View.GONE);
 
         mCancelButton.setVisibility(View.VISIBLE);
@@ -145,7 +148,7 @@ public class SleepFragment extends Fragment {
     private void showSeekPrompt() {
         stopProgressObserver();
         mSeekbar.setProgress(1);
-        mSetButton.setVisibility(View.VISIBLE);
+        mSetButtonWrapper.setVisibility(View.VISIBLE);
         mSeekbar.setVisibility(View.VISIBLE);
 
         mCancelButton.setVisibility(View.GONE);

@@ -83,7 +83,7 @@ public class MainActivity extends ActionBarActivity {
                     }
             );
 
-            Navigation.instance.addItem(R.string.wake_sleep, R.drawable.menu_feedback, AlarmFragment.STACK_TAG,
+            Navigation.instance.addItem(R.string.wake_sleep, R.drawable.menu_clock, AlarmFragment.STACK_TAG,
                     AnalyticsManager.EVENT_MENU_SELECTION_WAKE_SLEEP,
                     new Navigation.NavigationItemSelectedCallback() {
                         @Override

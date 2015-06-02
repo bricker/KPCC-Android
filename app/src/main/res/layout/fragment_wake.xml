@@ -10,7 +10,7 @@
         android:gravity="center|top"
         android:id="@+id/time_picker_fragment_container"
         android:layout_marginBottom="10dp"
-        android:layout_above="@+id/set_button">
+        android:layout_above="@+id/set_button_wrapper">
         <TimePicker
             android:id="@+id/time_picker"
             android:layout_width="wrap_content"
@@ -18,17 +18,11 @@
             android:layout_gravity="center" />
     </FrameLayout>
 
-    <Button
-        android:id="@+id/set_button"
-        style="@style/active_btn"
-        android:text="@string/set_alarm_time"
-        android:layout_alignParentBottom="true" />
-
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:id="@+id/current_alarm_data"
-        android:layout_above="@+id/cancel_button">
+        android:layout_above="@+id/set_button_wrapper">
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -50,6 +44,24 @@
             android:textSize="40sp"
             android:visibility="gone"/>
     </RelativeLayout>
+
+    <FrameLayout
+        android:id="@+id/set_button_wrapper"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true">
+        <ImageView
+            android:layout_width="25dp"
+            android:layout_height="25dp"
+            android:src="@drawable/ic_clock"
+            android:layout_gravity="center_vertical"
+            android:layout_marginLeft="50dp"/>
+
+        <Button
+            android:id="@+id/set_button"
+            style="@style/active_btn"
+            android:text="@string/set_alarm_time"/>
+    </FrameLayout>
 
     <Button
         android:id="@+id/cancel_button"

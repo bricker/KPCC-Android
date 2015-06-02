@@ -10,7 +10,7 @@
         android:gravity="center"
         android:id="@+id/seekbar_container"
         android:layout_marginBottom="10dp"
-        android:layout_above="@+id/set_button">
+        android:layout_above="@+id/set_button_wrapper">
 
         <RelativeLayout
             android:layout_width="match_parent"
@@ -72,11 +72,23 @@
             android:layout_below="@+id/selection_time" />
     </RelativeLayout>
 
-    <Button
-        android:id="@+id/set_button"
-        style="@style/active_btn"
-        android:text="@string/start_sleep_timer"
-        android:layout_alignParentBottom="true" />
+    <FrameLayout
+        android:id="@+id/set_button_wrapper"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true">
+        <ImageView
+            android:layout_width="25dp"
+            android:layout_height="25dp"
+            android:src="@drawable/ic_stopwatch"
+            android:layout_gravity="center_vertical"
+            android:layout_marginLeft="50dp"/>
+
+        <Button
+            android:id="@+id/set_button"
+            style="@style/active_btn"
+            android:text="@string/start_sleep_timer"/>
+    </FrameLayout>
 
     <Button
         android:id="@+id/cancel_button"
