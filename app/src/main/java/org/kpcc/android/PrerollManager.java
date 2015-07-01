@@ -21,7 +21,8 @@ public class PrerollManager {
     public final static long PREROLL_THRESHOLD = 1000 * 60 * 60 * 4; // 4 hours
     public final static long INSTALL_GRACE = 1000 * 60 * 10; // 10 minutes
     public final static PrerollManager instance = new PrerollManager();
-    private final static String TRITON_BASE = "http://cmod.live.streamtheworld.com/ondemand/ars?type=preroll&stid=83153&lsid=%s:%s";
+    private final static String PREROLL_BASE = "http://adserver.adtechus.com/?adrawdata/3.0/5511.1/3590534/0/0/header=yes;cookie=no;adct=text/xml;guid=%s:%s";
+
     public static long LAST_PREROLL_PLAY = 0;
 
     private PrerollCallbackListener mCallback;
@@ -160,7 +161,7 @@ public class PrerollManager {
                     type = "gaid";
                 }
 
-                String url = String.format(TRITON_BASE, type, id);
+                String url = String.format(PREROLL_BASE, type, id);
 
                 HttpRequest.XmlRequest.get(url, new Response.Listener<String>() {
                     @Override
