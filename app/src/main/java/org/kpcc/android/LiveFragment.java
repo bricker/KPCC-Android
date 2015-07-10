@@ -30,6 +30,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class LiveFragment extends Fragment {
     public static final String STACK_TAG = "LiveFragment";
     private static long PLAY_START = 0;
+    private static final String LIVESTREAM_LISTENER_KEY = "livestream";
 
     private TextView mTitle;
     private TextView mStatus;
@@ -85,6 +86,34 @@ public class LiveFragment extends Fragment {
                     return;
                 }
 
+                // Register a listener to start/stop the stream immediately based on connectivity status.
+                // We had a process in place to handle this lazily but there was a certain device which
+                // wasn't releasing the stream, and ended up creating a new stream every time a network
+                // was available and simultaneously streaming dozens (or more) streams at once. I think.
+                // It's hard to tell for sure but this is what I guess was happening.
+                // So, we're being more proactive about managing streams on network connectivity changes.
+                AppConnectivityManager.instance.addOnNetworkConnectivityListener(LIVESTREAM_LISTENER_KEY, new AppConnectivityManager.NetworkConnectivityListener() {
+                    @Override
+                    public void onConnect() {
+                        StreamManager.LiveStream currentLivePlayer = AppConnectivityManager.instance.streamManager.currentLivePlayer;
+
+                        if (currentLivePlayer != null) {
+                            currentLivePlayer.stop();
+                            currentLivePlayer.reset();
+                            currentLivePlayer.prepareAndStart();
+                        }
+                    }
+
+                    @Override
+                    public void onDisconnect() {
+                        StreamManager.LiveStream currentLivePlayer = AppConnectivityManager.instance.streamManager.currentLivePlayer;
+
+                        if (currentLivePlayer != null) {
+                            currentLivePlayer.stop();
+                        }
+                    }
+                }, false);
+
                 if (AppConnectivityManager.instance.streamManager.currentPrerollPlayer != null) {
                     // Preroll was Paused - start it again.
                     AppConnectivityManager.instance.streamManager.currentPrerollPlayer.start();
@@ -120,6 +149,8 @@ public class LiveFragment extends Fragment {
         mAudioButtonManager.getStopButton().setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                AppConnectivityManager.instance.removeOnNetworkConnectivityListener(LIVESTREAM_LISTENER_KEY);
+
                 if (!AppConnectivityManager.instance.streamIsBound) {
                     return;
                 }
