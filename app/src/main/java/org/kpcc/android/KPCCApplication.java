@@ -4,9 +4,11 @@ import android.app.Application;
 import android.content.pm.PackageManager;
 import android.preference.PreferenceManager;
 
+import com.crashlytics.android.Crashlytics;
 import com.parse.Parse;
 import com.parse.ParseInstallation;
 
+import io.fabric.sdk.android.Fabric;
 import uk.co.chrisjenx.calligraphy.CalligraphyConfig;
 
 public class KPCCApplication extends Application {
@@ -38,6 +40,7 @@ public class KPCCApplication extends Application {
         AppNotificationManager.setupInstance(this);
 
         super.onCreate();
+        Fabric.with(this, new Crashlytics());
 
         CalligraphyConfig.initDefault(new CalligraphyConfig.Builder()
                         .setDefaultFontPath("fonts/FreigSanProLig.otf")
