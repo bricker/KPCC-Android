@@ -117,11 +117,7 @@ public class EpisodesFragment extends Fragment
     @Override
     public void onPause() {
         super.onPause();
-
-        if (mRequest != null) {
-            mRequest.cancel();
-        }
-
+        if (mRequest != null) { mRequest.cancel(); }
         AppConnectivityManager.instance.removeOnNetworkConnectivityListener(EpisodesFragment.STACK_TAG);
     }
 

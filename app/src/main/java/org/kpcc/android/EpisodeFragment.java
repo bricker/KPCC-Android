@@ -36,7 +36,7 @@ public class EpisodeFragment extends Fragment {
     private AudioButtonManager mAudioButtonManager;
     // Unrecoverable error. Just show an error message if this is true.
     private boolean mDidError = false;
-
+    private ProgressManager mProgressManager;
 
     public static EpisodeFragment newInstance(String programSlug, String episodeJson) {
         Bundle args = new Bundle();
@@ -163,7 +163,7 @@ public class EpisodeFragment extends Fragment {
         mAudioButtonManager.getPlayButton().setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mPlayer.play();
+                mPlayer.prepareAndStart();
             }
         });
 
@@ -226,9 +226,10 @@ public class EpisodeFragment extends Fragment {
 
             // Audio should be released when next one starts, based on Audio Focus rules.
         } else {
-            mPlayer = new StreamManager.EpisodeStream(episode.audio.url, program.slug,
-                    episode.audio.durationSeconds, activity);
+            mPlayer = new StreamManager.EpisodeStream(episode.audio.url,
+                    program.slug, episode.audio.durationSeconds, activity);
         }
+
 
         mPlayer.setOnAudioEventListener(new StreamManager.AudioEventListener() {
             @Override
@@ -240,18 +241,23 @@ public class EpisodeFragment extends Fragment {
             public void onPlay() {
                 mSeekBar.setEnabled(true);
                 mAudioButtonManager.togglePlayingForPause();
+
+                if (mProgressManager != null) { mProgressManager.start(); }
                 logEpisodeStreamEvent(AnalyticsManager.EVENT_ON_DEMAND_BEGAN);
             }
 
             @Override
             public void onPause() {
                 mAudioButtonManager.togglePaused();
+                if (mProgressManager != null) { mProgressManager.release(); }
+
                 logEpisodeStreamEvent(AnalyticsManager.EVENT_ON_DEMAND_PAUSED);
             }
 
             @Override
             public void onStop() {
                 mAudioButtonManager.toggleStopped();
+                if (mProgressManager != null) { mProgressManager.release(); }
             }
 
             @Override
@@ -259,6 +265,8 @@ public class EpisodeFragment extends Fragment {
                 if (!AppConnectivityManager.instance.streamIsBound || !isVisible()) {
                     return;
                 }
+
+                if (mProgressManager != null) { mProgressManager.release(); }
 
                 FragmentManager fm = getActivity().getSupportFragmentManager();
                 EpisodesPagerFragment fragment = (EpisodesPagerFragment) fm.findFragmentByTag(EpisodesPagerFragment.STACK_TAG);
@@ -294,9 +302,13 @@ public class EpisodeFragment extends Fragment {
             }
         });
 
+
         if (!pagerVisible.get()) {
             return;
         }
+
+        mProgressManager = new ProgressManager(new ProgressManager.ProgressBarRunner(mPlayer), 100);
+        if (mPlayer.isPlaying()) { mProgressManager.start(); }
 
         // No audio will play if:
         // 1. Stream isn't ready
@@ -321,7 +333,14 @@ public class EpisodeFragment extends Fragment {
     public void onPause() {
         super.onPause();
         pagerVisible.set(false);
-        AppConnectivityManager.instance.removeOnNetworkConnectivityListener(episode.publicUrl);
+
+        // If we caught an error in the episode page and episode URL was never set, then an error
+        // will be raised when the user tries to back out.
+        if (episode.publicUrl != null) {
+            AppConnectivityManager.instance.removeOnNetworkConnectivityListener(episode.publicUrl);
+        }
+
+        if (mProgressManager != null) { mProgressManager.release(); }
     }
 
     public boolean episodeWasSkipped() {
@@ -342,7 +361,7 @@ public class EpisodeFragment extends Fragment {
             return 0;
         }
 
-        return (int) mPlayer.getCurrentPosition() / 1000;
+        return mPlayer.getCurrentPosition() / 1000;
     }
 
     private boolean streamNotAvailable() {
