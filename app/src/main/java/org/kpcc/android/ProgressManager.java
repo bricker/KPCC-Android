@@ -86,7 +86,7 @@ public class ProgressManager {
     }
 
     public static class ProgressBarRunner implements Runnable {
-        private StreamManager.BaseStream stream;
+        private final StreamManager.BaseStream stream;
 
         public ProgressBarRunner(StreamManager.BaseStream stream) {
             this.stream = stream;

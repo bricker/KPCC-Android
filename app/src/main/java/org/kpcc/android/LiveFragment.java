@@ -31,7 +31,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class LiveFragment extends Fragment {
 
     public static final String STACK_TAG = "LiveFragment";
-    public static final String TAG = STACK_TAG;
     private static long PLAY_START = 0;
     private static final String LIVESTREAM_LISTENER_KEY = "livestream";
 
@@ -51,8 +50,8 @@ public class LiveFragment extends Fragment {
     private Request mRequest;
     private TextView mTimerRemaining;
     private LinearLayout mTimerRemainingWrapper;
-    private Button mRewind;
-    private AtomicBoolean didInitAudio = new AtomicBoolean(false);
+//    private Button mRewind;
+    private final AtomicBoolean didInitAudio = new AtomicBoolean(false);
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -113,8 +112,6 @@ public class LiveFragment extends Fragment {
         mAudioButtonManager.getPlayButton().setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                MainActivity activity = (MainActivity) getActivity();
-
                 if (!AppConnectivityManager.instance.streamIsBound || !AppConnectivityManager.instance.isConnectedToNetwork()) {
                     // The Error message should already be showing for connectivity problems.
                     // Just do nothing.

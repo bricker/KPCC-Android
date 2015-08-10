@@ -99,20 +99,6 @@ public class AudioPlayer {
         player.setPlayWhenReady(playWhenReady);
     }
 
-    public int getPlaybackState() {
-        if (rendererBuildingState == RENDERER_BUILDING_STATE_BUILDING) {
-            return ExoPlayer.STATE_PREPARING;
-        }
-        int playerState = player.getPlaybackState();
-        if (rendererBuildingState == RENDERER_BUILDING_STATE_BUILT
-                && rendererBuildingState == RENDERER_BUILDING_STATE_IDLE) {
-            // This is an edge case where the renderers are built, but are still being passed to the
-            // player's playback thread.
-            return ExoPlayer.STATE_PREPARING;
-        }
-        return playerState;
-    }
-
     public void addListener(ExoPlayer.Listener listener) {
         player.addListener(listener);
     }
@@ -156,22 +142,6 @@ public class AudioPlayer {
         }
         rendererBuildingState = RENDERER_BUILDING_STATE_IDLE;
         player.release();
-    }
-
-    public long getDuration() {
-        return player.getDuration();
-    }
-
-    public int getBufferedPercentage() {
-        return player.getBufferedPercentage();
-    }
-
-    public boolean getPlayWhenReady() {
-        return player.getPlayWhenReady();
-    }
-
-    /* package */ Looper getPlaybackLooper() {
-        return player.getPlaybackLooper();
     }
 
     /* package */ Handler getMainHandler() {

@@ -363,7 +363,7 @@ public class StreamManager extends Service {
                         BuildConfig.VERSION_NAME + "-" +
                         String.valueOf(BuildConfig.VERSION_CODE);
 
-        public PrerollCompleteCallback prerollCompleteCallback;
+        public final PrerollCompleteCallback prerollCompleteCallback;
 
         public LiveStream(Context context) {
             super(context);
@@ -402,7 +402,7 @@ public class StreamManager extends Service {
     }
 
     public static class PrerollStream extends BaseStream {
-        Context context;
+        final Context context;
         LiveStream.PrerollCompleteCallback prerollCompleteCallback;
 
         public PrerollStream(Context context) {
@@ -501,9 +501,9 @@ public class StreamManager extends Service {
 
     // This class is responsible for orchestrating the interaction between livestream and preroll.
     public static class LiveStreamBundle {
-        public LiveStream liveStream;
-        public PrerollStream prerollStream;
-        private Context context;
+        public final LiveStream liveStream;
+        public final PrerollStream prerollStream;
+        private final Context context;
 
         public LiveStreamBundle(Context context) {
             this.context = context;

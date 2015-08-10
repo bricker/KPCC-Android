@@ -258,6 +258,7 @@ public class FeedbackFragment extends Fragment {
 
     private boolean validateInput() {
         // Better safe than crashy.
+        //noinspection SimplifiableIfStatement
         if (mCurrentName == null || mCurrentComments == null || mCurrentEmail == null) {
             return false;
         }
