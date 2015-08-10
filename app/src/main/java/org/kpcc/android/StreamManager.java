@@ -103,6 +103,7 @@ public class StreamManager extends Service {
         public AudioEventListener audioEventListener;
         final AtomicBoolean mDidPauseForAudioLoss = new AtomicBoolean(false);
         boolean isPaused = false;
+        boolean didStopOnConnectivityLoss = false;
 
         public BaseStream(Context context) {
             mContext = context;
@@ -132,9 +133,6 @@ public class StreamManager extends Service {
 
         public void setOnAudioEventListener(AudioEventListener eventListener) {
             audioEventListener = eventListener;
-        }
-
-        public void onPrerollComplete() {
         }
 
         public void start() {
@@ -517,6 +515,12 @@ public class StreamManager extends Service {
             this.context = context;
             this.liveStream = liveStream;
             this.prerollStream = new PrerollStream(context);
+        }
+
+        public LiveStreamBundle(Context context, LiveStream liveStream, PrerollStream prerollStream) {
+            this.context = context;
+            this.liveStream = liveStream;
+            this.prerollStream = prerollStream;
         }
 
         public void playWithPrerollAttempt() {
