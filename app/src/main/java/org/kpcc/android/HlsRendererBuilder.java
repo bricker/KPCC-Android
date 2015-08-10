@@ -70,5 +70,4 @@ public class HlsRendererBuilder implements AudioPlayer.RendererBuilder, Manifest
         renderers[AudioPlayer.TYPE_AUDIO] = audioRenderer;
         callback.onRenderers(renderers, bandwidthMeter);
     }
-
 }
