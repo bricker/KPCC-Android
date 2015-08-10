@@ -21,11 +21,11 @@
         android:layout_gravity="bottom"
         android:orientation="vertical">
 
-        <Button
-            android:id="@+id/rewind"
-            android:layout_width="match_parent"
-            android:layout_height="50dp"
-            android:text="Back 30 seconds"/>
+        <!--<Button-->
+            <!--android:id="@+id/rewind"-->
+            <!--android:layout_width="match_parent"-->
+            <!--android:layout_height="50dp"-->
+            <!--android:text="Back 30 seconds"/>-->
 
         <LinearLayout
             android:id="@+id/timer_remaining_wrapper"

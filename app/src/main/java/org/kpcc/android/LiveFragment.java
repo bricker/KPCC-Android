@@ -74,7 +74,7 @@ public class LiveFragment extends Fragment {
         mPrerollView = view.findViewById(R.id.preroll);
         mTimerRemaining = (TextView)view.findViewById(R.id.timer_remaining);
         mTimerRemainingWrapper = (LinearLayout)view.findViewById(R.id.timer_remaining_wrapper);
-        mRewind = (Button)view.findViewById(R.id.rewind);
+//        mRewind = (Button)view.findViewById(R.id.rewind);
 
         mAudioButtonManager = new AudioButtonManager(view);
 
@@ -163,15 +163,15 @@ public class LiveFragment extends Fragment {
             }
         });
 
-        mRewind.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (streamBundle != null) {
-                    int currentPosition = streamBundle.liveStream.getCurrentPosition();
-                    streamBundle.liveStream.seekTo(currentPosition - 1000*30);
-                }
-            }
-        });
+//        mRewind.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//                if (streamBundle != null) {
+//                    int currentPosition = streamBundle.liveStream.getCurrentPosition();
+//                    streamBundle.liveStream.seekTo(currentPosition - 1000*30);
+//                }
+//            }
+//        });
 
         return view;
     }
