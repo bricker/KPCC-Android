@@ -1,15 +1,14 @@
 package org.kpcc.android;
 
+import android.os.Handler;
+import android.os.Looper;
+
 import com.google.android.exoplayer.ExoPlaybackException;
 import com.google.android.exoplayer.ExoPlayer;
 import com.google.android.exoplayer.MediaCodecAudioTrackRenderer;
 import com.google.android.exoplayer.TrackRenderer;
-import com.google.android.exoplayer.chunk.MultiTrackChunkSource;
 import com.google.android.exoplayer.upstream.BandwidthMeter;
 import com.google.android.exoplayer.util.PlayerControl;
-
-import android.os.Handler;
-import android.os.Looper;
 
 /**
  * A wrapper around {@link ExoPlayer} that provides a higher level interface. It can be prepared
@@ -99,20 +98,6 @@ public class AudioPlayer {
         player.setPlayWhenReady(playWhenReady);
     }
 
-    public int getPlaybackState() {
-        if (rendererBuildingState == RENDERER_BUILDING_STATE_BUILDING) {
-            return ExoPlayer.STATE_PREPARING;
-        }
-        int playerState = player.getPlaybackState();
-        if (rendererBuildingState == RENDERER_BUILDING_STATE_BUILT
-                && rendererBuildingState == RENDERER_BUILDING_STATE_IDLE) {
-            // This is an edge case where the renderers are built, but are still being passed to the
-            // player's playback thread.
-            return ExoPlayer.STATE_PREPARING;
-        }
-        return playerState;
-    }
-
     public void addListener(ExoPlayer.Listener listener) {
         player.addListener(listener);
     }
@@ -156,22 +141,6 @@ public class AudioPlayer {
         }
         rendererBuildingState = RENDERER_BUILDING_STATE_IDLE;
         player.release();
-    }
-
-    public long getDuration() {
-        return player.getDuration();
-    }
-
-    public int getBufferedPercentage() {
-        return player.getBufferedPercentage();
-    }
-
-    public boolean getPlayWhenReady() {
-        return player.getPlayWhenReady();
-    }
-
-    /* package */ Looper getPlaybackLooper() {
-        return player.getPlaybackLooper();
     }
 
     /* package */ Handler getMainHandler() {

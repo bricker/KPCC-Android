@@ -16,3 +16,5 @@ parse.clientKey=your-parse-clientKey
 desk.email=your-desk-email
 desk.password=your-desk-password
 ```
+
+For Fabric integration, you'll also need `app/fabric.properties`, as described here: https://dev.twitter.com/fabric/android/integrating

@@ -23,15 +23,6 @@
         android:contentDescription="@string/pause_audio"
         android:background="@drawable/btn_state_audio_pause"/>
 
-    <ImageButton
-        android:id="@+id/stop_button"
-        android:layout_width="@dimen/audio_button"
-        android:layout_height="@dimen/audio_button"
-        android:text="@string/stop_audio"
-        android:visibility="gone"
-        android:contentDescription="@string/stop_audio"
-        android:background="@drawable/btn_state_audio_stop"/>
-
     <ProgressBar
         android:id="@id/progress_circular"
         style="@style/Widget.AppCompat.ProgressBar"

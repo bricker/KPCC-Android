@@ -1,5 +1,6 @@
 package org.kpcc.android;
 
+import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
@@ -25,12 +26,12 @@ import org.kpcc.api.ScheduleOccurrence;
 
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 
 public class LiveFragment extends Fragment {
 
     public static final String STACK_TAG = "LiveFragment";
-    public static final String TAG = STACK_TAG;
     private static long PLAY_START = 0;
     private static final String LIVESTREAM_LISTENER_KEY = "livestream";
 
@@ -51,6 +52,7 @@ public class LiveFragment extends Fragment {
     private TextView mTimerRemaining;
     private LinearLayout mTimerRemainingWrapper;
     private Button mRewind;
+    private final AtomicBoolean didInitAudio = new AtomicBoolean(false);
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -90,9 +92,10 @@ public class LiveFragment extends Fragment {
             public void onConnect() {
                 StreamManager.LiveStream currentLivePlayer = AppConnectivityManager.instance.streamManager.currentLivePlayer;
 
-                if (currentLivePlayer != null) {
+                if (currentLivePlayer != null && currentLivePlayer.didStopOnConnectivityLoss) {
                     currentLivePlayer.stop();
                     currentLivePlayer.prepareAndStart();
+                    currentLivePlayer.didStopOnConnectivityLoss = false;
                 }
             }
 
@@ -101,6 +104,7 @@ public class LiveFragment extends Fragment {
                 StreamManager.LiveStream currentLivePlayer = AppConnectivityManager.instance.streamManager.currentLivePlayer;
 
                 if (currentLivePlayer != null) {
+                    currentLivePlayer.didStopOnConnectivityLoss = true;
                     currentLivePlayer.stop();
                 }
             }
@@ -109,24 +113,21 @@ public class LiveFragment extends Fragment {
         mAudioButtonManager.getPlayButton().setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                MainActivity activity = (MainActivity) getActivity();
-
                 if (!AppConnectivityManager.instance.streamIsBound || !AppConnectivityManager.instance.isConnectedToNetwork()) {
                     // The Error message should already be showing for connectivity problems.
                     // Just do nothing.
                     return;
                 }
 
-                if (AppConnectivityManager.instance.streamManager.currentPrerollPlayer != null) {
-                    // Preroll was Paused; start it again.
-                    AppConnectivityManager.instance.streamManager.currentPrerollPlayer.start();
-                } else if (AppConnectivityManager.instance.streamManager.currentLivePlayer != null) {
-                    // Live stream was paused; start it again.
-                    AppConnectivityManager.instance.streamManager.currentLivePlayer.start();
-                } else {
-                    streamBundle = new StreamManager.LiveStreamBundle(activity);
-                    setupAudioStateHandlers();
+                initAudio();
 
+                if (streamBundle.prerollStream.isPaused) {
+                    // Preroll was Paused; start it again.
+                    streamBundle.prerollStream.start();
+                } else if (streamBundle.liveStream.isPaused) {
+                    // Live stream was paused; start it again.
+                    streamBundle.liveStream.start();
+                } else {
                     // Preroll will be handled normally
                     streamBundle.playWithPrerollAttempt();
                     PLAY_START = System.currentTimeMillis();
@@ -186,9 +187,9 @@ public class LiveFragment extends Fragment {
         AppConnectivityManager.instance.addOnStreamBindListener(new AppConnectivityManager.OnStreamBindListener() {
             @Override
             public void onBind() {
-                initAudioButtonState();
+                initAudio();
 
-                // This must come after calling initAudioButtonState(), otherwise the play button could be
+                // This must come after calling initAudio(), otherwise the play button could be
                 // clicked before we have the chance to hide it if necessary.
                 if (DataManager.instance.getPlayNow()) {
                     DataManager.instance.setPlayNow(false);
@@ -284,18 +285,14 @@ public class LiveFragment extends Fragment {
             public void onConnect() {
                 // We want this here so the schedule will get updated immediately when connectivity
                 // is back, so we'll just restart it.
-                if (mScheduleUpdater != null) {
-                    mScheduleUpdater.start();
-                }
+                if (mScheduleUpdater != null) { mScheduleUpdater.start(); }
 
                 mAudioButtonManager.hideError();
             }
 
             @Override
             public void onDisconnect() {
-                if (mScheduleUpdater != null) {
-                    mScheduleUpdater.release();
-                }
+                if (mScheduleUpdater != null) { mScheduleUpdater.release(); }
                 setDefaultValues();
                 mAudioButtonManager.showError(R.string.network_error);
             }
@@ -428,6 +425,10 @@ public class LiveFragment extends Fragment {
                     }
                 }
 
+                // This gets called when the preroll player is released, which happens
+                // when it's completed. Don't toggle any button state here because we're going to
+                // immediately switch to livestream, which will handle button state updates.
+
                 if (mPrerollProgressManager != null) { mPrerollProgressManager.release(); }
             }
 
@@ -489,19 +490,42 @@ public class LiveFragment extends Fragment {
         AnalyticsManager.instance.logEvent(key, params);
     }
 
-    private void initAudioButtonState() {
-        if (AppConnectivityManager.instance.streamIsBound) {
-            StreamManager.LiveStream currentPlayer = AppConnectivityManager.instance.streamManager.currentLivePlayer;
-            if (currentPlayer != null && currentPlayer.isPlaying()) {
-                streamBundle = new StreamManager.LiveStreamBundle(getActivity(), currentPlayer);
-                setupAudioStateHandlers();
-                mAudioButtonManager.togglePlayingForStop();
-                return;
-            }
+    private void initAudio() {
+        if (didInitAudio.get()) {
+            return;
         }
 
-        // Default State.
-        // We put this here to reset any previous error message.
-        mAudioButtonManager.toggleStopped();
+        if (AppConnectivityManager.instance.streamIsBound) {
+            StreamManager.LiveStream currentPlayer = AppConnectivityManager.instance.streamManager.currentLivePlayer;
+            StreamManager.PrerollStream currentPreroll = AppConnectivityManager.instance.streamManager.currentPrerollPlayer;
+            Context context = getActivity();
+
+            if (currentPlayer != null) {
+                if (currentPreroll != null) {
+                    streamBundle = new StreamManager.LiveStreamBundle(context, currentPlayer, currentPreroll);
+                } else {
+                    streamBundle = new StreamManager.LiveStreamBundle(context, currentPlayer);
+                }
+            } else {
+                // Nothing is playing, build a brand new bundle.
+                streamBundle = new StreamManager.LiveStreamBundle(context);
+            }
+
+            setupAudioStateHandlers();
+
+            if (currentPlayer != null && currentPlayer.isPlaying()) {
+                mAudioButtonManager.togglePlayingForPause();
+            } else if (currentPreroll != null && currentPreroll.isPlaying()) {
+                mAudioButtonManager.togglePlayingForPause();
+            } else {
+                // Default State.
+                // We put this here to reset any previous error message.
+                mAudioButtonManager.toggleStopped();
+            }
+
+            didInitAudio.set(true);
+        } else {
+            mAudioButtonManager.toggleStopped();
+        }
     }
 }
