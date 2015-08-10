@@ -175,7 +175,7 @@ public class StreamManager extends Service {
             audioPlayer.release();
         }
 
-        public void seekTo(int pos) {
+        public void seekTo(long pos) {
             try {
                 if (isPlaying()) {
                     audioPlayer.seekTo(pos);
@@ -361,7 +361,7 @@ public class StreamManager extends Service {
         // Using Uri.parse because there seems to be a bug in Lollipop that causes
         // the stream to take 20 seconds to start playing. Uri.parse is a workaround.
         public final static String HLS_URL =
-                "http://streammachine-hls001.scprdev.org/sg/kpcc-aac.m3u8?ua=KPCCAndroid-" +
+                    "http://streammachine-hls001.scprdev.org/sg/kpcc-aac.m3u8?ua=KPCCAndroid-" +
                         BuildConfig.VERSION_NAME + "-" +
                         String.valueOf(BuildConfig.VERSION_CODE);
 
@@ -460,7 +460,7 @@ public class StreamManager extends Service {
         }
 
         @Override
-        public void seekTo(int pos) {
+        public void seekTo(long pos) {
             // Can't seek preroll.
         }
 

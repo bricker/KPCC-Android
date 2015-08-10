@@ -39,9 +39,8 @@ public class AudioPlayer {
          * Invoked with the results from a {@link RendererBuilder}.
          * @param renderers Renderers indexed by {@link AudioPlayer} TYPE_* constants. An individual
          *     element may be null if there do not exist tracks of the corresponding type.
-         * @param bandwidthMeter Provides an estimate of the currently available bandwidth. May be null.
          */
-        void onRenderers(TrackRenderer[] renderers, BandwidthMeter bandwidthMeter);
+        void onRenderers(TrackRenderer[] renderers);
         /**
          * Invoked if a {@link RendererBuilder} encounters an error.
          *
@@ -139,7 +138,7 @@ public class AudioPlayer {
     }
 
     public void seekTo(long positionMs) {
-        playerControl.seekTo((int)positionMs);
+        player.seekTo(positionMs);
     }
 
     public void pause() {
@@ -180,7 +179,6 @@ public class AudioPlayer {
     }
 
     private class InternalRendererBuilderCallback implements RendererBuilderCallback {
-
         private boolean canceled;
 
         public void cancel() {
@@ -188,7 +186,7 @@ public class AudioPlayer {
         }
 
         @Override
-        public void onRenderers(TrackRenderer[] renderers, BandwidthMeter bandwidthMeter) {
+        public void onRenderers(TrackRenderer[] renderers) {
             if (!canceled) {
                 AudioPlayer.this.onRenderers(renderers);
             }

@@ -68,6 +68,6 @@ public class HlsRendererBuilder implements AudioPlayer.RendererBuilder, Manifest
 
         TrackRenderer[] renderers = new TrackRenderer[1];
         renderers[AudioPlayer.TYPE_AUDIO] = audioRenderer;
-        callback.onRenderers(renderers, bandwidthMeter);
+        callback.onRenderers(renderers);
     }
 }
