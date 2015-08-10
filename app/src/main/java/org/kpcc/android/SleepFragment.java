@@ -3,8 +3,6 @@ package org.kpcc.android;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.SystemClock;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -13,8 +11,6 @@ import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
-
-import java.util.concurrent.atomic.AtomicBoolean;
 
 public class SleepFragment extends Fragment {
 

@@ -1,5 +1,6 @@
 package org.kpcc.android;
 
+import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
@@ -24,6 +25,7 @@ import org.kpcc.api.ScheduleOccurrence;
 
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 
 public class LiveFragment extends Fragment {

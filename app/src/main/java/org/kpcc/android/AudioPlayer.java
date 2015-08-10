@@ -1,15 +1,14 @@
 package org.kpcc.android;
 
+import android.os.Handler;
+import android.os.Looper;
+
 import com.google.android.exoplayer.ExoPlaybackException;
 import com.google.android.exoplayer.ExoPlayer;
 import com.google.android.exoplayer.MediaCodecAudioTrackRenderer;
 import com.google.android.exoplayer.TrackRenderer;
-import com.google.android.exoplayer.chunk.MultiTrackChunkSource;
 import com.google.android.exoplayer.upstream.BandwidthMeter;
 import com.google.android.exoplayer.util.PlayerControl;
-
-import android.os.Handler;
-import android.os.Looper;
 
 /**
  * A wrapper around {@link ExoPlayer} that provides a higher level interface. It can be prepared

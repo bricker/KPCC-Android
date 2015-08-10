@@ -1,5 +1,8 @@
 package org.kpcc.android;
 
+import android.content.Context;
+import android.net.Uri;
+
 import com.google.android.exoplayer.MediaCodecAudioTrackRenderer;
 import com.google.android.exoplayer.TrackRenderer;
 import com.google.android.exoplayer.extractor.Extractor;
@@ -9,9 +12,6 @@ import com.google.android.exoplayer.upstream.DataSource;
 import com.google.android.exoplayer.upstream.DefaultAllocator;
 import com.google.android.exoplayer.upstream.DefaultBandwidthMeter;
 import com.google.android.exoplayer.upstream.DefaultUriDataSource;
-
-import android.content.Context;
-import android.net.Uri;
 
 public class ExtractorRendererBuilder implements AudioPlayer.RendererBuilder {
 
