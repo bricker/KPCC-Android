@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<inset xmlns:android="http://schemas.android.com/apk/res/android"
-       android:drawable="@drawable/ic_audio_btn_stop_normal"
-       android:insetTop="@dimen/button_press_inset"
-       android:insetRight="@dimen/button_press_inset"
-       android:insetBottom="@dimen/button_press_inset"
-       android:insetLeft="@dimen/button_press_inset"/>
