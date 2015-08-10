@@ -83,9 +83,9 @@ public class ProgramsManager {
     }
 
 
-    public abstract static interface OnProgramsResponseListener {
-        abstract void onProgramsResponse();
-        abstract void onProgramsError();
+    public interface OnProgramsResponseListener {
+        void onProgramsResponse();
+        void onProgramsError();
     }
 
 }

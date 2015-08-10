@@ -274,15 +274,15 @@ public class FeedbackManager {
 
     enum Type {BUG, FEEDBACK, SUGGESTION}
 
-    private static interface CustomerResponseCallback {
-        public void onSuccess(String customerId);
+    private interface CustomerResponseCallback {
+        void onSuccess(String customerId);
 
-        public void onFailure();
+        void onFailure();
     }
 
-    public static interface FeedbackCallback {
-        public void onSuccess();
+    public interface FeedbackCallback {
+        void onSuccess();
 
-        public void onFailure();
+        void onFailure();
     }
 }
