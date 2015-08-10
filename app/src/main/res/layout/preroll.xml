@@ -13,10 +13,11 @@
 
     <ProgressBar
         android:id="@+id/progress_bar"
-        android:layout_width="match_parent"
+        android:layout_width="300dp"
+        android:layout_height="2dp"
+        android:layout_centerHorizontal="true"
         android:layout_marginLeft="20dp"
         android:layout_marginRight="20dp"
-        android:layout_height="2dp"
         android:layout_below="@id/preroll_ad"
         android:layout_marginBottom="10dp"
         style="@style/AppTheme.ProgressBarHorizontal" />

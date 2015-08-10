@@ -43,3 +43,8 @@
 -dontwarn com.parse.FacebookAuthenticationProvider$2
 -dontwarn com.parse.FacebookAuthenticationProvider$1
 -dontwarn com.parse.FacebookAuthenticationProvider$2$1
+
+-assumenosideeffects class android.util.Log {
+    public static *** d(...);
+    public static *** v(...);
+}

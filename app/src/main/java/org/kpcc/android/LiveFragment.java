@@ -3,11 +3,11 @@ package org.kpcc.android;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.Handler;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
@@ -24,11 +24,12 @@ import org.kpcc.api.ScheduleOccurrence;
 
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 
 public class LiveFragment extends Fragment {
+
     public static final String STACK_TAG = "LiveFragment";
+    public static final String TAG = STACK_TAG;
     private static long PLAY_START = 0;
     private static final String LIVESTREAM_LISTENER_KEY = "livestream";
 
@@ -36,18 +37,19 @@ public class LiveFragment extends Fragment {
     private TextView mStatus;
     private NetworkImageView mAdView;
     private String mScheduleTitle;
-    private StreamManager.LiveStream mPlayer;
+    private StreamManager.LiveStreamBundle streamBundle;
     private AudioButtonManager mAudioButtonManager;
     private ProgressBar mPrerollProgressBar;
+    private ProgressManager mProgressManager;
+    private ProgressManager mPrerollProgressManager;
     private View mPrerollView;
-    private ScheduleUpdater mScheduleUpdater;
-    private Thread mUpdaterThread;
+    private ProgressManager mScheduleUpdater;
+    private ProgressManager mTimerProgressObserver;
     private ImageView mBackground;
     private Request mRequest;
-    private SleepFragment.ProgressObserver mTimerProgressObserver;
-    private Thread mTimerProgressThread;
     private TextView mTimerRemaining;
     private LinearLayout mTimerRemainingWrapper;
+    private Button mRewind;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -72,8 +74,36 @@ public class LiveFragment extends Fragment {
         mPrerollView = view.findViewById(R.id.preroll);
         mTimerRemaining = (TextView)view.findViewById(R.id.timer_remaining);
         mTimerRemainingWrapper = (LinearLayout)view.findViewById(R.id.timer_remaining_wrapper);
+        mRewind = (Button)view.findViewById(R.id.rewind);
 
         mAudioButtonManager = new AudioButtonManager(view);
+
+        // Register a listener to start/stop the stream immediately based on connectivity status.
+        // We had a process in place to handle this lazily but there was a certain device which
+        // wasn't releasing the stream, and ended up creating a new stream every time a network
+        // was available and simultaneously streaming dozens (or more) streams at once. I think.
+        // It's hard to tell for sure but this is what I guess was happening.
+        // So, we're being more proactive about managing streams on network connectivity changes.
+        AppConnectivityManager.instance.addOnNetworkConnectivityListener(LIVESTREAM_LISTENER_KEY, new AppConnectivityManager.NetworkConnectivityListener() {
+            @Override
+            public void onConnect() {
+                StreamManager.LiveStream currentLivePlayer = AppConnectivityManager.instance.streamManager.currentLivePlayer;
+
+                if (currentLivePlayer != null) {
+                    currentLivePlayer.stop();
+                    currentLivePlayer.prepareAndStart();
+                }
+            }
+
+            @Override
+            public void onDisconnect() {
+                StreamManager.LiveStream currentLivePlayer = AppConnectivityManager.instance.streamManager.currentLivePlayer;
+
+                if (currentLivePlayer != null) {
+                    currentLivePlayer.stop();
+                }
+            }
+        }, false);
 
         mAudioButtonManager.getPlayButton().setOnClickListener(new View.OnClickListener() {
             @Override
@@ -86,46 +116,18 @@ public class LiveFragment extends Fragment {
                     return;
                 }
 
-                // Register a listener to start/stop the stream immediately based on connectivity status.
-                // We had a process in place to handle this lazily but there was a certain device which
-                // wasn't releasing the stream, and ended up creating a new stream every time a network
-                // was available and simultaneously streaming dozens (or more) streams at once. I think.
-                // It's hard to tell for sure but this is what I guess was happening.
-                // So, we're being more proactive about managing streams on network connectivity changes.
-                AppConnectivityManager.instance.addOnNetworkConnectivityListener(LIVESTREAM_LISTENER_KEY, new AppConnectivityManager.NetworkConnectivityListener() {
-                    @Override
-                    public void onConnect() {
-                        StreamManager.LiveStream currentLivePlayer = AppConnectivityManager.instance.streamManager.currentLivePlayer;
-
-                        if (currentLivePlayer != null) {
-                            currentLivePlayer.stop();
-                            currentLivePlayer.reset();
-                            currentLivePlayer.prepareAndStart();
-                        }
-                    }
-
-                    @Override
-                    public void onDisconnect() {
-                        StreamManager.LiveStream currentLivePlayer = AppConnectivityManager.instance.streamManager.currentLivePlayer;
-
-                        if (currentLivePlayer != null) {
-                            currentLivePlayer.stop();
-                        }
-                    }
-                }, false);
-
                 if (AppConnectivityManager.instance.streamManager.currentPrerollPlayer != null) {
-                    // Preroll was Paused - start it again.
+                    // Preroll was Paused; start it again.
                     AppConnectivityManager.instance.streamManager.currentPrerollPlayer.start();
+                } else if (AppConnectivityManager.instance.streamManager.currentLivePlayer != null) {
+                    // Live stream was paused; start it again.
+                    AppConnectivityManager.instance.streamManager.currentLivePlayer.start();
                 } else {
-                    // We should always set a new mPlayer here. If the play button was clicked,
-                    // either it was handled by the preroll case above or the previous
-                    // stream was destroyed.
-                    mPlayer = new StreamManager.LiveStream(activity);
+                    streamBundle = new StreamManager.LiveStreamBundle(activity);
                     setupAudioStateHandlers();
 
                     // Preroll will be handled normally
-                    mPlayer.playWithPrerollAttempt();
+                    streamBundle.playWithPrerollAttempt();
                     PLAY_START = System.currentTimeMillis();
                     logLiveStreamEvent(AnalyticsManager.EVENT_LIVE_STREAM_PLAY);
                 }
@@ -139,27 +141,13 @@ public class LiveFragment extends Fragment {
                     return;
                 }
 
-                if (AppConnectivityManager.instance.streamManager.currentPrerollPlayer != null) {
-                    // In this view, only Preroll can be paused.
+                StreamManager.PrerollStream prerollPlayer = AppConnectivityManager.instance.streamManager.currentPrerollPlayer;
+                StreamManager.LiveStream livePlayer = AppConnectivityManager.instance.streamManager.currentLivePlayer;
+
+                if (prerollPlayer != null && prerollPlayer.isPlaying()) {
                     AppConnectivityManager.instance.streamManager.currentPrerollPlayer.pause();
-                }
-            }
-        });
-
-        mAudioButtonManager.getStopButton().setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                AppConnectivityManager.instance.removeOnNetworkConnectivityListener(LIVESTREAM_LISTENER_KEY);
-
-                if (!AppConnectivityManager.instance.streamIsBound) {
-                    return;
-                }
-
-                if (AppConnectivityManager.instance.streamManager.currentLivePlayer != null) {
-                    // In this view, only the Stream can be stopped.
-                    // We want to release it immediately too.
-                    AppConnectivityManager.instance.streamManager.currentLivePlayer.stop();
-                    logLiveStreamEvent(AnalyticsManager.EVENT_LIVE_STREAM_PAUSE);
+                } else if (livePlayer != null && livePlayer.isPlaying()) {
+                    AppConnectivityManager.instance.streamManager.currentLivePlayer.pause();
                 }
             }
         });
@@ -174,6 +162,17 @@ public class LiveFragment extends Fragment {
                 }
             }
         });
+
+        mRewind.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (streamBundle != null) {
+                    int currentPosition = streamBundle.liveStream.getCurrentPosition();
+                    streamBundle.liveStream.seekTo(currentPosition - 1000*30);
+                }
+            }
+        });
+
         return view;
     }
 
@@ -199,9 +198,9 @@ public class LiveFragment extends Fragment {
             }
         });
 
-        mScheduleUpdater = new ScheduleUpdater(new ScheduleUpdateCallback() {
+        mScheduleUpdater = new ProgressManager(new Runnable() {
             @Override
-            public void onUpdate() {
+            public void run() {
                 mRequest = ScheduleOccurrence.Client.getCurrent(new Response.Listener<JSONObject>() {
                     @Override
                     public void onResponse(JSONObject response) {
@@ -250,12 +249,12 @@ public class LiveFragment extends Fragment {
                     }
                 });
             }
-        });
+        }, 1000 * 60 * 5); // Run the thread every 5 minutes)
 
         if (BaseAlarmManager.SleepManager.instance.isRunning()) {
             mTimerRemainingWrapper.setVisibility(View.VISIBLE);
 
-            mTimerProgressObserver = new SleepFragment.ProgressObserver(new SleepFragment.SleepTimerUpdater() {
+            mTimerProgressObserver = new ProgressManager(new ProgressManager.TimerRunner() {
                 @Override
                 public void onTimerUpdate(int hours, int mins, int secs) {
                     mTimerRemaining.setText(
@@ -269,9 +268,9 @@ public class LiveFragment extends Fragment {
                 public void onTimerComplete() {
                     mTimerRemainingWrapper.setVisibility(View.GONE);
                 }
-            });
+            }, 1000);
 
-            startTimerUpdater();
+            mTimerProgressObserver.start();
         } else {
             mTimerRemainingWrapper.setVisibility(View.GONE);
         }
@@ -284,87 +283,32 @@ public class LiveFragment extends Fragment {
             public void onConnect() {
                 // We want this here so the schedule will get updated immediately when connectivity
                 // is back, so we'll just restart it.
-                startScheduleUpdater();
+                if (mScheduleUpdater != null) {
+                    mScheduleUpdater.start();
+                }
+
                 mAudioButtonManager.hideError();
             }
 
             @Override
             public void onDisconnect() {
-                stopScheduleUpdater();
+                if (mScheduleUpdater != null) {
+                    mScheduleUpdater.release();
+                }
                 setDefaultValues();
                 mAudioButtonManager.showError(R.string.network_error);
             }
         }, true);
     }
 
-    private void startScheduleUpdater() {
-        stopScheduleUpdater();
-
-        if (mScheduleUpdater != null && !mScheduleUpdater.mIsObserving.get()) {
-            mScheduleUpdater.start();
-
-            if (mUpdaterThread != null && !mUpdaterThread.isInterrupted()) {
-                mUpdaterThread.interrupt();
-                // GC will take care of the dead thread hanging around.
-            }
-
-            mUpdaterThread = new Thread(mScheduleUpdater);
-            mUpdaterThread.start();
-        }
-    }
-
-    private void stopScheduleUpdater() {
-        if (mScheduleUpdater != null) {
-            mScheduleUpdater.stop();
-        }
-
-        if (mUpdaterThread != null) {
-            if (!mUpdaterThread.isInterrupted()) {
-                mUpdaterThread.interrupt();
-            }
-
-            mUpdaterThread = null;
-        }
-    }
-
-    private void startTimerUpdater() {
-        stopTimerUpdater();
-
-        if (mTimerProgressObserver != null && !mTimerProgressObserver.isObserving()) {
-            mTimerProgressObserver.start();
-
-            if (mTimerProgressThread != null && !mTimerProgressThread.isInterrupted()) {
-                mTimerProgressThread.interrupt();
-                // GC will take care of the dead thread hanging around.
-            }
-
-            mTimerProgressThread = new Thread(mTimerProgressObserver);
-            mTimerProgressThread.start();
-        }
-    }
-
-    private void stopTimerUpdater() {
-        if (mTimerProgressObserver != null) {
-            mTimerProgressObserver.stop();
-        }
-
-        if (mTimerProgressThread != null) {
-            if (!mTimerProgressThread.isInterrupted()) {
-                mTimerProgressThread.interrupt();
-            }
-
-            mTimerProgressThread = null;
-        }
-    }
-
     @Override
     public void onPause() {
-        if (mRequest != null) {
-            mRequest.cancel();
-        }
+        if (mRequest != null) { mRequest.cancel(); }
+        if (mScheduleUpdater != null) { mScheduleUpdater.release(); }
+        if (mTimerProgressObserver != null) { mTimerProgressObserver.release(); }
+        if (mProgressManager != null) { mProgressManager.release(); }
+        if (mPrerollProgressManager != null) { mPrerollProgressManager.release(); }
 
-        stopScheduleUpdater();
-        stopTimerUpdater();
         AppConnectivityManager.instance.removeOnNetworkConnectivityListener(LiveFragment.STACK_TAG);
 
         super.onPause();
@@ -377,11 +321,11 @@ public class LiveFragment extends Fragment {
     }
 
     private void setupAudioStateHandlers() {
-        if (mPlayer == null) {
+        if (streamBundle == null) {
             return;
         }
 
-        mPlayer.setOnAudioEventListener(new StreamManager.AudioEventListener() {
+        streamBundle.liveStream.setOnAudioEventListener(new StreamManager.AudioEventListener() {
             @Override
             public void onLoading() {
                 mAudioButtonManager.toggleLoading();
@@ -389,17 +333,20 @@ public class LiveFragment extends Fragment {
 
             @Override
             public void onPlay() {
-                mAudioButtonManager.togglePlayingForStop();
+                mAudioButtonManager.togglePlayingForPause();
+                if (mProgressManager != null) { mProgressManager.start(); }
             }
 
             @Override
             public void onPause() {
                 mAudioButtonManager.togglePaused();
+                if (mProgressManager != null) { mProgressManager.release(); }
             }
 
             @Override
             public void onStop() {
                 mAudioButtonManager.toggleStopped();
+                if (mProgressManager != null) { mProgressManager.release(); }
             }
 
             @Override
@@ -411,10 +358,11 @@ public class LiveFragment extends Fragment {
             public void onError() {
                 mAudioButtonManager.toggleStopped();
                 mAudioButtonManager.showError(R.string.audio_error);
+                if (mProgressManager != null) { mProgressManager.release(); }
             }
         });
 
-        mPlayer.setPrerollAudioEventListener(new StreamManager.AudioEventListener() {
+        streamBundle.prerollStream.setOnAudioEventListener(new StreamManager.AudioEventListener() {
             public void onPrerollData(final PrerollManager.PrerollData prerollData) {
                 mPrerollProgressBar.setMax(prerollData.audioDurationSeconds * 1000);
                 mPrerollView.setVisibility(View.VISIBLE);
@@ -458,11 +406,14 @@ public class LiveFragment extends Fragment {
             @Override
             public void onPlay() {
                 mAudioButtonManager.togglePlayingForPause();
+                mPrerollProgressManager = new ProgressManager(new ProgressManager.ProgressBarRunner(streamBundle.prerollStream), 100);
+                mPrerollProgressManager.start();
             }
 
             @Override
             public void onPause() {
                 mAudioButtonManager.togglePaused();
+                if (mPrerollProgressManager != null) { mPrerollProgressManager.release(); }
             }
 
             @Override
@@ -475,6 +426,8 @@ public class LiveFragment extends Fragment {
                         frag.enableDrawer();
                     }
                 }
+
+                if (mPrerollProgressManager != null) { mPrerollProgressManager.release(); }
             }
 
             @Override
@@ -495,6 +448,7 @@ public class LiveFragment extends Fragment {
 
                 // Toggle loading so we get a loading icon while live stream is loading.
                 mAudioButtonManager.toggleLoading();
+                if (mPrerollProgressManager != null) { mPrerollProgressManager.release(); }
             }
 
             @Override
@@ -505,9 +459,14 @@ public class LiveFragment extends Fragment {
             @Override
             public void onError() {
                 ((MainActivity) getActivity()).getNavigationDrawerFragment().enableDrawer();
+                if (mPrerollProgressManager != null) { mPrerollProgressManager.release(); }
             }
         });
 
+        mProgressManager = new ProgressManager(new ProgressManager.ProgressBarRunner(streamBundle.liveStream), 100);
+        if (streamBundle.liveStream.isPlaying()) { mProgressManager.start(); }
+        // There is a possible bug here, where if you start preroll and leave, then come back,
+        // the observer won't refresh. I'm not super worried about it.
     }
 
     private void logLiveStreamEvent(String key) {
@@ -533,7 +492,7 @@ public class LiveFragment extends Fragment {
         if (AppConnectivityManager.instance.streamIsBound) {
             StreamManager.LiveStream currentPlayer = AppConnectivityManager.instance.streamManager.currentLivePlayer;
             if (currentPlayer != null && currentPlayer.isPlaying()) {
-                mPlayer = currentPlayer;
+                streamBundle = new StreamManager.LiveStreamBundle(getActivity(), currentPlayer);
                 setupAudioStateHandlers();
                 mAudioButtonManager.togglePlayingForStop();
                 return;
@@ -543,57 +502,5 @@ public class LiveFragment extends Fragment {
         // Default State.
         // We put this here to reset any previous error message.
         mAudioButtonManager.toggleStopped();
-    }
-
-    private abstract class ScheduleUpdateCallback {
-        public abstract void onUpdate();
-    }
-
-    private class ScheduleUpdater implements Runnable {
-        private final AtomicBoolean mIsObserving = new AtomicBoolean(false);
-        private final Handler mHandler = new Handler();
-        private final ScheduleUpdateCallback mCallbacks;
-
-        public ScheduleUpdater(ScheduleUpdateCallback callbacks) {
-            mCallbacks = callbacks;
-        }
-
-        public void start() {
-            mIsObserving.set(true);
-        }
-
-        public void stop() {
-            mIsObserving.set(false);
-        }
-
-        @Override
-        public void run() {
-            while (mIsObserving.get()) {
-                // This is a neat feature but a little problematic:
-                // On the one hand, we want to update as frequently and accurately as possible,
-                // to future-proof the feature (what if there's a 15-minute program?),
-                // and also allow for special broadcast events to show up as quickly as possible.
-                // On the other hand, we don't want to hit the Schedule API too aggressively.
-                // We could do something on a */5 cron-type thing (that is: 0, 5, 10, 15th minute
-                // of the hour), but that would be potentially thousands of requests to the
-                // servers all at the exact same time.
-                // So the compromise is to stagger the requests and hit it every 5 minutes from
-                // the first time the loop runs. So screens may be a few minutes off from the
-                // live broadcast.
-                try {
-                    mHandler.post(new Runnable() {
-                        @Override
-                        public void run() {
-                            mCallbacks.onUpdate();
-                        }
-                    });
-
-                    Thread.sleep(1000 * 60 * 5); // Run the thread every 5 minutes
-                } catch (InterruptedException e) {
-                    // If the progress observer fails, just stop the observer.
-                    mIsObserving.set(false);
-                }
-            }
-        }
     }
 }

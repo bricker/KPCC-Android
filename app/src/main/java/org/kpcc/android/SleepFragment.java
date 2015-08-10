@@ -22,14 +22,13 @@ public class SleepFragment extends Fragment {
     private Button mCancelButton;
     private TextView mCurrentTimerHeader;
     private SeekBar mSeekbar;
-    private ProgressObserver mProgressObserver;
+    private ProgressManager mProgressObserver;
     private TextView mSelectionHr;
     private TextView mSelectionMin;
     private TextView mSelectionSec;
     private String mStrHr;
     private String mStrMin;
     private String mStrSec;
-    private Thread mProgressThread;
 
     public SleepFragment() {
     }
@@ -54,19 +53,19 @@ public class SleepFragment extends Fragment {
         mStrMin = getActivity().getResources().getString(R.string.timer_min);
         mStrSec = getActivity().getResources().getString(R.string.timer_sec);
 
-        mProgressObserver = new ProgressObserver(new SleepTimerUpdater() {
+        mProgressObserver = new ProgressManager(new ProgressManager.TimerRunner() {
+            @Override
+            public void onTimerComplete() {
+                showSeekPrompt();
+            }
+
             @Override
             public void onTimerUpdate(int hours, int mins, int secs) {
                 mSelectionHr.setText(String.valueOf(hours) + " " + mStrHr);
                 mSelectionMin.setText(String.valueOf(mins) + " " + mStrMin);
                 mSelectionSec.setText(String.valueOf(secs) + " " + mStrSec);
             }
-
-            @Override
-            public void onTimerComplete() {
-                showSeekPrompt();
-            }
-        });
+        }, 1000);
 
         mSeekbar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
@@ -139,11 +138,11 @@ public class SleepFragment extends Fragment {
         mCurrentTimerHeader.setVisibility(View.VISIBLE);
         mSelectionSec.setVisibility(View.VISIBLE);
 
-        startProgressObserver();
+        mProgressObserver.start();
     }
 
     private void showSeekPrompt() {
-        stopProgressObserver();
+        mProgressObserver.release();
         mSeekbar.setProgress(1);
         mSetButtonWrapper.setVisibility(View.VISIBLE);
         mSeekbar.setVisibility(View.VISIBLE);
@@ -153,96 +152,9 @@ public class SleepFragment extends Fragment {
         mSelectionSec.setVisibility(View.GONE);
     }
 
-    private void startProgressObserver() {
-        stopProgressObserver();
-        mProgressObserver.start();
-
-        mProgressThread = new Thread(mProgressObserver);
-        mProgressThread.start();
-    }
-
-    private void stopProgressObserver() {
-        if (mProgressObserver != null) {
-            mProgressObserver.stop();
-        }
-
-        if (mProgressThread != null && !mProgressThread.isInterrupted()) {
-            mProgressThread.interrupt();
-        }
-
-        mProgressThread = null;
-    }
-
     @Override
     public void onPause() {
         super.onPause();
-        mProgressObserver.stop();
-    }
-
-
-
-    public static class ProgressObserver implements Runnable {
-        private final AtomicBoolean mIsObserving = new AtomicBoolean(false);
-        private final Handler mHandler = new Handler();
-        private final SleepTimerUpdater mUpdater;
-
-        public ProgressObserver(SleepTimerUpdater updater) {
-            mUpdater = updater;
-        }
-
-        public void start() {
-            mIsObserving.set(true);
-        }
-
-        public void stop() {
-            mIsObserving.set(false);
-        }
-
-        public boolean isObserving() {
-            return mIsObserving.get();
-        }
-
-        @Override
-        public void run() {
-            final long sleepUntilMillis = DataManager.instance.getTimerMillis();
-
-            while (mIsObserving.get()) {
-                try {
-                    mHandler.post(new Runnable() {
-                        @Override
-                        public void run() {
-                            long now = SystemClock.elapsedRealtime();
-                            long diff = sleepUntilMillis - now;
-
-                            if (diff <= 0) {
-                                stop();
-                                mUpdater.onTimerComplete();
-                                return;
-                            }
-
-                            int totalSeconds = (int) diff/1000;
-                            int totalMinutes = totalSeconds / 60;
-
-                            int secs = totalSeconds % 60;
-                            int mins = totalMinutes % 60;
-                            int hours = totalMinutes / 60;
-
-                            if (mUpdater != null) {
-                                mUpdater.onTimerUpdate(hours, mins, secs);
-                            }
-                        }
-                    });
-                    Thread.sleep(1000);
-                } catch (InterruptedException e) {
-                    // If the progress observer fails, just stop the observer.
-                    mIsObserving.set(false);
-                }
-            }
-        }
-    }
-
-    public static interface SleepTimerUpdater {
-        public abstract void onTimerUpdate(int hours, int mins, int secs);
-        public abstract void onTimerComplete();
+        mProgressObserver.release();
     }
 }

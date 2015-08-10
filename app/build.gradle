@@ -34,4 +34,5 @@ dependencies {
     compile 'uk.co.chrisjenx:calligraphy:2.0.2'
     compile 'com.astuetz:pagerslidingtabstrip:1.0.1'
     compile project(':support-v4-preferencefragment-1.0.0')
+    compile 'com.google.android.exoplayer:exoplayer:r1.4.1'
 }

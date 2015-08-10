@@ -17,7 +17,7 @@ public class AppConnectivityManager {
     public static AppConnectivityManager instance;
     private final ConnectivityManager mConnectivityManager;
     public boolean streamIsBound = false;
-    private final ArrayList<OnStreamBindListener> mStreamBindListeners = new ArrayList<>();
+    public final ArrayList<OnStreamBindListener> mStreamBindListeners = new ArrayList<>();
     private final HashMap<String, NetworkConnectivityListener> networkConnectivityListeners = new HashMap<>();
     public StreamManager streamManager;
     private final Context mContext;
@@ -102,8 +102,8 @@ public class AppConnectivityManager {
         }
     }
 
-    abstract static interface OnStreamBindListener {
-        public abstract void onBind();
+    interface OnStreamBindListener {
+        void onBind();
     }
 
     void addOnNetworkConnectivityListener(String tag, NetworkConnectivityListener listener, boolean doNow) {

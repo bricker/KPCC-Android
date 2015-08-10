@@ -3,6 +3,8 @@ package org.kpcc.api;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.UUID;
+
 public class Audio extends Entity {
     public final static String PLURAL_KEY = "audio";
 
@@ -13,6 +15,7 @@ public class Audio extends Entity {
     public static Audio buildFromJson(JSONObject jsonAudio) throws JSONException {
         Audio audio = new Audio();
 
+        // Audio URLs are less likely to be unique, so we are generating a random one.
         audio.url = jsonAudio.getString(PROP_URL);
 
         try {

@@ -4,16 +4,23 @@ import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
 import android.media.AudioManager;
-import android.media.MediaPlayer;
+import android.net.Uri;
 import android.os.Binder;
-import android.os.Handler;
 import android.os.IBinder;
+import android.webkit.MimeTypeMap;
 
-import java.io.IOException;
+import com.google.android.exoplayer.ExoPlaybackException;
+import com.google.android.exoplayer.ExoPlayer;
+import com.google.android.exoplayer.extractor.Extractor;
+import com.google.android.exoplayer.extractor.mp3.Mp3Extractor;
+import com.google.android.exoplayer.extractor.mp4.Mp4Extractor;
+import com.google.android.exoplayer.util.MimeTypes;
+
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class StreamManager extends Service {
+    public static final String USER_AGENT = "KPCCAndroid";
     private final IBinder mBinder = new LocalBinder();
 
     public EpisodeStream currentEpisodePlayer;
@@ -26,6 +33,17 @@ public class StreamManager extends Service {
                 TimeUnit.SECONDS.toMinutes(seconds) % TimeUnit.HOURS.toMinutes(1),
                 TimeUnit.SECONDS.toSeconds(seconds) % TimeUnit.MINUTES.toSeconds(1)
         );
+    }
+
+    public static Extractor getExtractorFromContentType(String contentType) {
+        switch (contentType) {
+            case MimeTypes.AUDIO_MPEG:
+                return new Mp3Extractor();
+            case MimeTypes.AUDIO_MP4:
+                return new Mp4Extractor();
+            default:
+                return null;
+        }
     }
 
     // The nuclear option - this isn't guaranteed to update button states. It's a cleanup task.
@@ -76,21 +94,17 @@ public class StreamManager extends Service {
     }
 
     public abstract static class BaseStream {
-        public final MediaPlayer audioPlayer;
+        public AudioPlayer audioPlayer;
         final Context mContext;
         final AudioManager mAudioManager;
         final AtomicBoolean mIsDucking = new AtomicBoolean(false);
         final AudioManager.OnAudioFocusChangeListener mAfChangeListener;
         final StreamManager mStreamManager;
-        AudioEventListener mAudioEventListener;
-        ProgressObserver mProgressObserver;
-        Thread mProgressThread;
-        final AtomicBoolean isPrepared = new AtomicBoolean(false);
+        public AudioEventListener audioEventListener;
         final AtomicBoolean mDidPauseForAudioLoss = new AtomicBoolean(false);
+        boolean isPaused = false;
 
         public BaseStream(Context context) {
-            audioPlayer = new MediaPlayer();
-            audioPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
             mContext = context;
             mStreamManager = AppConnectivityManager.instance.streamManager;
             mAudioManager = (AudioManager) mContext.getSystemService(Context.AUDIO_SERVICE);
@@ -117,25 +131,67 @@ public class StreamManager extends Service {
         }
 
         public void setOnAudioEventListener(AudioEventListener eventListener) {
-            mAudioEventListener = eventListener;
+            audioEventListener = eventListener;
         }
 
         public void onPrerollComplete() {
         }
 
-        public abstract void start();
+        public void start() {
+            try {
+                audioEventListener.onPlay();
+                isPaused = false;
+                audioPlayer.start();
+            } catch (IllegalStateException e) {
+                // Call release() to stop progress observer, update button state, etc.
+                release();
+            }
+        }
 
-        public abstract void stop();
+        public void stop() {
+            try {
+                audioEventListener.onStop();
+                audioPlayer.stop();
+            } catch (IllegalStateException e) {
+                // Call release() to stop progress observer, update button state, etc.
+                release();
+            }
+        }
 
-        public abstract void pause();
+        public void pause() {
+            try {
+                audioEventListener.onPause();
+                isPaused = true;
+                audioPlayer.pause();
+            } catch (IllegalStateException e) {
+                // Call release() to stop progress observer, update button state, etc.
+                release();
+            }
+        }
 
-        public abstract void release();
+        public void release() {
+            audioEventListener.onStop();
+            isPaused = false;
+            audioPlayer.release();
+        }
+
+        public void seekTo(int pos) {
+            try {
+                if (isPlaying()) {
+                    audioPlayer.seekTo(pos);
+                }
+            } catch (IllegalStateException e) {
+                release();
+            }
+        }
+
+        public void prepare() {
+            audioPlayer.prepare();
+        }
 
         public boolean isPlaying() {
             return audioPlayer.isPlaying();
         }
-
-        public void reset() { audioPlayer.reset(); }
 
         void requestAudioFocus() throws AudioFocusNotGrantedException {
             int result = mAudioManager.requestAudioFocus(mAfChangeListener,
@@ -143,6 +199,27 @@ public class StreamManager extends Service {
 
             if (result != AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
                 throw new AudioFocusNotGrantedException();
+            }
+        }
+
+        public int getCurrentPosition() {
+            return audioPlayer.getCurrentPosition();
+        }
+
+        public void prepareAndStart() {
+            if (isPaused) {
+                start();
+                return;
+            }
+
+            audioEventListener.onLoading();
+
+            try {
+                requestAudioFocus();
+                prepare();
+                start();
+            } catch (AudioFocusNotGrantedException e) {
+                audioEventListener.onError();
             }
         }
 
@@ -182,7 +259,7 @@ public class StreamManager extends Service {
                 mIsDucking.set(true);
 
                 if (isPlaying()) {
-                    audioPlayer.setVolume(0.25f, 0.25f);
+                    audioPlayer.setVolume(0.25f);
                 }
             }
         }
@@ -192,37 +269,8 @@ public class StreamManager extends Service {
                 mIsDucking.set(false);
 
                 if (isPlaying()) {
-                    audioPlayer.setVolume(1.0f, 1.0f);
+                    audioPlayer.setVolume(1.0f);
                 }
-            }
-        }
-
-        void startProgressObserver() {
-            stopProgressObserver();
-            mProgressObserver.start();
-
-            mProgressThread = new Thread(mProgressObserver);
-            mProgressThread.start();
-        }
-
-        void stopProgressObserver() {
-            if (mProgressObserver != null) {
-                mProgressObserver.stop();
-            }
-
-            if (mProgressThread != null && !mProgressThread.isInterrupted()) {
-                mProgressThread.interrupt();
-            }
-
-            mProgressThread = null;
-        }
-
-        void resetProgressObserver() {
-            stopProgressObserver();
-            mProgressObserver = new StreamManager.ProgressObserver(audioPlayer, mAudioEventListener);
-
-            if (isPlaying()) {
-                startProgressObserver();
             }
         }
     }
@@ -231,126 +279,59 @@ public class StreamManager extends Service {
         public final String audioUrl;
         public final String programSlug;
         public final int durationSeconds;
-        boolean isPaused = false;
 
         public EpisodeStream(String audioUrl, String programSlug, int durationSeconds, Context context) {
             super(context);
+
+            String mimeType = MimeTypes.AUDIO_MPEG; // Default mime type.
+
+            String ext = MimeTypeMap.getFileExtensionFromUrl(audioUrl);
+            if (ext != null) {
+                mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(ext);
+            } else {
+                // TODO: Extension couldn't be determined. We should notify the user that the
+                // audio probably won't play, for now we'll just assume it's mp3 (the default mime).
+            }
+
+            AudioPlayer.RendererBuilder builder = new ExtractorRendererBuilder(context, USER_AGENT,
+                    Uri.parse(audioUrl), StreamManager.getExtractorFromContentType(mimeType));
+
+            audioPlayer = new AudioPlayer(builder);
+            audioPlayer.setPlayWhenReady(false);
+
+            audioPlayer.addListener(new ExoPlayer.Listener() {
+                @Override
+                public void onPlayerStateChanged(boolean playWhenReady, int i) {
+                    switch (i) {
+                        case ExoPlayer.STATE_IDLE:
+                            break;
+                        case ExoPlayer.STATE_PREPARING:
+                            break;
+                        case ExoPlayer.STATE_BUFFERING:
+                            break;
+                        case ExoPlayer.STATE_READY:
+                            audioEventListener.onPrepared();
+                            break;
+                        case ExoPlayer.STATE_ENDED:
+                            audioEventListener.onCompletion();
+                            release();
+                            break;
+                    }
+                }
+
+                @Override
+                public void onPlayWhenReadyCommitted() {
+                }
+
+                @Override
+                public void onPlayerError(ExoPlaybackException e) {
+                    audioEventListener.onError();
+                }
+            });
+
             this.audioUrl = audioUrl;
             this.durationSeconds = durationSeconds;
             this.programSlug = programSlug;
-        }
-
-        @Override
-        public void setOnAudioEventListener(AudioEventListener eventListener) {
-            mAudioEventListener = eventListener;
-            resetProgressObserver();
-        }
-
-        public void play() {
-            if (mStreamManager != null) {
-                mStreamManager.currentEpisodePlayer = this;
-            }
-
-            if (isPaused) {
-                start();
-                return;
-            }
-
-            mAudioEventListener.onLoading();
-
-            try {
-                requestAudioFocus();
-            } catch (AudioFocusNotGrantedException e) {
-                mAudioEventListener.onError();
-                return;
-            }
-
-            try {
-                audioPlayer.setDataSource(audioUrl);
-            } catch (IOException | IllegalStateException e) {
-                mAudioEventListener.onError();
-                return;
-            }
-
-            audioPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
-                @Override
-                public void onCompletion(MediaPlayer mp) {
-                    mAudioEventListener.onCompletion();
-                    release();
-                }
-            });
-
-            audioPlayer.setOnBufferingUpdateListener(new MediaPlayer.OnBufferingUpdateListener() {
-                @Override
-                public void onBufferingUpdate(MediaPlayer mp, int percent) {
-                    mAudioEventListener.onBufferingUpdate(percent);
-                }
-            });
-
-            audioPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
-                @Override
-                public void onPrepared(MediaPlayer mp) {
-                    isPrepared.set(true);
-                    start();
-                }
-            });
-
-            audioPlayer.prepareAsync();
-        }
-
-        public long getCurrentPosition() throws IllegalStateException {
-            return audioPlayer.getCurrentPosition();
-        }
-
-        public void seekTo(int pos) {
-            try {
-                // If it's not prepared, it'll transfer to the Error state, call onCompletion(),
-                // and mess everything up. Since seeking is a UI action that can be interacted with
-                // before the player is ready, we need to just not do anything if it's not ready.
-                if (isPrepared.get()) {
-                    audioPlayer.seekTo(pos);
-                }
-            } catch (IllegalStateException e) {
-                release();
-            }
-        }
-
-        @Override
-        public void start() {
-            try {
-                mAudioEventListener.onPlay();
-                startProgressObserver();
-                isPaused = false;
-                audioPlayer.start();
-            } catch (IllegalStateException e) {
-                // Call release() to stop progress observer, update button state, etc.
-                release();
-            }
-        }
-
-        @Override
-        public void pause() {
-            try {
-                mAudioEventListener.onPause();
-                stopProgressObserver();
-                isPaused = true;
-                audioPlayer.pause();
-            } catch (IllegalStateException e) {
-                // Call release() to stop progress observer, update button state, etc.
-                release();
-            }
-        }
-
-        @Override
-        public void stop() {
-            try {
-                mAudioEventListener.onStop();
-                stopProgressObserver();
-                audioPlayer.stop();
-            } catch (IllegalStateException e) {
-                // Call release() to stop progress observer, update button state, etc.
-                release();
-            }
         }
 
         @Override
@@ -361,11 +342,16 @@ public class StreamManager extends Service {
                 }
             }
 
-            mAudioEventListener.onStop();
-            stopProgressObserver();
+            super.release();
+        }
 
-            isPaused = false;
-            audioPlayer.release();
+        @Override
+        public void prepareAndStart() {
+            if (mStreamManager != null) {
+                mStreamManager.currentEpisodePlayer = this;
+            }
+
+            super.prepareAndStart();
         }
     }
 
@@ -374,111 +360,23 @@ public class StreamManager extends Service {
         // Also send the UA for logs.
         // Using Uri.parse because there seems to be a bug in Lollipop that causes
         // the stream to take 20 seconds to start playing. Uri.parse is a workaround.
-        public final static String LIVESTREAM_URL =
-                "http://live.scpr.org/kpcclive?preskip=true&ua=KPCCAndroid-" +
-                BuildConfig.VERSION_NAME + "-" +
-                String.valueOf(BuildConfig.VERSION_CODE);
+        public final static String HLS_URL =
+                "http://streammachine-hls001.scprdev.org/sg/kpcc-aac.m3u8?ua=KPCCAndroid-" +
+                        BuildConfig.VERSION_NAME + "-" +
+                        String.valueOf(BuildConfig.VERSION_CODE);
 
-        private AudioEventListener mPrerollAudioEventListener;
+        public PrerollCompleteCallback prerollCompleteCallback;
 
         public LiveStream(Context context) {
             super(context);
 
+            AudioPlayer.RendererBuilder builder = new HlsRendererBuilder(context, USER_AGENT, HLS_URL);
+            audioPlayer = new AudioPlayer(builder);
+            audioPlayer.setPlayWhenReady(false);
+            this.prerollCompleteCallback = new PrerollCompleteCallback();
+
             if (mStreamManager != null) {
                 mStreamManager.currentLivePlayer = this;
-            }
-        }
-
-        public void setPrerollAudioEventListener(AudioEventListener eventListener) {
-            mPrerollAudioEventListener = eventListener;
-            resetProgressObserver();
-        }
-
-        public void playWithPrerollAttempt() {
-            mAudioEventListener.onLoading();
-
-            // If they just installed the app (less than 10 minutes ago), and have never played the live
-            // stream, don't play preroll.
-            // Otherwise do the normal preroll flow.
-            final long now = System.currentTimeMillis();
-
-            boolean hasPlayedLiveStream = DataManager.instance.getHasPlayedLiveStream();
-            boolean installedRecently = KPCCApplication.INSTALLATION_TIME > (now - PrerollManager.INSTALL_GRACE);
-            boolean heardPrerollRecently = PrerollManager.LAST_PREROLL_PLAY > (now - PrerollManager.PREROLL_THRESHOLD);
-
-            if ((!hasPlayedLiveStream && installedRecently) || heardPrerollRecently) {
-                // Skipping Preroll
-                prepareAndStart();
-            } else {
-                // Normal preroll flow (preroll still may not play, based on Triton response)
-                PrerollManager.instance.getPrerollData(mContext, new PrerollManager.PrerollCallbackListener() {
-                    @Override
-                    public void onPrerollResponse(final PrerollManager.PrerollData prerollData) {
-                        if (prerollData == null || prerollData.audioUrl == null) {
-                            prepareAndStart();
-                        } else {
-                            mPrerollAudioEventListener.onPrerollData(prerollData);
-
-                            PrerollStream preroll = new PrerollStream(mContext,
-                                    prerollData, LiveStream.this);
-
-                            preroll.setOnAudioEventListener(mPrerollAudioEventListener);
-                            preroll.play();
-                        }
-                    }
-                });
-            }
-
-            if (!hasPlayedLiveStream) {
-                DataManager.instance.setHasPlayedLiveStream(true);
-            }
-        }
-
-        @Override
-        public void onPrerollComplete() {
-            prepareAndStart();
-        }
-
-        @Override
-        void audioFocusGain() {
-            // Since we STOP the stream, we can't just start() it again. We need to prepare it
-            // first. So we're overriding this method.
-            if (mIsDucking.get() && isPlaying()) {
-                unduckStream();
-            } else {
-                if (mDidPauseForAudioLoss.get()) {
-                    prepareAndStart();
-                }
-            }
-
-            // Always do this just to be safe.
-            mDidPauseForAudioLoss.set(false);
-        }
-
-        @Override
-        public void start() {
-            try {
-                mAudioEventListener.onPlay();
-                audioPlayer.start();
-            } catch (IllegalStateException e) {
-                // Call release() to stop progress observer, update button state, etc.
-                release();
-            }
-        }
-
-        @Override
-        public void pause() {
-            stop();
-        }
-
-        @Override
-        public void stop() {
-            try {
-                mAudioEventListener.onStop();
-                audioPlayer.stop();
-            } catch (IllegalStateException e) {
-                // Call release() to stop progress observer, update button state, etc.
-                release();
             }
         }
 
@@ -495,66 +393,66 @@ public class StreamManager extends Service {
                 }
             }
 
-            // Bryan: Don't call onStop() here.
-            // Audio Focus rules cause the button states to collide.
-            audioPlayer.release();
+            super.release();
         }
 
-        public void prepareAndStart() {
-            // Since this method can be called directly, we need to trigger loading state here too.
-            mAudioEventListener.onLoading();
-
-            try {
-                audioPlayer.setDataSource(LIVESTREAM_URL);
-                requestAudioFocus();
-            } catch (IOException | IllegalStateException | AudioFocusNotGrantedException e) {
-                mAudioEventListener.onError();
-                return;
-            }
-
-            // When the network changes, the stream will eventually "complete" because of the
-            // gap in data. So we just reboot the stream. It's not ideal but at least it restarts
-            // by itself instead of just stopping all together.
-            audioPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
-                @Override
-                public void onCompletion(MediaPlayer mp) {
-                    stop();
-                    reset();
-                    prepareAndStart();
-                }
-            });
-
-            audioPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
-                @Override
-                public void onPrepared(MediaPlayer mp) {
-                    isPrepared.set(true);
-                    start();
-                }
-            });
-
-            prepare();
-        }
-
-        private void prepare() {
-            try {
-                audioPlayer.prepareAsync();
-            } catch (IllegalStateException e) {
-                mAudioEventListener.onError();
+        private class PrerollCompleteCallback {
+            public void onPrerollComplete() {
+                prepareAndStart();
             }
         }
     }
 
     public static class PrerollStream extends BaseStream {
-        private final BaseStream mParentStream;
-        private final PrerollManager.PrerollData mPrerollData;
+        Context context;
+        LiveStream.PrerollCompleteCallback prerollCompleteCallback;
 
-        public PrerollStream(Context context,
-                             PrerollManager.PrerollData prerollData,
-                             BaseStream parentStream) {
+        public PrerollStream(Context context) {
             super(context);
+            this.context = context;
+        }
 
-            mParentStream = parentStream;
-            mPrerollData = prerollData;
+        // We want to be able to rely on the preroll player existing, but we don't know if it will
+        // actually be playing anything, so this method acts as sort of a "deferred constructor".
+        public void setupPreroll(PrerollManager.PrerollData prerollData) {
+            AudioPlayer.RendererBuilder builder = new ExtractorRendererBuilder(this.context, USER_AGENT,
+                    Uri.parse(prerollData.audioUrl), StreamManager.getExtractorFromContentType(prerollData.audioType));
+
+            audioPlayer = new AudioPlayer(builder);
+            audioPlayer.setPlayWhenReady(true);
+
+            audioPlayer.addListener(new ExoPlayer.Listener() {
+                @Override
+                public void onPlayerStateChanged(boolean playWhenReady, int i) {
+                    switch (i) {
+                        case ExoPlayer.STATE_IDLE:
+                            break;
+                        case ExoPlayer.STATE_PREPARING:
+                            break;
+                        case ExoPlayer.STATE_BUFFERING:
+                            break;
+                        case ExoPlayer.STATE_READY:
+                            audioEventListener.onPrepared();
+                            break;
+                        case ExoPlayer.STATE_ENDED:
+                            audioEventListener.onCompletion();
+                            prerollCompleteCallback.onPrerollComplete();
+                            release();
+                            break;
+                    }
+                }
+
+                @Override
+                public void onPlayWhenReadyCommitted() {
+                }
+
+                @Override
+                public void onPlayerError(ExoPlaybackException e) {
+                    audioEventListener.onError();
+                    prerollCompleteCallback.onPrerollComplete();
+                    release();
+                }
+            });
 
             if (mStreamManager != null) {
                 mStreamManager.currentPrerollPlayer = this;
@@ -562,80 +460,14 @@ public class StreamManager extends Service {
         }
 
         @Override
-        public void setOnAudioEventListener(AudioEventListener eventListener) {
-            mAudioEventListener = eventListener;
-            resetProgressObserver();
-        }
-
-        public void play() {
-            mAudioEventListener.onLoading();
-
-            try {
-                requestAudioFocus();
-            } catch (AudioFocusNotGrantedException e) {
-                // No preroll.
-                return;
-            }
-
-            try {
-                audioPlayer.setDataSource(mPrerollData.audioUrl);
-            } catch (IOException | IllegalStateException e) {
-                // No preroll.
-                return;
-            }
-
-            audioPlayer.prepareAsync();
-
-            audioPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
-                @Override
-                public void onPrepared(MediaPlayer mp) {
-                    isPrepared.set(true);
-                    mAudioEventListener.onPrepared();
-                    PrerollManager.LAST_PREROLL_PLAY = System.currentTimeMillis();
-                    start();
-                }
-            });
-
-            audioPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
-                @Override
-                public void onCompletion(MediaPlayer mp) {
-                    mAudioEventListener.onCompletion();
-                    mParentStream.onPrerollComplete();
-                }
-            });
+        public void seekTo(int pos) {
+            // Can't seek preroll.
         }
 
         @Override
         public void start() {
-            try {
-                audioPlayer.start();
-                mAudioEventListener.onPlay();
-                startProgressObserver();
-            } catch (IllegalStateException e) {
-                // Nothing to do, player has been released.
-            }
-        }
-
-        @Override
-        public void pause() {
-            try {
-                audioPlayer.pause();
-                mAudioEventListener.onPause();
-                stopProgressObserver();
-            } catch (IllegalStateException e) {
-                // Nothing to do, player has been released.
-            }
-        }
-
-        @Override
-        public void stop() {
-            try {
-                audioPlayer.stop();
-                mAudioEventListener.onStop();
-                stopProgressObserver();
-            } catch (IllegalStateException e) {
-                // Nothing to do, player has been released.
-            }
+            super.start();
+            PrerollManager.LAST_PREROLL_PLAY = System.currentTimeMillis();
         }
 
         @Override
@@ -646,60 +478,84 @@ public class StreamManager extends Service {
                 }
             }
 
-            mAudioEventListener.onStop();
-            stopProgressObserver();
-            audioPlayer.release();
+            super.release();
+        }
+
+        // We're overriding this because we don't want to show an error if the preroll can't
+        // play. Instead we should just continue with the stream.
+        @Override
+        public void prepareAndStart() {
+            audioEventListener.onLoading();
+
+            try {
+                requestAudioFocus();
+                prepare();
+                start();
+            } catch (AudioFocusNotGrantedException e) {
+                // No preroll, do nothing.
+            }
+        }
+
+        public void setOnPrerollCompleteCallback(LiveStream.PrerollCompleteCallback prerollCompleteCallback) {
+            this.prerollCompleteCallback = prerollCompleteCallback;
         }
     }
 
+    // This class is responsible for orchestrating the interaction between livestream and preroll.
+    public static class LiveStreamBundle {
+        public LiveStream liveStream;
+        public PrerollStream prerollStream;
+        private Context context;
 
-    public static class ProgressObserver implements Runnable {
-        private final AtomicBoolean mIsObserving = new AtomicBoolean(false);
-        private final Handler mHandler = new Handler();
-        private final MediaPlayer mMediaPlayer;
-        private final AudioEventListener mAudioEventListener;
-
-        public ProgressObserver(MediaPlayer mediaPlayer, AudioEventListener eventListener) {
-            mMediaPlayer = mediaPlayer;
-            mAudioEventListener = eventListener;
+        public LiveStreamBundle(Context context) {
+            this.context = context;
+            this.liveStream = new LiveStream(context);
+            this.prerollStream = new PrerollStream(context);
         }
 
-        public void start() {
-            mIsObserving.set(true);
+        public LiveStreamBundle(Context context, LiveStream liveStream) {
+            this.context = context;
+            this.liveStream = liveStream;
+            this.prerollStream = new PrerollStream(context);
         }
 
-        public void stop() {
-            mIsObserving.set(false);
-        }
+        public void playWithPrerollAttempt() {
+            liveStream.audioEventListener.onLoading();
 
-        @Override
-        public void run() {
-            while (mIsObserving.get()) {
-                try {
-                    mHandler.post(new Runnable() {
-                        @Override
-                        public void run() {
-                            try {
-                                int millis = mMediaPlayer.getCurrentPosition();
-                                mAudioEventListener.onProgress(millis);
-                            } catch (IllegalStateException e) {
-                                // We're rescuing IllegalStateException incase the audio is stopped
-                                // before this observer is shut down.
-                                // We'll just refuse to observe anymore.
-                                mIsObserving.set(false);
-                            }
+            // If they just installed the app (less than 10 minutes ago), and have never played the live
+            // stream, don't play preroll.
+            // Otherwise do the normal preroll flow.
+            final long now = System.currentTimeMillis();
+
+            boolean hasPlayedLiveStream = DataManager.instance.getHasPlayedLiveStream();
+            boolean installedRecently = KPCCApplication.INSTALLATION_TIME > (now - PrerollManager.INSTALL_GRACE);
+            boolean heardPrerollRecently = PrerollManager.LAST_PREROLL_PLAY > (now - PrerollManager.PREROLL_THRESHOLD);
+
+            if (!DebugFlag.isEnabled(DebugFlag.PREROLL) && ((!hasPlayedLiveStream && installedRecently) || heardPrerollRecently)) {
+                // Skipping Preroll
+                liveStream.prepareAndStart();
+            } else {
+                // Normal preroll flow (preroll still may not play, based on preroll response)
+                PrerollManager.instance.getPrerollData(context, new PrerollManager.PrerollCallbackListener() {
+                    @Override
+                    public void onPrerollResponse(final PrerollManager.PrerollData prerollData) {
+                        if (prerollData == null || prerollData.audioUrl == null) {
+                            liveStream.prepareAndStart();
+                        } else {
+                            prerollStream.setupPreroll(prerollData);
+                            prerollStream.audioEventListener.onPrerollData(prerollData);
+                            prerollStream.setOnPrerollCompleteCallback(liveStream.prerollCompleteCallback);
+                            prerollStream.prepareAndStart();
                         }
-                    });
+                    }
+                });
+            }
 
-                    Thread.sleep(1000);
-                } catch (InterruptedException e) {
-                    // If the progress observer fails, just stop the observer.
-                    mIsObserving.set(false);
-                }
+            if (!hasPlayedLiveStream) {
+                DataManager.instance.setHasPlayedLiveStream(true);
             }
         }
     }
-
     public class LocalBinder extends Binder {
         public StreamManager getService() {
             return StreamManager.this;
