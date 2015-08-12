@@ -107,6 +107,7 @@
     <orderEntry type="library" exported="" name="play-services-6.5.87" level="project" />
     <orderEntry type="library" exported="" name="crashlytics-core-2.3.3" level="project" />
     <orderEntry type="library" exported="" name="crashlytics-2.5.0" level="project" />
+    <orderEntry type="library" exported="" name="ExoPlayer-rewind" level="project" />
     <orderEntry type="library" exported="" name="appcompat-v7-22.2.1" level="project" />
     <orderEntry type="library" exported="" name="pagerslidingtabstrip-1.0.1" level="project" />
     <orderEntry type="library" exported="" name="Parse-1.8.2" level="project" />

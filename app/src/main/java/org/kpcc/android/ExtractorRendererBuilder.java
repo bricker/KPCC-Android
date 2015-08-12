@@ -36,9 +36,10 @@ public class ExtractorRendererBuilder implements AudioPlayer.RendererBuilder {
 
     @Override
     public void buildRenderers(AudioPlayer player, AudioPlayer.RendererBuilderCallback callback) {
-        // Build the video and audio renderers.
-        DataSource dataSource = new DefaultUriDataSource(context, userAgent);
-        ExtractorSampleSource sampleSource = new ExtractorSampleSource(uri, dataSource, extractor, 2,
+        DefaultBandwidthMeter bandwidthMeter = new DefaultBandwidthMeter(player.getMainHandler(),
+                null);
+        DataSource dataSource = new DefaultUriDataSource(context, bandwidthMeter, userAgent);
+        ExtractorSampleSource sampleSource = new ExtractorSampleSource(uri, dataSource, extractor,
                 BUFFER_SIZE);
         MediaCodecAudioTrackRenderer audioRenderer = new MediaCodecAudioTrackRenderer(sampleSource,
                 null, true, player.getMainHandler(), null);
