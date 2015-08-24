@@ -300,11 +300,14 @@ public class LiveFragment extends Fragment {
                             JSONObject jsonSchedule = response.getJSONObject(ScheduleOccurrence.SINGULAR_KEY);
                             ScheduleOccurrence schedule = ScheduleOccurrence.buildFromJson(jsonSchedule);
 
-                            ScheduleOccurrence previousSchedule = currentSchedule;
-
-                            currentSchedule = schedule;
                             // It may be null, if nothing is on right now according to the API.
-                            if (currentSchedule != null) {
+                            if (schedule != null) {
+                                // Don't make a network request for the image if it's the same program.
+                                if (currentSchedule == null || !currentSchedule.programSlug.equals(schedule.programSlug)) {
+                                    NetworkImageManager.instance.setBitmap(mBackground, schedule.programSlug, getActivity());
+                                }
+
+                                currentSchedule = schedule;
                                 mScheduleTitle = currentSchedule.title;
 
                                 float length = (float) mScheduleTitle.length();
@@ -325,10 +328,6 @@ public class LiveFragment extends Fragment {
                                     mStatus.setText(R.string.up_next);
                                 } else {
                                     mStatus.setText(R.string.live);
-                                }
-
-                                if (previousSchedule != null && previousSchedule.programSlug.equals(currentSchedule.programSlug)) {
-                                    NetworkImageManager.instance.setBitmap(mBackground, currentSchedule.programSlug, getActivity());
                                 }
                             } else {
                                 setDefaultValues();
