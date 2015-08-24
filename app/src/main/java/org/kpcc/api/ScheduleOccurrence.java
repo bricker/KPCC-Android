@@ -16,7 +16,8 @@ public class ScheduleOccurrence extends Entity {
     private final static String CURRENT_ENDPOINT = "current";
 
     public String title;
-    public Date softStartsAt;
+    public long softStartsAtMs;
+    public long endsAtMs;
     public String programSlug;
 
 
@@ -28,7 +29,12 @@ public class ScheduleOccurrence extends Entity {
         ScheduleOccurrence schedule = new ScheduleOccurrence();
 
         schedule.title = jsonSchedule.getString(PROP_TITLE);
-        schedule.softStartsAt = parseISODateTime(jsonSchedule.getString(PROP_SOFT_STARTS_AT));
+
+        Date softStartsAt = parseISODateTime(jsonSchedule.getString(PROP_SOFT_STARTS_AT));
+        schedule.softStartsAtMs = softStartsAt.getTime();
+
+        Date endsAt = parseISODateTime(jsonSchedule.getString(PROP_ENDS_AT));
+        schedule.endsAtMs = endsAt.getTime();
 
         if (jsonSchedule.has(Program.SINGULAR_KEY)) {
             schedule.programSlug = jsonSchedule.getJSONObject(Program.SINGULAR_KEY).getString(PROP_SLUG);
@@ -37,6 +43,13 @@ public class ScheduleOccurrence extends Entity {
         return schedule;
     }
 
+    public int length() {
+        return (int)(this.endsAtMs - this.softStartsAtMs);
+    }
+
+    public long timeSinceSoftStartMs() {
+        return System.currentTimeMillis() - this.softStartsAtMs;
+    }
 
     public static class ApiClient extends BaseApiClient {
         public ApiClient(String endpoint) {

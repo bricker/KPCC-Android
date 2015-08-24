@@ -122,6 +122,10 @@ public class AudioPlayer {
         return playerControl.getCurrentPosition();
     }
 
+    public int getDuration() {
+        return playerControl.getDuration();
+    }
+
     public void seekTo(long positionMs) {
         player.seekTo(positionMs);
     }

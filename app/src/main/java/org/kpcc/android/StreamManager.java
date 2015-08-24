@@ -7,6 +7,7 @@ import android.media.AudioManager;
 import android.net.Uri;
 import android.os.Binder;
 import android.os.IBinder;
+import android.util.Log;
 import android.webkit.MimeTypeMap;
 
 import com.google.android.exoplayer.ExoPlaybackException;
@@ -180,6 +181,14 @@ public class StreamManager extends Service {
                 }
             } catch (IllegalStateException e) {
                 release();
+            }
+        }
+
+        public int getDuration() {
+            try {
+                return audioPlayer.getDuration();
+            } catch (IllegalStateException e) {
+                return -1;
             }
         }
 
@@ -363,6 +372,10 @@ public class StreamManager extends Service {
                         BuildConfig.VERSION_NAME + "-" +
                         String.valueOf(BuildConfig.VERSION_CODE);
 
+        private final static long EDGE_OFFSET_MS = 20*1000;
+        public final static int WINDOW_MS = 1000*60*60*4; // The approximate window from the HLS server...
+        public final static int JUMP_INTERVAL_SEC = 30;
+
         public final PrerollCompleteCallback prerollCompleteCallback;
 
         public LiveStream(Context context) {
@@ -379,6 +392,12 @@ public class StreamManager extends Service {
         }
 
         @Override
+        public void prepareAndStart() {
+            super.prepareAndStart();
+            seekToLive();
+        }
+
+        @Override
         public void release() {
             if (mStreamManager != null) {
                 // We don't want to call stop here, because in the case where the live stream was
@@ -392,6 +411,11 @@ public class StreamManager extends Service {
             }
 
             super.release();
+        }
+
+        public void seekToLive() {
+            // Stay a few seconds behind edge to avoid stalling.
+            seekTo(WINDOW_MS);
         }
 
         private class PrerollCompleteCallback {
