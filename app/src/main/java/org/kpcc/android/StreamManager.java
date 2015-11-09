@@ -36,6 +36,20 @@ public class StreamManager extends Service {
         );
     }
 
+    public static String getMimeTypeFromAudioUrl(String audioUrl) {
+        String mimeType = MimeTypes.AUDIO_MPEG; // Default mime type.
+
+        String ext = MimeTypeMap.getFileExtensionFromUrl(audioUrl);
+        if (ext != null) {
+            mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(ext);
+        } else {
+            // TODO: Extension couldn't be determined. We should notify the user that the
+            // audio probably won't play, for now we'll just assume it's mp3 (the default mime).
+        }
+
+        return mimeType;
+    }
+
     public static Extractor getExtractorFromContentType(String contentType) {
         switch (contentType) {
             case MimeTypes.AUDIO_MPEG:
@@ -282,6 +296,61 @@ public class StreamManager extends Service {
         }
     }
 
+    public static class RawStream extends BaseStream {
+        public final String assetPath;
+
+        public RawStream(Context context, String assetPath) {
+            super(context);
+            this.assetPath = assetPath;
+
+            String mimeType = StreamManager.getMimeTypeFromAudioUrl(assetPath);
+            AudioPlayer.RendererBuilder builder = new ExtractorRendererBuilder(context, USER_AGENT,
+                    Uri.parse(assetPath), StreamManager.getExtractorFromContentType(mimeType));
+
+            audioPlayer = new AudioPlayer(builder);
+            audioPlayer.setPlayWhenReady(false);
+
+            audioPlayer.addListener(new ExoPlayer.Listener() {
+                @Override
+                public void onPlayerStateChanged(boolean playWhenReady, int i) {
+                    switch (i) {
+                        case ExoPlayer.STATE_IDLE:
+                            break;
+                        case ExoPlayer.STATE_PREPARING:
+                            audioEventListener.onLoading();
+                            break;
+                        case ExoPlayer.STATE_BUFFERING:
+                            audioEventListener.onLoading();
+                            break;
+                        case ExoPlayer.STATE_READY:
+                            audioEventListener.onPrepared();
+                            break;
+                        case ExoPlayer.STATE_ENDED:
+                            audioEventListener.onCompletion();
+                            release();
+                            break;
+                    }
+                }
+
+                @Override
+                public void onPlayWhenReadyCommitted() {
+                }
+
+                @Override
+                public void onPlayerError(ExoPlaybackException e) {
+                    audioEventListener.onError();
+                }
+            });
+        }
+
+        public void prepareAndStart() {
+            audioEventListener.onLoading();
+            prepare();
+            start();
+        }
+
+    }
+
     public static class EpisodeStream extends BaseStream {
         public final String audioUrl;
         public final String programSlug;
@@ -290,16 +359,7 @@ public class StreamManager extends Service {
         public EpisodeStream(String audioUrl, String programSlug, int durationSeconds, Context context) {
             super(context);
 
-            String mimeType = MimeTypes.AUDIO_MPEG; // Default mime type.
-
-            String ext = MimeTypeMap.getFileExtensionFromUrl(audioUrl);
-            if (ext != null) {
-                mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(ext);
-            } else {
-                // TODO: Extension couldn't be determined. We should notify the user that the
-                // audio probably won't play, for now we'll just assume it's mp3 (the default mime).
-            }
-
+            String mimeType = StreamManager.getMimeTypeFromAudioUrl(audioUrl);
             AudioPlayer.RendererBuilder builder = new ExtractorRendererBuilder(context, USER_AGENT,
                     Uri.parse(audioUrl), StreamManager.getExtractorFromContentType(mimeType));
 
@@ -368,12 +428,12 @@ public class StreamManager extends Service {
         // Using Uri.parse because there seems to be a bug in Lollipop that causes
         // the stream to take 20 seconds to start playing. Uri.parse is a workaround.
         public final static String HLS_URL =
-                "http://streammachine-hls001.scprdev.org/sg/kpcc-aac.m3u8?ua=KPCCAndroid-" +
-                        BuildConfig.VERSION_NAME + "-" +
-                        String.valueOf(BuildConfig.VERSION_CODE);
+                String.format(AppConfiguration.instance.getConfig("livestream.url"),
+                        BuildConfig.VERSION_NAME,
+                        String.valueOf(BuildConfig.VERSION_CODE)
+                );
 
-        private final static long EDGE_OFFSET_MS = 20*1000;
-        public final static int WINDOW_MS = 1000*60*60*4; // The approximate window from the HLS server...
+        public final static int EDGE_OFFSET_MS = 10 * 1000;
         public final static int JUMP_INTERVAL_SEC = 30;
 
         public final PrerollCompleteCallback prerollCompleteCallback;
@@ -392,12 +452,6 @@ public class StreamManager extends Service {
         }
 
         @Override
-        public void prepareAndStart() {
-            super.prepareAndStart();
-            seekToLive();
-        }
-
-        @Override
         public void release() {
             if (mStreamManager != null) {
                 // We don't want to call stop here, because in the case where the live stream was
@@ -413,14 +467,28 @@ public class StreamManager extends Service {
             super.release();
         }
 
+        public void prepareAndStartFromLive() {
+            super.prepareAndStart();
+            seekToLive();
+        }
+
+        public int getDuration() {
+            // Stop gap
+            return 1000*60*60*4;
+        }
+
+        public long msBehindLive() {
+            return getDuration() - getCurrentPosition();
+        }
+
         public void seekToLive() {
             // Stay a few seconds behind edge to avoid stalling.
-            seekTo(WINDOW_MS);
+            seekTo(getDuration());
         }
 
         private class PrerollCompleteCallback {
             public void onPrerollComplete() {
-                prepareAndStart();
+                prepareAndStartFromLive();
             }
         }
     }
@@ -559,16 +627,16 @@ public class StreamManager extends Service {
             boolean installedRecently = KPCCApplication.INSTALLATION_TIME > (now - PrerollManager.INSTALL_GRACE);
             boolean heardPrerollRecently = PrerollManager.LAST_PREROLL_PLAY > (now - PrerollManager.PREROLL_THRESHOLD);
 
-            if (!DebugFlag.isEnabled(DebugFlag.PREROLL) && ((!hasPlayedLiveStream && installedRecently) || heardPrerollRecently)) {
+            if (!AppConfiguration.instance.isDebug && ((!hasPlayedLiveStream && installedRecently) || heardPrerollRecently)) {
                 // Skipping Preroll
-                liveStream.prepareAndStart();
+                liveStream.prepareAndStartFromLive();
             } else {
                 // Normal preroll flow (preroll still may not play, based on preroll response)
                 PrerollManager.instance.getPrerollData(context, new PrerollManager.PrerollCallbackListener() {
                     @Override
                     public void onPrerollResponse(final PrerollManager.PrerollData prerollData) {
                         if (prerollData == null || prerollData.audioUrl == null) {
-                            liveStream.prepareAndStart();
+                            liveStream.prepareAndStartFromLive();
                         } else {
                             prerollStream.setupPreroll(prerollData);
                             prerollStream.audioEventListener.onPrerollData(prerollData);

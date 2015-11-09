@@ -1,21 +1,37 @@
 package org.kpcc.android;
 
+import android.media.MediaCodec;
 import android.os.Handler;
 import android.os.Looper;
+import android.util.Log;
+import android.view.Surface;
 
 import com.google.android.exoplayer.ExoPlaybackException;
 import com.google.android.exoplayer.ExoPlayer;
 import com.google.android.exoplayer.MediaCodecAudioTrackRenderer;
+import com.google.android.exoplayer.MediaCodecTrackRenderer;
+import com.google.android.exoplayer.TimeRange;
 import com.google.android.exoplayer.TrackRenderer;
+import com.google.android.exoplayer.audio.AudioTrack;
+import com.google.android.exoplayer.chunk.Format;
+import com.google.android.exoplayer.hls.HlsSampleSource;
+import com.google.android.exoplayer.text.Cue;
 import com.google.android.exoplayer.upstream.BandwidthMeter;
 import com.google.android.exoplayer.util.PlayerControl;
+
+import java.io.IOException;
+import java.util.List;
+import java.util.Map;
 
 /**
  * A wrapper around {@link ExoPlayer} that provides a higher level interface. It can be prepared
  * with one of a number of {@link RendererBuilder} classes to suit different use cases (e.g. DASH,
  * SmoothStreaming and so on).
  */
-public class AudioPlayer {
+public class AudioPlayer implements
+        ExoPlayer.Listener,
+        HlsSampleSource.EventListener,
+        MediaCodecAudioTrackRenderer.EventListener {
 
     /**
      * Builds renderers for the player.
@@ -149,6 +165,79 @@ public class AudioPlayer {
 
     /* package */ Handler getMainHandler() {
         return mainHandler;
+    }
+
+    @Override
+    public void onPlayerStateChanged(boolean playWhenReady, int state) {
+        Log.d("AudioPlayer", "called onPlayerStateChanged");
+    }
+
+    @Override
+    public void onPlayerError(ExoPlaybackException exception) {
+        Log.d("AudioPlayer", "called onPlayerError");
+    }
+
+    @Override
+    public void onDownstreamFormatChanged(int sourceId, Format format, int trigger, int mediaTimeMs) {
+        Log.d("AudioPlayer", "called onDownstreamFormatChanged");
+    }
+
+    @Override
+    public void onLoadError(int sourceId, IOException e) {
+        Log.d("AudioPlayer", "called onLoadError");
+    }
+
+    @Override
+    public void onPlayWhenReadyCommitted() {
+        Log.d("AudioPlayer", "called onPlayWhenReadyCommitted");
+    }
+
+    @Override
+    public void onLoadStarted(int sourceId, long length, int type, int trigger, Format format,
+                              int mediaStartTimeMs, int mediaEndTimeMs) {
+        Log.d("AudioPlayer", "called onLoadStarted");
+    }
+
+    @Override
+    public void onLoadCompleted(int sourceId, long bytesLoaded, int type, int trigger, Format format,
+                                int mediaStartTimeMs, int mediaEndTimeMs, long elapsedRealtimeMs, long loadDurationMs) {
+        Log.d("AudioPlayer", "called onLoadCompleted");
+    }
+
+    @Override
+    public void onLoadCanceled(int sourceId, long bytesLoaded) {
+        Log.d("AudioPlayer", "called onLoadCanceled");
+    }
+
+    @Override
+    public void onUpstreamDiscarded(int sourceId, int mediaStartTimeMs, int mediaEndTimeMs) {
+        Log.d("AudioPlayer", "called onUpstreamDiscarded");
+    }
+
+    @Override
+    public void onAudioTrackInitializationError(AudioTrack.InitializationException e) {
+        Log.d("AudioPlayer", "called onAudioTrackInitializationError");
+    }
+
+    @Override
+    public void onAudioTrackWriteError(AudioTrack.WriteException e) {
+        Log.d("AudioPlayer", "called onAudioTrackWriteError");
+    }
+
+    @Override
+    public void onDecoderInitializationError(MediaCodecTrackRenderer.DecoderInitializationException e) {
+        Log.d("AudioPlayer", "called onDecoderInitializationError");
+    }
+
+    @Override
+    public void onCryptoError(MediaCodec.CryptoException e) {
+        Log.d("AudioPlayer", "called onCryptoError");
+    }
+
+    @Override
+    public void onDecoderInitialized(String decoderName, long elapsedRealtimeMs,
+                                     long initializationDurationMs) {
+        Log.d("AudioPlayer", "called onDecoderInitialized");
     }
 
     private class InternalRendererBuilderCallback implements RendererBuilderCallback {

@@ -41,7 +41,7 @@ public class AnalyticsManager {
     public final static String PARAM_SESSION_LENGTH = "sessionLengthInSeconds";
     public final static String PARAM_ACTIVITY_TYPE = "activityType";
 
-    private static final String MIXPANEL_TOKEN = AppConfiguration.instance.getConfig("mixpanel.token");
+    private static final String MIXPANEL_TOKEN = AppConfiguration.instance.getSecret("mixpanel.token");
     public static AnalyticsManager instance = null;
     private final MixpanelAPI mMixpanelAPI;
 
