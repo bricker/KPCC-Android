@@ -2,6 +2,7 @@ package org.kpcc.android;
 
 import android.content.Context;
 import android.content.Intent;
+import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -9,21 +10,25 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.FrameLayout;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
+import android.widget.SeekBar;
 import android.widget.TextView;
 
 import com.android.volley.Request;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.NetworkImageView;
+import com.google.android.exoplayer.C;
+import com.google.android.exoplayer.extractor.mp3.Mp3Extractor;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.kpcc.api.ScheduleOccurrence;
 
-import java.util.Date;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -41,17 +46,27 @@ public class LiveFragment extends Fragment {
     private StreamManager.LiveStreamBundle streamBundle;
     private AudioButtonManager mAudioButtonManager;
     private ProgressBar mPrerollProgressBar;
-    private ProgressManager mProgressManager;
-    private ProgressManager mPrerollProgressManager;
+    private ProgressManager mProgressManager; // Updates seek bar
+    private ProgressManager mPersistentProgressObserver; // Updates live status
+    private ProgressManager mPrerollProgressManager; // Updates preroll seek bar
+    private ProgressManager mScheduleUpdater; // Updates program info
+    private ProgressManager mTimerProgressObserver; // Updates sleep timer
     private View mPrerollView;
-    private ProgressManager mScheduleUpdater;
-    private ProgressManager mTimerProgressObserver;
     private ImageView mBackground;
     private Request mRequest;
     private TextView mTimerRemaining;
     private LinearLayout mTimerRemainingWrapper;
-//    private Button mRewind;
+    private ImageButton mRewind;
+    private ImageButton mForward;
+    private Button mGoLive;
+    private Button mProgStart;
+    private SeekBar mSeekBar;
+    private FrameLayout mGoLiveWrapper;
+    private FrameLayout mProgStartWrapper;
+    private FrameLayout mLiveJumpBtns;
     private final AtomicBoolean didInitAudio = new AtomicBoolean(false);
+    private ScheduleOccurrence currentSchedule = null;
+    private AtomicBoolean isCloseToLive = new AtomicBoolean(true);
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -76,7 +91,14 @@ public class LiveFragment extends Fragment {
         mPrerollView = view.findViewById(R.id.preroll);
         mTimerRemaining = (TextView)view.findViewById(R.id.timer_remaining);
         mTimerRemainingWrapper = (LinearLayout)view.findViewById(R.id.timer_remaining_wrapper);
-//        mRewind = (Button)view.findViewById(R.id.rewind);
+        mRewind = (ImageButton)view.findViewById(R.id.rewind);
+        mForward = (ImageButton)view.findViewById(R.id.forward);
+        mGoLive = (Button)view.findViewById(R.id.golive_button);
+        mProgStart = (Button)view.findViewById(R.id.progstart_button);
+        mGoLiveWrapper = (FrameLayout)view.findViewById(R.id.golive_wrapper);
+        mProgStartWrapper = (FrameLayout)view.findViewById(R.id.progstart_wrapper);
+        mLiveJumpBtns = (FrameLayout)view.findViewById(R.id.live_jump_buttons);
+        mSeekBar = (SeekBar)view.findViewById(R.id.live_seek_bar);
 
         mAudioButtonManager = new AudioButtonManager(view);
 
@@ -93,7 +115,7 @@ public class LiveFragment extends Fragment {
 
                 if (currentLivePlayer != null && currentLivePlayer.didStopOnConnectivityLoss) {
                     currentLivePlayer.stop();
-                    currentLivePlayer.prepareAndStart();
+                    currentLivePlayer.prepareAndStartFromLive();
                     currentLivePlayer.didStopOnConnectivityLoss = false;
                 }
             }
@@ -129,6 +151,7 @@ public class LiveFragment extends Fragment {
                 } else {
                     // Preroll will be handled normally
                     streamBundle.playWithPrerollAttempt();
+                    toggleBtnProgStart();
                     PLAY_START = System.currentTimeMillis();
                     logLiveStreamEvent(AnalyticsManager.EVENT_LIVE_STREAM_PLAY);
                 }
@@ -164,17 +187,151 @@ public class LiveFragment extends Fragment {
             }
         });
 
-//        mRewind.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-//                if (streamBundle != null) {
-//                    int currentPosition = streamBundle.liveStream.getCurrentPosition();
-//                    streamBundle.liveStream.seekTo(currentPosition - 1000*30);
-//                }
-//            }
-//        });
+        mSeekBar.setEnabled(false);
+
+        mSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                if (!fromUser) {
+                    return;
+                }
+
+                if (streamBundle != null) {
+                    long adjustedProgress = currentSchedule.softStartsAtMs + progress;
+                    if (adjustedProgress > currentSchedule.endsAtMs) { return; }
+
+                    streamBundle.liveStream.seekTo(adjustedProgress);
+                }
+
+                toggleBtnGoLive();
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+            }
+        });
+
+        mRewind.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (streamBundle != null) {
+                    long currentPosition = streamBundle.liveStream.getCurrentPosition();
+
+                    if (currentPosition > StreamManager.LiveStream.JUMP_INTERVAL_SEC) {
+                        streamBundle.liveStream.seekTo(currentPosition - (1000 * StreamManager.LiveStream.JUMP_INTERVAL_SEC));
+                    }
+
+                    toggleBtnGoLive();
+                }
+            }
+        });
+        mForward.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (streamBundle != null) {
+                    long currentPosition = streamBundle.liveStream.getCurrentPosition();
+
+                    if (streamBundle.liveStream.getDuration() - StreamManager.LiveStream.JUMP_INTERVAL_SEC > currentPosition) {
+                        streamBundle.liveStream.seekTo(currentPosition + (1000 * StreamManager.LiveStream.JUMP_INTERVAL_SEC));
+                    }
+                }
+            }
+        });
+
+        mGoLive.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (streamBundle != null) {
+                    streamBundle.liveStream.pause();
+
+                    playRewindBeat(new StreamManager.AudioEventListener() {
+                        @Override
+                        public void onLoading() {
+                            mAudioButtonManager.toggleLoading();
+                        }
+
+                        @Override
+                        public void onPlay() {
+                        }
+
+                        @Override
+                        public void onPause() {
+                        }
+
+                        @Override
+                        public void onStop() {
+                        }
+
+                        @Override
+                        public void onCompletion() {
+                            streamBundle.liveStream.seekToLive();
+                            toggleBtnProgStart();
+                            streamBundle.liveStream.start();
+                        }
+
+                        @Override
+                        public void onError() {
+                        }
+                    });
+                }
+            }
+        });
+
+        mProgStart.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (streamBundle != null && currentSchedule != null) {
+                    streamBundle.liveStream.pause();
+
+                    playRewindBeat(new StreamManager.AudioEventListener() {
+                        @Override
+                        public void onLoading() {
+                            mAudioButtonManager.toggleLoading();
+                        }
+
+                        @Override
+                        public void onPlay() {
+                        }
+
+                        @Override
+                        public void onPause() {
+                        }
+
+                        @Override
+                        public void onStop() {
+                        }
+
+                        @Override
+                        public void onCompletion() {
+//                            int currentPosition = streamBundle.liveStream.getCurrentPosition();
+                            int relativeProgStart = (int) (streamBundle.liveStream.getDuration() - currentSchedule.timeSinceSoftStartMs());
+                            toggleBtnGoLive();
+                            mSeekBar.setProgress(0);
+                            int _p = mSeekBar.getProgress();
+                            int _s = streamBundle.liveStream.getCurrentPosition();
+                            streamBundle.liveStream.prepareAndStart();
+                            streamBundle.liveStream.seekTo(relativeProgStart);
+                        }
+
+                        @Override
+                        public void onError() {
+                        }
+                    });
+                }
+            }
+        });
 
         return view;
+    }
+
+    private void playRewindBeat(StreamManager.AudioEventListener eventListener) {
+        StreamManager.RawStream rewindAudio = new StreamManager.RawStream(getContext(), "asset:///audio/rewind.mp3");
+        rewindAudio.setOnAudioEventListener(eventListener);
+        rewindAudio.prepareAndStart();
     }
 
     @Override
@@ -199,6 +356,65 @@ public class LiveFragment extends Fragment {
             }
         });
 
+        mPersistentProgressObserver = new ProgressManager(new Runnable() {
+            @Override
+            public void run() {
+                // Do this stuff every second. This should never be stopped by any action except
+                // leaving the fragment.
+                int relativeLiveHead = (int)currentSchedule.timeSinceSoftStartMs();
+                long currentPositionMs = mSeekBar.getProgress();
+                mSeekBar.setSecondaryProgress(relativeLiveHead);
+
+                if (streamBundle != null && streamBundle.liveStream != null) {
+                    if (streamBundle.liveStream.isPaused) {
+                        if (relativeLiveHead > (currentPositionMs + (1000 * 60 * 2))) {
+                            isCloseToLive.set(false);
+
+                            int minBehindLive = (int) (relativeLiveHead - currentPositionMs) / 1000 / 60;
+
+                            String val;
+                            if (minBehindLive <= 1) {
+                                val = getString(R.string.less_than_a_minute);
+                            } else {
+                                val = String.valueOf(minBehindLive) + " " + getString(R.string.minutes);
+                            }
+
+                            val = val + " " + getString(R.string.behind_live);
+                            mStatus.setText(val);
+
+                            toggleBtnGoLive();
+                        } else {
+                            // If we're before this occurrence's 'soft start', then say "up next".
+                            // Otherwise, set "On Now".
+                            if (System.currentTimeMillis() < currentSchedule.softStartsAtMs) {
+                                mStatus.setText(R.string.up_next);
+                            } else {
+                                mStatus.setText(R.string.live);
+                            }
+
+                            toggleBtnProgStart();
+                        }
+                    }
+
+                    if (relativeLiveHead < (currentPositionMs + (1000 * 30))) {
+                        mForward.setAlpha((float)0.4);
+                        mForward.setEnabled(false);
+                    } else {
+                        mForward.setAlpha((float)1.0);
+                        mForward.setEnabled(true);
+                    }
+
+                    if (streamBundle.liveStream.audioPlayer.getCurrentPosition() < 30) {
+                        mRewind.setAlpha((float)0.4);
+                        mRewind.setEnabled(false);
+                    } else {
+                        mRewind.setAlpha((float)1.0);
+                        mRewind.setEnabled(true);
+                    }
+                }
+            }
+        }, 1000);
+
         mScheduleUpdater = new ProgressManager(new Runnable() {
             @Override
             public void run() {
@@ -211,7 +427,13 @@ public class LiveFragment extends Fragment {
 
                             // It may be null, if nothing is on right now according to the API.
                             if (schedule != null) {
-                                mScheduleTitle = schedule.title;
+                                // Don't make a network request for the image if it's the same program.
+                                if (currentSchedule == null || !currentSchedule.programSlug.equals(schedule.programSlug)) {
+                                    NetworkImageManager.instance.setBitmap(mBackground, schedule.programSlug, getActivity());
+                                }
+
+                                currentSchedule = schedule;
+                                mScheduleTitle = currentSchedule.title;
 
                                 float length = (float) mScheduleTitle.length();
                                 if (length < 12) {
@@ -222,18 +444,8 @@ public class LiveFragment extends Fragment {
                                     mTitle.setTextSize(30);
                                 }
 
+                                mSeekBar.setMax(currentSchedule.length());
                                 mTitle.setText(mScheduleTitle);
-
-                                // If we're before this occurrence's 'soft start', then say "up next".
-                                // Otherwise, set "On Now".
-                                Date softStartsAt = schedule.softStartsAt;
-                                if (softStartsAt != null && new Date().getTime() < softStartsAt.getTime()) {
-                                    mStatus.setText(R.string.up_next);
-                                } else {
-                                    mStatus.setText(R.string.live);
-                                }
-
-                                NetworkImageManager.instance.setBitmap(mBackground, schedule.programSlug, getActivity());
                             } else {
                                 setDefaultValues();
                             }
@@ -250,7 +462,7 @@ public class LiveFragment extends Fragment {
                     }
                 });
             }
-        }, 1000 * 60 * 5); // Run the thread every 5 minutes)
+        }, 1000 * 60 * 5); // Run the thread every 5 minutes
 
         if (BaseAlarmManager.SleepManager.instance.isRunning()) {
             mTimerRemainingWrapper.setVisibility(View.VISIBLE);
@@ -259,9 +471,11 @@ public class LiveFragment extends Fragment {
                 @Override
                 public void onTimerUpdate(int hours, int mins, int secs) {
                     mTimerRemaining.setText(
-                            String.valueOf(hours) + ":" +
-                                    String.format("%02d", mins) + ":" +
+                            String.format("%s:%s:%s",
+                                    String.valueOf(hours),
+                                    String.format("%02d", mins),
                                     String.format("%02d", secs)
+                            )
                     );
                 }
 
@@ -284,14 +498,18 @@ public class LiveFragment extends Fragment {
             public void onConnect() {
                 // We want this here so the schedule will get updated immediately when connectivity
                 // is back, so we'll just restart it.
-                if (mScheduleUpdater != null) { mScheduleUpdater.start(); }
+                if (mScheduleUpdater != null) {
+                    mScheduleUpdater.start();
+                }
 
                 mAudioButtonManager.hideError();
             }
 
             @Override
             public void onDisconnect() {
-                if (mScheduleUpdater != null) { mScheduleUpdater.release(); }
+                if (mScheduleUpdater != null) {
+                    mScheduleUpdater.release();
+                }
                 setDefaultValues();
                 mAudioButtonManager.showError(R.string.network_error);
             }
@@ -305,6 +523,7 @@ public class LiveFragment extends Fragment {
         if (mTimerProgressObserver != null) { mTimerProgressObserver.release(); }
         if (mProgressManager != null) { mProgressManager.release(); }
         if (mPrerollProgressManager != null) { mPrerollProgressManager.release(); }
+        if (mPersistentProgressObserver != null) {mPersistentProgressObserver.release(); }
 
         AppConnectivityManager.instance.removeOnNetworkConnectivityListener(LiveFragment.STACK_TAG);
 
@@ -331,7 +550,17 @@ public class LiveFragment extends Fragment {
             @Override
             public void onPlay() {
                 mAudioButtonManager.togglePlayingForPause();
+                showSeekButtons();
+                mSeekBar.setVisibility(View.VISIBLE);
+                mSeekBar.setEnabled(true);
                 if (mProgressManager != null) { mProgressManager.start(); }
+                if (!mPersistentProgressObserver.isObserving()) { mPersistentProgressObserver.start(); }
+            }
+
+            @Override
+            public void onProgress(int progress) {
+                long relativeProgress = System.currentTimeMillis() - currentSchedule.softStartsAtMs;
+                mSeekBar.setProgress((int)relativeProgress);
             }
 
             @Override
@@ -366,6 +595,9 @@ public class LiveFragment extends Fragment {
                 mStatus.setVisibility(View.INVISIBLE);
                 mTitle.setVisibility(View.INVISIBLE);
                 mTimerRemainingWrapper.setVisibility(View.GONE);
+                mLiveJumpBtns.setVisibility(View.INVISIBLE);
+                mRewind.setVisibility(View.INVISIBLE);
+                mForward.setVisibility(View.INVISIBLE);
 
                 if (prerollData.assetUrl != null) {
                     NetworkImageManager.instance.setPrerollImage(mAdView, prerollData.assetUrl);
@@ -442,6 +674,9 @@ public class LiveFragment extends Fragment {
                 mPrerollView.setVisibility(View.GONE);
                 mStatus.setVisibility(View.VISIBLE);
                 mTitle.setVisibility(View.VISIBLE);
+                mLiveJumpBtns.setVisibility(View.VISIBLE);
+                mRewind.setVisibility(View.VISIBLE);
+                mForward.setVisibility(View.VISIBLE);
 
                 if (BaseAlarmManager.SleepManager.instance.isRunning()) {
                     mTimerRemainingWrapper.setVisibility(View.VISIBLE);
@@ -468,6 +703,18 @@ public class LiveFragment extends Fragment {
         if (streamBundle.liveStream.isPlaying()) { mProgressManager.start(); }
         // There is a possible bug here, where if you start preroll and leave, then come back,
         // the observer won't refresh. I'm not super worried about it.
+    }
+
+    private void toggleBtnProgStart() {
+        mGoLiveWrapper.setVisibility(View.GONE);
+        mProgStartWrapper.setVisibility(View.VISIBLE);
+    }
+
+    private void toggleBtnGoLive() {
+        if (streamBundle != null) {
+            mGoLiveWrapper.setVisibility(View.VISIBLE);
+            mProgStartWrapper.setVisibility(View.GONE);
+        }
     }
 
     private void logLiveStreamEvent(String key) {
@@ -514,17 +761,30 @@ public class LiveFragment extends Fragment {
 
             if (currentPlayer != null && currentPlayer.isPlaying()) {
                 mAudioButtonManager.togglePlayingForPause();
+                mSeekBar.setVisibility(View.VISIBLE);
+                mSeekBar.setEnabled(true);
             } else if (currentPreroll != null && currentPreroll.isPlaying()) {
                 mAudioButtonManager.togglePlayingForPause();
             } else {
                 // Default State.
                 // We put this here to reset any previous error message.
                 mAudioButtonManager.toggleStopped();
+                hideSeekButtons();
             }
 
             didInitAudio.set(true);
         } else {
             mAudioButtonManager.toggleStopped();
         }
+    }
+
+    private void hideSeekButtons() {
+        mRewind.setVisibility(View.INVISIBLE);
+        mForward.setVisibility(View.INVISIBLE);
+    }
+
+    private void showSeekButtons() {
+        mRewind.setVisibility(View.VISIBLE);
+        mForward.setVisibility(View.VISIBLE);
     }
 }

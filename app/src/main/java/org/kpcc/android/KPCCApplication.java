@@ -31,8 +31,8 @@ public class KPCCApplication extends Application {
         BaseAlarmManager.setupInstance(this);
 
         Parse.initialize(this,
-                AppConfiguration.instance.getConfig("parse.applicationId"),
-                AppConfiguration.instance.getConfig("parse.clientKey")
+                AppConfiguration.instance.getSecret("parse.applicationId"),
+                AppConfiguration.instance.getSecret("parse.clientKey")
         );
         ParseInstallation.getCurrentInstallation().saveInBackground();
 

@@ -22,8 +22,7 @@ public class PrerollManager {
     public final static long INSTALL_GRACE = 1000 * 60 * 10; // 10 minutes
     public final static PrerollManager instance = new PrerollManager();
 
-    private final static String PREROLL_URL = "http://adserver.adtechus.com/?adrawdata/3.0/5511.1/3590533/0/0/header=yes;cookie=no;adct=text/xml;guid=%s:%s";
-//    private final static String PREROLL_URL = "http://192.168.100.16:5000/preroll/BasicTritonPreroll.xml/?adrawdata/3.0/5511.1/3590533/0/0/header=yes;cookie=no;adct=text/xml;guid=%s:%s";
+    private final static String PREROLL_URL = AppConfiguration.instance.getConfig("preroll.url");
 
     public static long LAST_PREROLL_PLAY = 0;
 
@@ -165,7 +164,7 @@ public class PrerollManager {
                     type = "gaid";
                 }
 
-                if (DebugFlag.isEnabled(DebugFlag.PREROLL)) {
+                if (AppConfiguration.instance.isDebug) {
                     id = UUID.randomUUID().toString();
                     type = "app";
                 }

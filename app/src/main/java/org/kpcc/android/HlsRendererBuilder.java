@@ -6,8 +6,11 @@ import android.os.Handler;
 import com.google.android.exoplayer.DefaultLoadControl;
 import com.google.android.exoplayer.LoadControl;
 import com.google.android.exoplayer.MediaCodecAudioTrackRenderer;
+import com.google.android.exoplayer.MediaCodecUtil;
 import com.google.android.exoplayer.TrackRenderer;
+import com.google.android.exoplayer.chunk.VideoFormatSelectorUtil;
 import com.google.android.exoplayer.hls.HlsChunkSource;
+import com.google.android.exoplayer.hls.HlsMasterPlaylist;
 import com.google.android.exoplayer.hls.HlsPlaylist;
 import com.google.android.exoplayer.hls.HlsPlaylistParser;
 import com.google.android.exoplayer.hls.HlsSampleSource;
@@ -59,16 +62,27 @@ public class HlsRendererBuilder implements AudioPlayer.RendererBuilder, Manifest
         LoadControl loadControl = new DefaultLoadControl(new DefaultAllocator(BUFFER_SEGMENT_SIZE));
         DefaultBandwidthMeter bandwidthMeter = new DefaultBandwidthMeter();
 
+        int[] variantIndices = null;
+        if (manifest instanceof HlsMasterPlaylist) {
+            HlsMasterPlaylist masterPlaylist = (HlsMasterPlaylist) manifest;
+            try {
+                variantIndices = VideoFormatSelectorUtil.selectVideoFormatsForDefaultDisplay(
+                        context, masterPlaylist.variants, null, false);
+            } catch (MediaCodecUtil.DecoderQueryException e) {
+                callback.onRenderersError(e);
+                return;
+            }
+        }
+
         DataSource dataSource = new DefaultUriDataSource(context, bandwidthMeter, userAgent);
         HlsChunkSource chunkSource = new HlsChunkSource(dataSource, url, manifest, bandwidthMeter,
-                null, HlsChunkSource.ADAPTIVE_MODE_SPLICE, null);
+                variantIndices, HlsChunkSource.ADAPTIVE_MODE_SPLICE, null);
         HlsSampleSource sampleSource = new HlsSampleSource(chunkSource, loadControl,
-                BUFFER_SEGMENTS * BUFFER_SEGMENT_SIZE, true, mainHandler, null, AudioPlayer.TYPE_AUDIO);
+                BUFFER_SEGMENTS * BUFFER_SEGMENT_SIZE, true, mainHandler, player, AudioPlayer.TYPE_AUDIO);
         MediaCodecAudioTrackRenderer audioRenderer = new MediaCodecAudioTrackRenderer(sampleSource);
 
         TrackRenderer[] renderers = new TrackRenderer[1];
         renderers[AudioPlayer.TYPE_AUDIO] = audioRenderer;
-        callback.onRenderers(renderers, bandwidthMeter);
+        callback.onRenderers(renderers);
     }
-
 }

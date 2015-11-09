@@ -29,6 +29,14 @@
 
     <string name="play_audio">Play Audio</string>
     <string name="pause_audio">Pause Audio</string>
+    <string name="back_30s">Back 30 seconds</string>
+    <string name="forward_30s">Forward 30 seconds</string>
+    <string name="rewind_start">Rewind to the start of this show</string>
+    <string name="back_to_live">Back to Live</string>
+    <string name="less_than_a_minute">Less than a minute</string>
+    <string name="behind_live">behind live</string>
+    <string name="minutes">minutes</string>
+
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>
 

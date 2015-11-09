@@ -25,7 +25,7 @@ public class FeedbackManager {
     private final static String PRIORITY_SUGGESTION = "4";
     private final static String PRIORITY_FEEDBACK = "2";
     private final static String PRIORITY_DEFAULT = "5";
-    private final static String KPCC_EMAIL = "mobilefeedback@scpr.org";
+    private final static String KPCC_EMAIL = AppConfiguration.instance.getConfig("feedback.email");
     private final static String LABEL = "Android Feedback";
     private final static String DEFAULT_USER = "/api/v2/users/21318558";
     private final static String DEFAULT_GROUP = "/api/v2/groups/346862";
@@ -37,8 +37,8 @@ public class FeedbackManager {
     private final HashMap<String, String> mHeaders = new HashMap<>();
 
     private FeedbackManager() {
-        String email = AppConfiguration.instance.getConfig("desk.email");
-        String password = AppConfiguration.instance.getConfig("desk.password");
+        String email = AppConfiguration.instance.getSecret("desk.email");
+        String password = AppConfiguration.instance.getSecret("desk.password");
 
         // The setBasicAuth method doesn't build the header correctly for this, so we have
         // to do it manually.

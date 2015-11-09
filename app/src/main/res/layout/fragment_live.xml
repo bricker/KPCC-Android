@@ -21,12 +21,6 @@
         android:layout_gravity="bottom"
         android:orientation="vertical">
 
-        <!--<Button-->
-            <!--android:id="@+id/rewind"-->
-            <!--android:layout_width="match_parent"-->
-            <!--android:layout_height="50dp"-->
-            <!--android:text="Back 30 seconds"/>-->
-
         <LinearLayout
             android:id="@+id/timer_remaining_wrapper"
             android:layout_width="match_parent"
@@ -53,7 +47,7 @@
 
         <RelativeLayout
             android:layout_width="match_parent"
-            android:layout_height="292dp"
+            android:layout_height="311dp"
             android:layout_gravity="bottom"
             style="@style/static_content_wrapper">
 
@@ -69,7 +63,8 @@
                     android:layout_height="wrap_content"
                     android:gravity="center_horizontal"
                     android:layout_marginBottom="5dp"
-                    style="@style/text_header_small" />
+                    style="@style/text_header_small"
+                    android:text="@string/live" />
 
                 <TextView
                     android:id="@+id/live_title"
@@ -80,20 +75,88 @@
                     android:textSize="50sp" />
             </LinearLayout>
 
-            <include
-                android:id="@+id/rule"
-                layout="@layout/horizontal_rule"
+            <SeekBar
+                android:id="@+id/live_seek_bar"
                 android:layout_width="match_parent"
-                android:layout_height="1dp"
+                android:layout_height="15dp"
                 android:layout_marginBottom="20dp"
-                android:layout_below="@id/stream_data" />
+                android:layout_below="@id/stream_data"
+                style="@style/AppTheme.ProgressBarHorizontal"
+                android:paddingLeft="0dp"
+                android:paddingRight="0dp"
+                android:thumb="@null"
+                android:visibility="invisible" />
 
-            <include
-                layout="@layout/audio_button"
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_gravity="center_horizontal"
-                android:layout_below="@id/rule" />
+                android:orientation="horizontal"
+                android:layout_below="@id/live_seek_bar">
+                <ImageButton
+                    android:id="@+id/rewind"
+                    style="@style/live_seek_btn"
+                    android:src="@drawable/btn_back_30"
+                    android:text="@string/back_30s" />
+
+                <include
+                    layout="@layout/audio_button"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_gravity="center_horizontal"/>
+
+                <ImageButton
+                    android:id="@+id/forward"
+                    style="@style/live_seek_btn"
+                    android:src="@drawable/btn_forward_30"
+                    android:text="@string/forward_30s"/>
+            </LinearLayout>
+
+            <FrameLayout
+                android:id="@+id/live_jump_buttons"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_alignParentBottom="true">
+                <FrameLayout
+                    android:id="@+id/golive_wrapper"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:visibility="gone">
+                    <ImageView
+                        android:layout_width="25dp"
+                        android:layout_height="25dp"
+                        android:src="@drawable/menu_antenna"
+                        android:layout_gravity="center_vertical"
+                        android:layout_marginLeft="100dp"/>
+
+                    <Button
+                        android:id="@+id/golive_button"
+                        android:paddingLeft="30dp"
+                        style="@style/active_btn"
+                        android:text="@string/back_to_live"
+                        android:textAllCaps="false"/>
+                </FrameLayout>
+
+                <FrameLayout
+                    android:id="@+id/progstart_wrapper"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:visibility="gone">
+                    <ImageView
+                        android:layout_width="25dp"
+                        android:layout_height="25dp"
+                        android:src="@drawable/btn_live_rewind_small"
+                        android:layout_gravity="center_vertical"
+                        android:layout_marginLeft="50dp"/>
+
+                    <Button
+                        android:id="@+id/progstart_button"
+                        android:paddingLeft="40dp"
+                        style="@style/active_btn"
+                        android:text="@string/rewind_start"
+                        android:textAllCaps="false"/>
+                </FrameLayout>
+            </FrameLayout>
         </RelativeLayout>
     </FrameLayout>
 </FrameLayout>

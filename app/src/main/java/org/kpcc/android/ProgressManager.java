@@ -16,6 +16,10 @@ public class ProgressManager {
         this.observer = new ProgressObserver(runner, interval);
     }
 
+    boolean isObserving() {
+        return observer.isObserving();
+    }
+
     void start() {
         // If the thread is already running, we want to avoid IllegalThreadStateException.
         if (progressThread != null && progressThread.isAlive()) {
@@ -86,7 +90,7 @@ public class ProgressManager {
     }
 
     public static class ProgressBarRunner implements Runnable {
-        private final StreamManager.BaseStream stream;
+        protected final StreamManager.BaseStream stream;
 
         public ProgressBarRunner(StreamManager.BaseStream stream) {
             this.stream = stream;
