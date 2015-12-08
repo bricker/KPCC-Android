@@ -7,16 +7,19 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
 
 public class ScheduleOccurrence extends Entity {
     public final static String SINGULAR_KEY = "schedule_occurrence";
     private final static String ENDPOINT = "schedule";
     public final static ApiClient Client = new ApiClient(ENDPOINT);
-    private final static String CURRENT_ENDPOINT = "current";
+    private final static String AT_ENDPOINT = "at";
 
     public String title;
     public long softStartsAtMs;
+    public long startsAtMs;
     public long endsAtMs;
     public String programSlug;
 
@@ -32,6 +35,9 @@ public class ScheduleOccurrence extends Entity {
 
         Date softStartsAt = parseISODateTime(jsonSchedule.getString(PROP_SOFT_STARTS_AT));
         schedule.softStartsAtMs = softStartsAt.getTime();
+
+        Date startsAt = parseISODateTime(jsonSchedule.getString(PROP_STARTS_AT));
+        schedule.startsAtMs = startsAt.getTime();
 
         Date endsAt = parseISODateTime(jsonSchedule.getString(PROP_ENDS_AT));
         schedule.endsAtMs = endsAt.getTime();
@@ -56,8 +62,10 @@ public class ScheduleOccurrence extends Entity {
             super(endpoint);
         }
 
-        public Request getCurrent(Response.Listener<JSONObject> listener, Response.ErrorListener errorListener) {
-            return get(CURRENT_ENDPOINT, null, listener, errorListener);
+        public Request getAtTimestamp(long uts, Response.Listener<JSONObject> listener, Response.ErrorListener errorListener) {
+            Map<String,String> params = new HashMap<>();
+            params.put("time", String.valueOf(uts));
+            return get(AT_ENDPOINT, params, listener, errorListener);
         }
     }
 

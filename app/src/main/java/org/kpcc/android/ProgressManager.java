@@ -98,8 +98,8 @@ public class ProgressManager {
 
         @Override
         public void run() {
-            int millis = stream.getCurrentPosition();
-            stream.audioEventListener.onProgress(millis);
+            long millis = stream.getCurrentPosition();
+            stream.audioEventListener.onProgress((int)millis);
         }
     }
 

@@ -13,7 +13,8 @@ import com.parse.ParsePush;
 import com.parse.ParsePushBroadcastReceiver;
 
 class AppNotificationManager implements SharedPreferences.OnSharedPreferenceChangeListener {
-    private static final String CHANNEL_LISTEN_LIVE = "listenLive";
+
+    private static final String CHANNEL_LISTEN_LIVE = AppConfiguration.instance.getConfig("channel.listenLive");
     private static AppNotificationManager instance = null;
 
     private final Application application;

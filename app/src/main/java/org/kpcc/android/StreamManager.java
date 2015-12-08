@@ -17,6 +17,8 @@ import com.google.android.exoplayer.extractor.mp3.Mp3Extractor;
 import com.google.android.exoplayer.extractor.mp4.Mp4Extractor;
 import com.google.android.exoplayer.util.MimeTypes;
 
+import org.kpcc.api.ScheduleOccurrence;
+
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -190,7 +192,7 @@ public class StreamManager extends Service {
 
         public void seekTo(long pos) {
             try {
-                if (isPlaying()) {
+                if (isPlaying() || isPaused) {
                     audioPlayer.seekTo(pos);
                 }
             } catch (IllegalStateException e) {
@@ -198,7 +200,7 @@ public class StreamManager extends Service {
             }
         }
 
-        public int getDuration() {
+        public long getDuration() {
             try {
                 return audioPlayer.getDuration();
             } catch (IllegalStateException e) {
@@ -223,7 +225,7 @@ public class StreamManager extends Service {
             }
         }
 
-        public int getCurrentPosition() {
+        public long getCurrentPosition() {
             return audioPlayer.getCurrentPosition();
         }
 
@@ -433,10 +435,11 @@ public class StreamManager extends Service {
                         String.valueOf(BuildConfig.VERSION_CODE)
                 );
 
-        public final static int EDGE_OFFSET_MS = 10 * 1000;
+        public final static int EDGE_OFFSET_MS = 60 * 1000;
         public final static int JUMP_INTERVAL_SEC = 30;
 
         public final PrerollCompleteCallback prerollCompleteCallback;
+        public ScheduleOccurrence currentSchedule = null;
 
         public LiveStream(Context context) {
             super(context);
@@ -472,18 +475,13 @@ public class StreamManager extends Service {
             seekToLive();
         }
 
-        public int getDuration() {
-            // Stop gap
-            return 1000*60*60*4;
-        }
-
-        public long msBehindLive() {
-            return getDuration() - getCurrentPosition();
-        }
-
         public void seekToLive() {
             // Stay a few seconds behind edge to avoid stalling.
-            seekTo(getDuration());
+            seekTo(getDuration() - EDGE_OFFSET_MS);
+        }
+
+        public long windowStartUTS() {
+            return System.currentTimeMillis() - getDuration();
         }
 
         private class PrerollCompleteCallback {

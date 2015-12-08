@@ -10,6 +10,7 @@ import android.support.v4.app.FragmentTransaction;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBarActivity;
+import android.support.v7.app.AppCompatActivity;
 import android.text.Spannable;
 import android.text.SpannableString;
 import android.text.style.TypefaceSpan;
@@ -17,7 +18,7 @@ import android.text.style.TypefaceSpan;
 import uk.co.chrisjenx.calligraphy.CalligraphyContextWrapper;
 
 
-public class MainActivity extends ActionBarActivity {
+public class MainActivity extends AppCompatActivity {
     private static final String DONATE_URL = "https://scprcontribute.publicradio.org/contribute.php";
     private NavigationDrawerFragment mNavigationDrawerFragment;
 

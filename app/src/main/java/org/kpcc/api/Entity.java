@@ -14,6 +14,7 @@ abstract class Entity {
     final static String PROP_DURATION = "duration";
     final static String PROP_AIR_DATE = "air_date";
     final static String PROP_SOFT_STARTS_AT = "soft_starts_at";
+    final static String PROP_STARTS_AT = "starts_at";
     final static String PROP_ENDS_AT = "ends_at";
     final static String PROP_PUBLISHED_AT = "published_at";
 

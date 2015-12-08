@@ -349,14 +349,14 @@ public class EpisodeFragment extends Fragment {
         }
 
         try {
-            int current = getCurrentPlayerPositionSeconds();
+            long current = getCurrentPlayerPositionSeconds();
             return current < (mPlayer.durationSeconds / 4);
         } catch (IllegalStateException e) {
             return false;
         }
     }
 
-    public int getCurrentPlayerPositionSeconds() throws IllegalStateException {
+    public long getCurrentPlayerPositionSeconds() throws IllegalStateException {
         if (streamNotAvailable()) {
             return 0;
         }

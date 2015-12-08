@@ -35,7 +35,7 @@
 }
 
 -keep class **.R$* {
-.   <fields>;
+    <fields>;
 }
 
 -dontwarn com.parse.ParseFacebookUtils

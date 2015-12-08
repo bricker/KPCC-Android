@@ -134,12 +134,12 @@ public class AudioPlayer implements
         playerControl.start();
     }
 
-    public int getCurrentPosition() {
-        return playerControl.getCurrentPosition();
+    public long getCurrentPosition() {
+        return player.getCurrentPosition();
     }
 
-    public int getDuration() {
-        return playerControl.getDuration();
+    public long getDuration() {
+        return player.getDuration();
     }
 
     public void seekTo(long positionMs) {
