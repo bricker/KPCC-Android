@@ -440,6 +440,8 @@ public class StreamManager extends Service {
 
         public final PrerollCompleteCallback prerollCompleteCallback;
         public ScheduleOccurrence currentSchedule = null;
+        public long pausedAt = 0;
+        public boolean startLive = true;
 
         public LiveStream(Context context) {
             super(context);
@@ -447,6 +449,45 @@ public class StreamManager extends Service {
             AudioPlayer.RendererBuilder builder = new HlsRendererBuilder(context, USER_AGENT, HLS_URL);
             audioPlayer = new AudioPlayer(builder);
             audioPlayer.setPlayWhenReady(false);
+
+            audioPlayer.addListener(new ExoPlayer.Listener() {
+                @Override
+                public void onPlayerStateChanged(boolean playWhenReady, int i) {
+                    switch (i) {
+                        case ExoPlayer.STATE_IDLE:
+                            break;
+                        case ExoPlayer.STATE_PREPARING:
+                            break;
+                        case ExoPlayer.STATE_BUFFERING:
+                            break;
+                        case ExoPlayer.STATE_READY:
+                            boolean sl = startLive;
+                            boolean p = isPaused;
+                            boolean pl = isPlaying();
+                            long d = getDuration();
+
+                            if (startLive && getDuration() > 0) {
+                                startLive = false;
+                                seekToLive();
+                            }
+
+                            break;
+                        case ExoPlayer.STATE_ENDED:
+                            break;
+                    }
+                }
+
+                @Override
+                public void onPlayWhenReadyCommitted() {
+                }
+
+                @Override
+                public void onPlayerError(ExoPlaybackException e) {
+                    audioEventListener.onError();
+                    release();
+                }
+            });
+
             this.prerollCompleteCallback = new PrerollCompleteCallback();
 
             if (mStreamManager != null) {
@@ -471,8 +512,8 @@ public class StreamManager extends Service {
         }
 
         public void prepareAndStartFromLive() {
+            startLive = true;
             super.prepareAndStart();
-            seekToLive();
         }
 
         public void seekToLive() {

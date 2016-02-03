@@ -147,7 +147,7 @@ public class LiveFragment extends Fragment {
                 if (streamBundle.prerollStream.isPaused) {
                     // Preroll was Paused; start it again.
                     streamBundle.prerollStream.start();
-                } else if (streamBundle.liveStream.isPaused) {
+                } else if (streamBundle.liveStream.isPaused && streamBundle.liveStream.pausedAt < (System.currentTimeMillis() - 1000*60*60*8)) {
                     // Live stream was paused; start it again.
                     streamBundle.liveStream.start();
                 } else {
@@ -622,13 +622,13 @@ public class LiveFragment extends Fragment {
                 });
 
                 if (mProgressManager != null) { mProgressManager.start(); }
+                if (mScheduleUpdater != null) { mScheduleUpdater.start(); }
                 if (!mPersistentProgressObserver.isObserving()) { mPersistentProgressObserver.start(); }
             }
 
             @Override
             public void onProgress(int progress) {
                 mSeekBar.setProgress(mSeekBar.getProgress() + 100);
-
                 if (positionInWindow <= 0) {
                     positionInWindow = (int)streamBundle.liveStream.getDuration();
                 }
@@ -637,13 +637,18 @@ public class LiveFragment extends Fragment {
             @Override
             public void onPause() {
                 mAudioButtonManager.togglePaused();
+                streamBundle.liveStream.pausedAt = System.currentTimeMillis();
+                isTimeTraveling = true;
                 if (mProgressManager != null) { mProgressManager.release(); }
+                if (mScheduleUpdater != null) { mScheduleUpdater.release(); }
             }
 
             @Override
             public void onStop() {
                 mAudioButtonManager.toggleStopped();
+                streamBundle.liveStream.pausedAt = System.currentTimeMillis();
                 if (mProgressManager != null) { mProgressManager.release(); }
+                if (mScheduleUpdater != null) { mScheduleUpdater.release(); }
             }
 
             @Override
