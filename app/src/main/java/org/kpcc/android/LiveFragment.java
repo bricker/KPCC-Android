@@ -22,8 +22,6 @@ import com.android.volley.Request;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.NetworkImageView;
-import com.google.android.exoplayer.C;
-import com.google.android.exoplayer.extractor.mp3.Mp3Extractor;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -147,7 +145,7 @@ public class LiveFragment extends Fragment {
                 if (streamBundle.prerollStream.isPaused) {
                     // Preroll was Paused; start it again.
                     streamBundle.prerollStream.start();
-                } else if (streamBundle.liveStream.isPaused && streamBundle.liveStream.pausedAt < (System.currentTimeMillis() - 1000*60*60*8)) {
+                } else if (streamBundle.liveStream.isPaused && streamBundle.liveStream.pausedAt > (System.currentTimeMillis() - 1000*60*60*8)) {
                     // Live stream was paused; start it again.
                     streamBundle.liveStream.start();
                 } else {
@@ -210,12 +208,7 @@ public class LiveFragment extends Fragment {
                         return;
                     }
 
-                    long _now = System.currentTimeMillis();
-                    long _duration = streamBundle.liveStream.getDuration();
-                    long _start = currentSchedule.softStartsAtMs;
-                    long _behind = _now - _start;
-                    positionInWindow = (int)(_duration - _behind + progress);
-
+                    positionInWindow = (int)(0 - currentSchedule.timeSinceSoftStartMs() + progress);
                     streamBundle.liveStream.seekTo(positionInWindow);
                 }
 
@@ -239,9 +232,8 @@ public class LiveFragment extends Fragment {
                     mSeekBar.setProgress(mSeekBar.getProgress() - jumpMs);
                     positionInWindow -= jumpMs;
 
-                    if (positionInWindow > jumpMs) {
-                        streamBundle.liveStream.seekTo(positionInWindow);
-                    }
+                    // TODO: Handle beginning-of-window case.
+                    streamBundle.liveStream.seekTo(positionInWindow);
                     toggleBtnGoLive();
 
                     if (mSeekBar.getProgress() <= 0) {
@@ -261,7 +253,7 @@ public class LiveFragment extends Fragment {
                     mSeekBar.setProgress(mSeekBar.getProgress() + jumpMs);
                     positionInWindow += jumpMs;
 
-                    if (streamBundle.liveStream.getDuration() - jumpMs > positionInWindow) {
+                    if (0 - jumpMs > positionInWindow) {
                         streamBundle.liveStream.seekTo(positionInWindow);
                     }
 
@@ -281,7 +273,7 @@ public class LiveFragment extends Fragment {
                 updateSchedule(System.currentTimeMillis());
 
                 if (streamBundle != null) {
-                    positionInWindow = (int)streamBundle.liveStream.getDuration();
+                    positionInWindow = 0;
                     streamBundle.liveStream.pause();
                     streamBundle.liveStream.seekToLive();
 
@@ -323,13 +315,9 @@ public class LiveFragment extends Fragment {
             public void onClick(View view) {
                 if (streamBundle != null && currentSchedule != null) {
                     streamBundle.liveStream.pause();
-                    long _now = System.currentTimeMillis();
-                    long _duration = streamBundle.liveStream.getDuration();
-                    long _start = currentSchedule.softStartsAtMs;
-                    long _behind = _now - _start;
-                    positionInWindow = (int)(_duration - _behind);
+                    positionInWindow = (int)(0 - currentSchedule.timeSinceSoftStartMs());
 
-                    streamBundle.liveStream.seekTo(positionInWindow);
+                    streamBundle.liveStream.seekTo(-1);
 
                     playRewindBeat(new StreamManager.AudioEventListener() {
                         @Override
@@ -427,13 +415,8 @@ public class LiveFragment extends Fragment {
                         mForward.setEnabled(true);
                     }
 
-                    if (positionInWindow < 1000*StreamManager.LiveStream.JUMP_INTERVAL_SEC) {
-                        mRewind.setAlpha((float)0.4);
-                        mRewind.setEnabled(false);
-                    } else {
-                        mRewind.setAlpha((float)1.0);
-                        mRewind.setEnabled(true);
-                    }
+                    mRewind.setAlpha((float)1.0);
+                    mRewind.setEnabled(true);
                 }
             }
         }, 1000);
@@ -556,7 +539,7 @@ public class LiveFragment extends Fragment {
 
                         mRewind.setEnabled(true);
 
-                        if (positionInWindow < streamBundle.liveStream.getDuration() - StreamManager.LiveStream.JUMP_INTERVAL_SEC*1000) {
+                        if (positionInWindow < 0 - StreamManager.LiveStream.JUMP_INTERVAL_SEC*1000) {
                             mForward.setEnabled(true);
                         }
 
@@ -629,9 +612,6 @@ public class LiveFragment extends Fragment {
             @Override
             public void onProgress(int progress) {
                 mSeekBar.setProgress(mSeekBar.getProgress() + 100);
-                if (positionInWindow <= 0) {
-                    positionInWindow = (int)streamBundle.liveStream.getDuration();
-                }
             }
 
             @Override
@@ -822,7 +802,7 @@ public class LiveFragment extends Fragment {
             StreamManager.PrerollStream currentPreroll = AppConnectivityManager.instance.streamManager.currentPrerollPlayer;
             Context context = getActivity();
 
-            if (currentPlayer != null) {
+            if (currentPlayer != null && currentPlayer.state != StreamManager.State.RELEASED) {
                 if (currentPreroll != null) {
                     streamBundle = new StreamManager.LiveStreamBundle(context, currentPlayer, currentPreroll);
                 } else {
