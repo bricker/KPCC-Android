@@ -2,8 +2,6 @@ package org.kpcc.android;
 
 import android.content.Context;
 
-import com.mixpanel.android.mpmetrics.MixpanelAPI;
-
 import org.json.JSONObject;
 
 public class AnalyticsManager {
@@ -41,12 +39,9 @@ public class AnalyticsManager {
     public final static String PARAM_SESSION_LENGTH = "sessionLengthInSeconds";
     public final static String PARAM_ACTIVITY_TYPE = "activityType";
 
-    private static final String MIXPANEL_TOKEN = AppConfiguration.instance.getSecret("mixpanel.token");
     public static AnalyticsManager instance = null;
-    private final MixpanelAPI mMixpanelAPI;
 
     private AnalyticsManager(Context context) {
-        mMixpanelAPI = MixpanelAPI.getInstance(context, MIXPANEL_TOKEN);
     }
 
     public static void setupInstance(Context context) {
@@ -56,28 +51,17 @@ public class AnalyticsManager {
     }
 
     public void logEvent(String name, JSONObject parameters) {
-        try {
-            mMixpanelAPI.track(name, parameters);
-        } catch (Exception e) {
-            // No event will be sent.
-        }
+        // Do nothing!
+        // This used to have MixPanel integration, now just a stub.
     }
 
     public void logEvent(String name) {
-        try {
-            // Send empty parameters
-            JSONObject parameters = new JSONObject();
-            mMixpanelAPI.track(name, parameters);
-        } catch (Exception e) {
-            // No event will be sent.
-        }
+        // Do nothing!
+        // This used to have MixPanel integration, now just a stub.
     }
 
     public void flush() {
-        try {
-            mMixpanelAPI.flush();
-        } catch (Exception e) {
-            // Events are not flushed.
-        }
+        // Do nothing!
+        // This used to have MixPanel integration, now just a stub.
     }
 }
