@@ -10,7 +10,6 @@ import android.os.IBinder;
 import android.util.Log;
 import android.webkit.MimeTypeMap;
 
-import com.google.android.exoplayer.ExoPlaybackException;
 import com.google.android.exoplayer.ExoPlayer;
 import com.google.android.exoplayer.extractor.Extractor;
 import com.google.android.exoplayer.extractor.mp3.Mp3Extractor;
@@ -293,6 +292,7 @@ public class StreamManager extends Service {
                 mIsDucking.set(true);
 
                 if (isPlaying()) {
+                    // TODO: Fix this
 //                    audioPlayer.setVolume(0.25f);
                 }
             }
@@ -303,6 +303,7 @@ public class StreamManager extends Service {
                 mIsDucking.set(false);
 
                 if (isPlaying()) {
+                    // TODO: Fix this
 //                    audioPlayer.setVolume(1.0f);
                 }
             }
@@ -530,7 +531,7 @@ public class StreamManager extends Service {
         }
 
         public void seekToLive() {
-            seekTo(0);
+            seekTo(getDuration());
         }
 
         private class PrerollCompleteCallback {

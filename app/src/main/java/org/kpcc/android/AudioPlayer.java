@@ -15,6 +15,11 @@
  */
 package org.kpcc.android;
 
+import android.media.MediaCodec.CryptoException;
+import android.os.Handler;
+import android.os.Looper;
+import android.view.Surface;
+
 import com.google.android.exoplayer.CodecCounters;
 import com.google.android.exoplayer.DummyTrackRenderer;
 import com.google.android.exoplayer.ExoPlaybackException;
@@ -31,7 +36,6 @@ import com.google.android.exoplayer.chunk.ChunkSampleSource;
 import com.google.android.exoplayer.chunk.Format;
 import com.google.android.exoplayer.dash.DashChunkSource;
 import com.google.android.exoplayer.drm.StreamingDrmSessionManager;
-import com.google.android.exoplayer.hls.HlsChunkSource;
 import com.google.android.exoplayer.hls.HlsSampleSource;
 import com.google.android.exoplayer.metadata.MetadataTrackRenderer.MetadataRenderer;
 import com.google.android.exoplayer.text.Cue;
@@ -40,11 +44,6 @@ import com.google.android.exoplayer.upstream.BandwidthMeter;
 import com.google.android.exoplayer.upstream.DefaultBandwidthMeter;
 import com.google.android.exoplayer.util.DebugTextViewHelper;
 import com.google.android.exoplayer.util.PlayerControl;
-
-import android.media.MediaCodec.CryptoException;
-import android.os.Handler;
-import android.os.Looper;
-import android.view.Surface;
 
 import java.io.IOException;
 import java.util.Collections;
@@ -58,7 +57,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
  * SmoothStreaming and so on).
  */
 public class AudioPlayer implements ExoPlayer.Listener, ChunkSampleSource.EventListener,
-        HlsChunkSource.EventListener, HlsSampleSource.EventListener, DefaultBandwidthMeter.EventListener,
+        HlsSampleSource.EventListener, DefaultBandwidthMeter.EventListener,
         MediaCodecVideoTrackRenderer.EventListener, MediaCodecAudioTrackRenderer.EventListener,
         StreamingDrmSessionManager.EventListener, DashChunkSource.EventListener, TextRenderer,
         MetadataRenderer<Map<String, Object>>, DebugTextViewHelper.Provider {
@@ -106,6 +105,7 @@ public class AudioPlayer implements ExoPlayer.Listener, ChunkSampleSource.EventL
         void onRendererInitializationError(Exception e);
         void onAudioTrackInitializationError(AudioTrack.InitializationException e);
         void onAudioTrackWriteError(AudioTrack.WriteException e);
+        void onAudioTrackUnderrun(int bufferSize, long bufferSizeMs, long elapsedSinceLastFeedMs);
         void onDecoderInitializationError(DecoderInitializationException e);
         void onCryptoError(CryptoException e);
         void onLoadError(int sourceId, IOException e);
@@ -126,7 +126,7 @@ public class AudioPlayer implements ExoPlayer.Listener, ChunkSampleSource.EventL
                              long mediaStartTimeMs, long mediaEndTimeMs, long elapsedRealtimeMs, long loadDurationMs);
         void onDecoderInitialized(String decoderName, long elapsedRealtimeMs,
                                   long initializationDurationMs);
-        void onAvailableRangeChanged(TimeRange availableRange);
+        void onAvailableRangeChanged(int sourceId, TimeRange availableRange);
     }
 
     /**
@@ -483,6 +483,13 @@ public class AudioPlayer implements ExoPlayer.Listener, ChunkSampleSource.EventL
     }
 
     @Override
+    public void onAudioTrackUnderrun(int bufferSize, long bufferSizeMs, long elapsedSinceLastFeedMs) {
+        if (internalErrorListener != null) {
+            internalErrorListener.onAudioTrackUnderrun(bufferSize, bufferSizeMs, elapsedSinceLastFeedMs);
+        }
+    }
+
+    @Override
     public void onCryptoError(CryptoException e) {
         if (internalErrorListener != null) {
             internalErrorListener.onCryptoError(e);
@@ -519,12 +526,10 @@ public class AudioPlayer implements ExoPlayer.Listener, ChunkSampleSource.EventL
     }
 
     @Override
-    public void onAvailableRangeChanged(TimeRange availableRange) {
+    public void onAvailableRangeChanged(int sourceId, TimeRange availableRange) {
         if (infoListener != null) {
-            infoListener.onAvailableRangeChanged(availableRange);
+            infoListener.onAvailableRangeChanged(sourceId, availableRange);
         }
-
-        playerControl.setAvailableSeekRange(availableRange);
     }
 
     @Override

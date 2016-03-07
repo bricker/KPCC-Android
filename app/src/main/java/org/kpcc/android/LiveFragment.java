@@ -2,7 +2,6 @@ package org.kpcc.android;
 
 import android.content.Context;
 import android.content.Intent;
-import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -628,7 +627,8 @@ public class LiveFragment extends Fragment {
             public void onProgress(int progress) {
                 mSeekBar.setProgress(mSeekBar.getProgress() + 100);
                 if (positionInWindow <= 0) {
-                    positionInWindow = (int)streamBundle.liveStream.getDuration();
+                    long _dur = streamBundle.liveStream.getDuration();
+                    positionInWindow = (int)_dur;
                 }
             }
 
