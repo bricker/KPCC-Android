@@ -27,7 +27,7 @@ public class StreamManager extends Service {
         STOPPED,
         PAUSED,
         PLAYING,
-        RELEASED;
+        RELEASED
     }
 
     public static final String USER_AGENT = "KPCCAndroid";
