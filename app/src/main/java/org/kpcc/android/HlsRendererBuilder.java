@@ -54,7 +54,7 @@ import java.util.Map;
 public class HlsRendererBuilder implements AudioPlayer.RendererBuilder {
 
     private static final int BUFFER_SEGMENT_SIZE = 64 * 1024;
-    private static final int MAIN_BUFFER_SEGMENTS = 256;
+    private static final int MAIN_BUFFER_SEGMENTS = 128;
     private static final int TEXT_BUFFER_SEGMENTS = 2;
 
     private final Context context;

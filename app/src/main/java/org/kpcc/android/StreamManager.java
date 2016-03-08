@@ -292,8 +292,7 @@ public class StreamManager extends Service {
                 mIsDucking.set(true);
 
                 if (isPlaying()) {
-                    // TODO: Fix this
-//                    audioPlayer.setVolume(0.25f);
+                    audioPlayer.setVolume(0.25f);
                 }
             }
         }
@@ -303,8 +302,7 @@ public class StreamManager extends Service {
                 mIsDucking.set(false);
 
                 if (isPlaying()) {
-                    // TODO: Fix this
-//                    audioPlayer.setVolume(1.0f);
+                    audioPlayer.setVolume(1.0f);
                 }
             }
         }
@@ -531,7 +529,9 @@ public class StreamManager extends Service {
         }
 
         public void seekToLive() {
-            seekTo(getDuration());
+            long _dur = getDuration();
+            int offset = EDGE_OFFSET_MS;
+            seekTo(_dur - 60);
         }
 
         private class PrerollCompleteCallback {
