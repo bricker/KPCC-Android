@@ -10,7 +10,6 @@ import android.os.IBinder;
 import android.util.Log;
 import android.webkit.MimeTypeMap;
 
-import com.google.android.exoplayer.ExoPlaybackException;
 import com.google.android.exoplayer.ExoPlayer;
 import com.google.android.exoplayer.extractor.Extractor;
 import com.google.android.exoplayer.extractor.mp3.Mp3Extractor;
@@ -23,6 +22,13 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class StreamManager extends Service {
+    public enum State {
+        STOPPED,
+        PAUSED,
+        PLAYING,
+        RELEASED
+    }
+
     public static final String USER_AGENT = "KPCCAndroid";
     private final IBinder mBinder = new LocalBinder();
 
@@ -121,6 +127,7 @@ public class StreamManager extends Service {
         final AtomicBoolean mDidPauseForAudioLoss = new AtomicBoolean(false);
         boolean isPaused = false;
         boolean didStopOnConnectivityLoss = false;
+        public State state;
 
         public BaseStream(Context context) {
             mContext = context;
@@ -153,10 +160,11 @@ public class StreamManager extends Service {
         }
 
         public void start() {
+            state = State.PLAYING;
             try {
                 audioEventListener.onPlay();
                 isPaused = false;
-                audioPlayer.start();
+                audioPlayer.getPlayerControl().start();
             } catch (IllegalStateException e) {
                 // Call release() to stop progress observer, update button state, etc.
                 release();
@@ -164,9 +172,10 @@ public class StreamManager extends Service {
         }
 
         public void stop() {
+            state = State.STOPPED;
             try {
                 audioEventListener.onStop();
-                audioPlayer.stop();
+                audioPlayer.getPlayerControl().pause();
             } catch (IllegalStateException e) {
                 // Call release() to stop progress observer, update button state, etc.
                 release();
@@ -174,10 +183,11 @@ public class StreamManager extends Service {
         }
 
         public void pause() {
+            state = State.PAUSED;
             try {
                 audioEventListener.onPause();
                 isPaused = true;
-                audioPlayer.pause();
+                audioPlayer.getPlayerControl().pause();
             } catch (IllegalStateException e) {
                 // Call release() to stop progress observer, update button state, etc.
                 release();
@@ -185,6 +195,7 @@ public class StreamManager extends Service {
         }
 
         public void release() {
+            state = State.RELEASED;
             audioEventListener.onStop();
             isPaused = false;
             audioPlayer.release();
@@ -201,11 +212,7 @@ public class StreamManager extends Service {
         }
 
         public long getDuration() {
-            try {
-                return audioPlayer.getDuration();
-            } catch (IllegalStateException e) {
-                return -1;
-            }
+            return audioPlayer.getDuration();
         }
 
         public void prepare() {
@@ -213,7 +220,7 @@ public class StreamManager extends Service {
         }
 
         public boolean isPlaying() {
-            return audioPlayer.isPlaying();
+            return audioPlayer.getPlayerControl().isPlaying();
         }
 
         void requestAudioFocus() throws AudioFocusNotGrantedException {
@@ -272,8 +279,11 @@ public class StreamManager extends Service {
         }
 
         void audioFocusLoss() {
-            mDidPauseForAudioLoss.set(false);
-            release();
+            if (isPlaying()) {
+                mDidPauseForAudioLoss.set(true);
+                pause();
+            }
+
             mAudioManager.abandonAudioFocus(mAfChangeListener);
         }
 
@@ -305,17 +315,16 @@ public class StreamManager extends Service {
             super(context);
             this.assetPath = assetPath;
 
-            String mimeType = StreamManager.getMimeTypeFromAudioUrl(assetPath);
             AudioPlayer.RendererBuilder builder = new ExtractorRendererBuilder(context, USER_AGENT,
-                    Uri.parse(assetPath), StreamManager.getExtractorFromContentType(mimeType));
+                    Uri.parse(assetPath));
 
             audioPlayer = new AudioPlayer(builder);
             audioPlayer.setPlayWhenReady(false);
 
-            audioPlayer.addListener(new ExoPlayer.Listener() {
+            audioPlayer.addListener(new AudioPlayer.Listener() {
                 @Override
-                public void onPlayerStateChanged(boolean playWhenReady, int i) {
-                    switch (i) {
+                public void onStateChanged(boolean playWhenReady, int playbackState) {
+                    switch (playbackState) {
                         case ExoPlayer.STATE_IDLE:
                             break;
                         case ExoPlayer.STATE_PREPARING:
@@ -335,11 +344,12 @@ public class StreamManager extends Service {
                 }
 
                 @Override
-                public void onPlayWhenReadyCommitted() {
+                public void onVideoSizeChanged(int width, int height, int unappliedRotationDegrees,
+                                               float pixelWidthHeightRatio) {
                 }
 
                 @Override
-                public void onPlayerError(ExoPlaybackException e) {
+                public void onError(Exception e) {
                     audioEventListener.onError();
                 }
             });
@@ -363,15 +373,15 @@ public class StreamManager extends Service {
 
             String mimeType = StreamManager.getMimeTypeFromAudioUrl(audioUrl);
             AudioPlayer.RendererBuilder builder = new ExtractorRendererBuilder(context, USER_AGENT,
-                    Uri.parse(audioUrl), StreamManager.getExtractorFromContentType(mimeType));
+                    Uri.parse(audioUrl));
 
             audioPlayer = new AudioPlayer(builder);
             audioPlayer.setPlayWhenReady(false);
 
-            audioPlayer.addListener(new ExoPlayer.Listener() {
+            audioPlayer.addListener(new AudioPlayer.Listener() {
                 @Override
-                public void onPlayerStateChanged(boolean playWhenReady, int i) {
-                    switch (i) {
+                public void onStateChanged(boolean playWhenReady, int playbackState) {
+                    switch (playbackState) {
                         case ExoPlayer.STATE_IDLE:
                             break;
                         case ExoPlayer.STATE_PREPARING:
@@ -389,11 +399,12 @@ public class StreamManager extends Service {
                 }
 
                 @Override
-                public void onPlayWhenReadyCommitted() {
+                public void onVideoSizeChanged(int width, int height, int unappliedRotationDegrees,
+                                               float pixelWidthHeightRatio) {
                 }
 
                 @Override
-                public void onPlayerError(ExoPlaybackException e) {
+                public void onError(Exception e) {
                     audioEventListener.onError();
                 }
             });
@@ -450,22 +461,21 @@ public class StreamManager extends Service {
             audioPlayer = new AudioPlayer(builder);
             audioPlayer.setPlayWhenReady(false);
 
-            audioPlayer.addListener(new ExoPlayer.Listener() {
+            audioPlayer.addListener(new AudioPlayer.Listener() {
                 @Override
-                public void onPlayerStateChanged(boolean playWhenReady, int i) {
-                    switch (i) {
+                public void onStateChanged(boolean playWhenReady, int playbackState) {
+                    switch (playbackState) {
                         case ExoPlayer.STATE_IDLE:
+                            Log.d("playerState", String.valueOf(playbackState));
                             break;
                         case ExoPlayer.STATE_PREPARING:
+                            Log.d("playerState", String.valueOf(playbackState));
                             break;
                         case ExoPlayer.STATE_BUFFERING:
+                            Log.d("playerState", String.valueOf(playbackState));
                             break;
                         case ExoPlayer.STATE_READY:
-                            boolean sl = startLive;
-                            boolean p = isPaused;
-                            boolean pl = isPlaying();
-                            long d = getDuration();
-
+                            Log.d("playerState", String.valueOf(playbackState));
                             if (startLive && getDuration() > 0) {
                                 startLive = false;
                                 seekToLive();
@@ -473,16 +483,18 @@ public class StreamManager extends Service {
 
                             break;
                         case ExoPlayer.STATE_ENDED:
+                            Log.d("playerState", String.valueOf(playbackState));
                             break;
                     }
                 }
 
                 @Override
-                public void onPlayWhenReadyCommitted() {
+                public void onVideoSizeChanged(int width, int height, int unappliedRotationDegrees,
+                                               float pixelWidthHeightRatio) {
                 }
 
                 @Override
-                public void onPlayerError(ExoPlaybackException e) {
+                public void onError(Exception e) {
                     audioEventListener.onError();
                     release();
                 }
@@ -517,12 +529,7 @@ public class StreamManager extends Service {
         }
 
         public void seekToLive() {
-            // Stay a few seconds behind edge to avoid stalling.
-            seekTo(getDuration() - EDGE_OFFSET_MS);
-        }
-
-        public long windowStartUTS() {
-            return System.currentTimeMillis() - getDuration();
+            seekTo(0);
         }
 
         private class PrerollCompleteCallback {
@@ -545,15 +552,15 @@ public class StreamManager extends Service {
         // actually be playing anything, so this method acts as sort of a "deferred constructor".
         public void setupPreroll(PrerollManager.PrerollData prerollData) {
             AudioPlayer.RendererBuilder builder = new ExtractorRendererBuilder(this.context, USER_AGENT,
-                    Uri.parse(prerollData.audioUrl), StreamManager.getExtractorFromContentType(prerollData.audioType));
+                    Uri.parse(prerollData.audioUrl));
 
             audioPlayer = new AudioPlayer(builder);
             audioPlayer.setPlayWhenReady(false);
 
-            audioPlayer.addListener(new ExoPlayer.Listener() {
+            audioPlayer.addListener(new AudioPlayer.Listener() {
                 @Override
-                public void onPlayerStateChanged(boolean playWhenReady, int i) {
-                    switch (i) {
+                public void onStateChanged(boolean playWhenReady, int playbackState) {
+                    switch (playbackState) {
                         case ExoPlayer.STATE_IDLE:
                             break;
                         case ExoPlayer.STATE_PREPARING:
@@ -572,11 +579,12 @@ public class StreamManager extends Service {
                 }
 
                 @Override
-                public void onPlayWhenReadyCommitted() {
+                public void onVideoSizeChanged(int width, int height, int unappliedRotationDegrees,
+                                               float pixelWidthHeightRatio) {
                 }
 
                 @Override
-                public void onPlayerError(ExoPlaybackException e) {
+                public void onError(Exception e) {
                     audioEventListener.onError();
                     prerollCompleteCallback.onPrerollComplete();
                     release();
