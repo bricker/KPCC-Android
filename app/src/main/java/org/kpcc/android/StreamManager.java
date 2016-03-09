@@ -529,9 +529,7 @@ public class StreamManager extends Service {
         }
 
         public void seekToLive() {
-            long _dur = getDuration();
-            int offset = EDGE_OFFSET_MS;
-            seekTo(_dur - 60);
+            seekTo(0);
         }
 
         private class PrerollCompleteCallback {

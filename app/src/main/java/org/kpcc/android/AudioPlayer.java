@@ -36,6 +36,7 @@ import com.google.android.exoplayer.chunk.ChunkSampleSource;
 import com.google.android.exoplayer.chunk.Format;
 import com.google.android.exoplayer.dash.DashChunkSource;
 import com.google.android.exoplayer.drm.StreamingDrmSessionManager;
+import com.google.android.exoplayer.hls.HlsChunkSource;
 import com.google.android.exoplayer.hls.HlsSampleSource;
 import com.google.android.exoplayer.metadata.MetadataTrackRenderer.MetadataRenderer;
 import com.google.android.exoplayer.text.Cue;
@@ -57,7 +58,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
  * SmoothStreaming and so on).
  */
 public class AudioPlayer implements ExoPlayer.Listener, ChunkSampleSource.EventListener,
-        HlsSampleSource.EventListener, DefaultBandwidthMeter.EventListener,
+        HlsChunkSource.EventListener, HlsSampleSource.EventListener, DefaultBandwidthMeter.EventListener,
         MediaCodecVideoTrackRenderer.EventListener, MediaCodecAudioTrackRenderer.EventListener,
         StreamingDrmSessionManager.EventListener, DashChunkSource.EventListener, TextRenderer,
         MetadataRenderer<Map<String, Object>>, DebugTextViewHelper.Provider {
@@ -105,7 +106,6 @@ public class AudioPlayer implements ExoPlayer.Listener, ChunkSampleSource.EventL
         void onRendererInitializationError(Exception e);
         void onAudioTrackInitializationError(AudioTrack.InitializationException e);
         void onAudioTrackWriteError(AudioTrack.WriteException e);
-        void onAudioTrackUnderrun(int bufferSize, long bufferSizeMs, long elapsedSinceLastFeedMs);
         void onDecoderInitializationError(DecoderInitializationException e);
         void onCryptoError(CryptoException e);
         void onLoadError(int sourceId, IOException e);
@@ -126,7 +126,7 @@ public class AudioPlayer implements ExoPlayer.Listener, ChunkSampleSource.EventL
                              long mediaStartTimeMs, long mediaEndTimeMs, long elapsedRealtimeMs, long loadDurationMs);
         void onDecoderInitialized(String decoderName, long elapsedRealtimeMs,
                                   long initializationDurationMs);
-        void onAvailableRangeChanged(int sourceId, TimeRange availableRange);
+        void onAvailableRangeChanged(TimeRange availableRange);
     }
 
     /**
@@ -233,6 +233,10 @@ public class AudioPlayer implements ExoPlayer.Listener, ChunkSampleSource.EventL
         pushSurface(false);
     }
 
+    public void setVolume(float vol) {
+        player.sendMessage(audioRenderer, MediaCodecAudioTrackRenderer.MSG_SET_VOLUME, vol);
+    }
+
     public Surface getSurface() {
         return surface;
     }
@@ -242,9 +246,6 @@ public class AudioPlayer implements ExoPlayer.Listener, ChunkSampleSource.EventL
         pushSurface(true);
     }
 
-    public void setVolume(float vol) {
-        player.sendMessage(audioRenderer, MediaCodecAudioTrackRenderer.MSG_SET_VOLUME, vol);
-    }
     public int getTrackCount(int type) {
         return player.getTrackCount(type);
     }
@@ -488,13 +489,6 @@ public class AudioPlayer implements ExoPlayer.Listener, ChunkSampleSource.EventL
     }
 
     @Override
-    public void onAudioTrackUnderrun(int bufferSize, long bufferSizeMs, long elapsedSinceLastFeedMs) {
-        if (internalErrorListener != null) {
-            internalErrorListener.onAudioTrackUnderrun(bufferSize, bufferSizeMs, elapsedSinceLastFeedMs);
-        }
-    }
-
-    @Override
     public void onCryptoError(CryptoException e) {
         if (internalErrorListener != null) {
             internalErrorListener.onCryptoError(e);
@@ -531,10 +525,11 @@ public class AudioPlayer implements ExoPlayer.Listener, ChunkSampleSource.EventL
     }
 
     @Override
-    public void onAvailableRangeChanged(int sourceId, TimeRange availableRange) {
+    public void onAvailableRangeChanged(TimeRange availableRange) {
         if (infoListener != null) {
-            infoListener.onAvailableRangeChanged(sourceId, availableRange);
+            infoListener.onAvailableRangeChanged(availableRange);
         }
+        playerControl.setAvailableSeekRange(availableRange);
     }
 
     @Override

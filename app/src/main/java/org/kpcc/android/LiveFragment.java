@@ -207,10 +207,10 @@ public class LiveFragment extends Fragment {
                     }
 
                     long _now = System.currentTimeMillis();
-                    long _duration = streamBundle.liveStream.getDuration();
+                    long _curdur = streamBundle.liveStream.getCurrentPosition();
                     long _start = currentSchedule.softStartsAtMs;
                     long _behind = _now - _start;
-                    long positionInWindow = _duration - _behind + progress;
+                    long positionInWindow = _curdur - _behind + progress;
 
                     streamBundle.liveStream.seekTo(positionInWindow);
                 }
@@ -263,15 +263,16 @@ public class LiveFragment extends Fragment {
                     mSeekBar.setProgress(mSeekBar.getProgress() + jumpMs);
                     long positionInWindow = streamBundle.liveStream.getCurrentPosition() + jumpMs;
 
-                    if (positionInWindow < streamBundle.liveStream.getDuration()) {
-                        streamBundle.liveStream.seekTo(positionInWindow);
-                    }
+                    streamBundle.liveStream.seekTo(positionInWindow);
+//                    if (positionInWindow < streamBundle.liveStream.getDuration()) {
+//                        streamBundle.liveStream.seekTo(positionInWindow);
+//                    }
 
-                    if (positionInWindow > streamBundle.liveStream.getDuration() - jumpMs) {
-                        mForward.setEnabled(false);
-                    } else {
-                        mForward.setEnabled(true);
-                    }
+//                    if (positionInWindow > streamBundle.liveStream.getDuration() - jumpMs) {
+//                        mForward.setEnabled(false);
+//                    } else {
+//                        mForward.setEnabled(true);
+//                    }
 
                     if (mSeekBar.getProgress() >= mSeekBar.getMax()) {
                         isTimeTraveling = true;
@@ -330,10 +331,10 @@ public class LiveFragment extends Fragment {
                 if (streamBundle != null && currentSchedule != null) {
                     streamBundle.liveStream.pause();
                     long _now = System.currentTimeMillis();
-                    long _duration = streamBundle.liveStream.getDuration();
+                    long _curdur = streamBundle.liveStream.getCurrentPosition();
                     long _start = currentSchedule.softStartsAtMs;
                     long _behind = _now - _start;
-                    long positionInWindow = _duration - _behind;
+                    long positionInWindow = _curdur - _behind;
 
                     streamBundle.liveStream.seekTo(positionInWindow);
 
