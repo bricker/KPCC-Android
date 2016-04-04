@@ -5,6 +5,7 @@ import android.content.pm.PackageManager;
 import android.preference.PreferenceManager;
 
 import com.crashlytics.android.Crashlytics;
+import com.flurry.android.FlurryAgent;
 import com.parse.Parse;
 import com.parse.ParseInstallation;
 
@@ -35,6 +36,9 @@ public class KPCCApplication extends Application {
                 AppConfiguration.instance.getSecret("parse.clientKey")
         );
         ParseInstallation.getCurrentInstallation().saveInBackground();
+
+        FlurryAgent.setLogEnabled(AppConfiguration.instance.isDebug);
+        FlurryAgent.init(this, AppConfiguration.instance.getSecret("flurry.apiKey"));
 
         // Parse must be initialized first.
         AppNotificationManager.setupInstance(this);

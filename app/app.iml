@@ -102,6 +102,7 @@
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" exported="" name="play-services-ads-8.3.0" level="project" />
     <orderEntry type="library" exported="" name="crashlytics-2.5.5" level="project" />
+    <orderEntry type="library" exported="" name="analytics-6.2.0" level="project" />
     <orderEntry type="library" exported="" name="play-services-base-8.3.0" level="project" />
     <orderEntry type="library" exported="" name="support-annotations-22.2.0" level="project" />
     <orderEntry type="library" exported="" name="support-v4-22.2.0" level="project" />
