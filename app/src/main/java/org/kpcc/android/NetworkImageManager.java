@@ -13,7 +13,7 @@ import com.android.volley.toolbox.ImageLoader;
 import com.android.volley.toolbox.NetworkImageView;
 
 public class NetworkImageManager {
-    public final static NetworkImageManager instance = new NetworkImageManager();
+    private final static NetworkImageManager instance = new NetworkImageManager();
     private static final String PROGRAM_TILE_URL = "http://media.scpr.org/iphone/program-images/program_tile_%s@2x.jpg";
     private final ImageLoader mImageLoader;
 
@@ -24,12 +24,16 @@ public class NetworkImageManager {
                 new BitmapLruCache(cacheSize));
     }
 
-    public void setPrerollImage(NetworkImageView view, String url) {
+    static NetworkImageManager getInstance() {
+        return instance;
+    }
+
+    public synchronized void setPrerollImage(NetworkImageView view, String url) {
         view.setImageUrl(url, mImageLoader);
         view.setVisibility(View.VISIBLE);
     }
 
-    public void setBitmap(final ImageView view, String slug, final Context context) {
+    public synchronized void setBitmap(final Context context, final ImageView view, String slug) {
         mImageLoader.get(buildTileUrl(slug), new ImageLoader.ImageListener() {
             @Override
             public void onResponse(ImageLoader.ImageContainer response, boolean isImmediate) {
@@ -47,7 +51,7 @@ public class NetworkImageManager {
         });
     }
 
-    public void setDefaultBitmap(ImageView view) {
+    public synchronized void setDefaultBitmap(ImageView view) {
         view.setImageResource(R.drawable.tile_generic);
     }
 

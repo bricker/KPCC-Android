@@ -15,11 +15,6 @@
  */
 package org.kpcc.android;
 
-import android.media.MediaCodec.CryptoException;
-import android.os.Handler;
-import android.os.Looper;
-import android.view.Surface;
-
 import com.google.android.exoplayer.CodecCounters;
 import com.google.android.exoplayer.DummyTrackRenderer;
 import com.google.android.exoplayer.ExoPlaybackException;
@@ -29,6 +24,7 @@ import com.google.android.exoplayer.MediaCodecTrackRenderer;
 import com.google.android.exoplayer.MediaCodecTrackRenderer.DecoderInitializationException;
 import com.google.android.exoplayer.MediaCodecVideoTrackRenderer;
 import com.google.android.exoplayer.MediaFormat;
+import com.google.android.exoplayer.SingleSampleSource;
 import com.google.android.exoplayer.TimeRange;
 import com.google.android.exoplayer.TrackRenderer;
 import com.google.android.exoplayer.audio.AudioTrack;
@@ -36,9 +32,12 @@ import com.google.android.exoplayer.chunk.ChunkSampleSource;
 import com.google.android.exoplayer.chunk.Format;
 import com.google.android.exoplayer.dash.DashChunkSource;
 import com.google.android.exoplayer.drm.StreamingDrmSessionManager;
+import com.google.android.exoplayer.extractor.ExtractorSampleSource;
 import com.google.android.exoplayer.hls.HlsChunkSource;
+import com.google.android.exoplayer.hls.HlsMediaPlaylist;
 import com.google.android.exoplayer.hls.HlsSampleSource;
 import com.google.android.exoplayer.metadata.MetadataTrackRenderer.MetadataRenderer;
+import com.google.android.exoplayer.metadata.id3.Id3Frame;
 import com.google.android.exoplayer.text.Cue;
 import com.google.android.exoplayer.text.TextRenderer;
 import com.google.android.exoplayer.upstream.BandwidthMeter;
@@ -46,10 +45,15 @@ import com.google.android.exoplayer.upstream.DefaultBandwidthMeter;
 import com.google.android.exoplayer.util.DebugTextViewHelper;
 import com.google.android.exoplayer.util.PlayerControl;
 
+import android.media.MediaCodec.CryptoException;
+import android.os.Handler;
+import android.os.Looper;
+import android.view.Surface;
+
 import java.io.IOException;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
@@ -58,10 +62,12 @@ import java.util.concurrent.CopyOnWriteArrayList;
  * SmoothStreaming and so on).
  */
 public class AudioPlayer implements ExoPlayer.Listener, ChunkSampleSource.EventListener,
-        HlsChunkSource.EventListener, HlsSampleSource.EventListener, DefaultBandwidthMeter.EventListener,
+        HlsSampleSource.EventListener, ExtractorSampleSource.EventListener,
+        SingleSampleSource.EventListener, DefaultBandwidthMeter.EventListener,
         MediaCodecVideoTrackRenderer.EventListener, MediaCodecAudioTrackRenderer.EventListener,
         StreamingDrmSessionManager.EventListener, DashChunkSource.EventListener, TextRenderer,
-        MetadataRenderer<Map<String, Object>>, DebugTextViewHelper.Provider {
+        MetadataRenderer<List<Id3Frame>>, DebugTextViewHelper.Provider,
+        HlsChunkSource.EventListener {
 
     /**
      * Builds renderers for the player.
@@ -90,8 +96,6 @@ public class AudioPlayer implements ExoPlayer.Listener, ChunkSampleSource.EventL
     public interface Listener {
         void onStateChanged(boolean playWhenReady, int playbackState);
         void onError(Exception e);
-        void onVideoSizeChanged(int width, int height, int unappliedRotationDegrees,
-                                float pixelWidthHeightRatio);
     }
 
     /**
@@ -106,6 +110,7 @@ public class AudioPlayer implements ExoPlayer.Listener, ChunkSampleSource.EventL
         void onRendererInitializationError(Exception e);
         void onAudioTrackInitializationError(AudioTrack.InitializationException e);
         void onAudioTrackWriteError(AudioTrack.WriteException e);
+        void onAudioTrackUnderrun(int bufferSize, long bufferSizeMs, long elapsedSinceLastFeedMs);
         void onDecoderInitializationError(DecoderInitializationException e);
         void onCryptoError(CryptoException e);
         void onLoadError(int sourceId, IOException e);
@@ -126,7 +131,7 @@ public class AudioPlayer implements ExoPlayer.Listener, ChunkSampleSource.EventL
                              long mediaStartTimeMs, long mediaEndTimeMs, long elapsedRealtimeMs, long loadDurationMs);
         void onDecoderInitialized(String decoderName, long elapsedRealtimeMs,
                                   long initializationDurationMs);
-        void onAvailableRangeChanged(TimeRange availableRange);
+        void onAvailableRangeChanged(int sourceId, TimeRange availableRange);
     }
 
     /**
@@ -140,7 +145,7 @@ public class AudioPlayer implements ExoPlayer.Listener, ChunkSampleSource.EventL
      * A listener for receiving ID3 metadata parsed from the media stream.
      */
     public interface Id3MetadataListener {
-        void onId3Metadata(Map<String, Object> metadata);
+        void onId3Metadata(List<Id3Frame> id3Frames);
     }
 
     // Constants pulled into this class for convenience.
@@ -178,6 +183,7 @@ public class AudioPlayer implements ExoPlayer.Listener, ChunkSampleSource.EventL
     private CodecCounters codecCounters;
     private Format videoFormat;
     private int videoTrackToRestore;
+    private long programDateTimeUTS = 0L;
 
     private BandwidthMeter bandwidthMeter;
     private boolean backgrounded;
@@ -200,6 +206,9 @@ public class AudioPlayer implements ExoPlayer.Listener, ChunkSampleSource.EventL
         player.setSelectedTrack(TYPE_TEXT, TRACK_DISABLED);
     }
 
+    public void getRenderers() {
+
+    }
     public PlayerControl getPlayerControl() {
         return playerControl;
     }
@@ -233,12 +242,12 @@ public class AudioPlayer implements ExoPlayer.Listener, ChunkSampleSource.EventL
         pushSurface(false);
     }
 
-    public void setVolume(float vol) {
-        player.sendMessage(audioRenderer, MediaCodecAudioTrackRenderer.MSG_SET_VOLUME, vol);
-    }
-
     public Surface getSurface() {
         return surface;
+    }
+
+    public void setVolume(float vol) {
+        player.sendMessage(audioRenderer, MediaCodecAudioTrackRenderer.MSG_SET_VOLUME, vol);
     }
 
     public void blockingClearSurface() {
@@ -264,6 +273,12 @@ public class AudioPlayer implements ExoPlayer.Listener, ChunkSampleSource.EventL
             captionListener.onCues(Collections.<Cue>emptyList());
         }
     }
+
+    public synchronized void setProgramDateTimeUTS(Date programDateTime) {
+        this.programDateTimeUTS = programDateTime.getTime();
+    }
+
+    public long getProgramDateTimeUTS() { return programDateTimeUTS; }
 
     public boolean getBackgrounded() {
         return backgrounded;
@@ -422,9 +437,6 @@ public class AudioPlayer implements ExoPlayer.Listener, ChunkSampleSource.EventL
     @Override
     public void onVideoSizeChanged(int width, int height, int unappliedRotationDegrees,
                                    float pixelWidthHeightRatio) {
-        for (Listener listener : listeners) {
-            listener.onVideoSizeChanged(width, height, unappliedRotationDegrees, pixelWidthHeightRatio);
-        }
     }
 
     @Override
@@ -489,6 +501,13 @@ public class AudioPlayer implements ExoPlayer.Listener, ChunkSampleSource.EventL
     }
 
     @Override
+    public void onAudioTrackUnderrun(int bufferSize, long bufferSizeMs, long elapsedSinceLastFeedMs) {
+        if (internalErrorListener != null) {
+            internalErrorListener.onAudioTrackUnderrun(bufferSize, bufferSizeMs, elapsedSinceLastFeedMs);
+        }
+    }
+
+    @Override
     public void onCryptoError(CryptoException e) {
         if (internalErrorListener != null) {
             internalErrorListener.onCryptoError(e);
@@ -518,18 +537,25 @@ public class AudioPlayer implements ExoPlayer.Listener, ChunkSampleSource.EventL
     }
 
     @Override
-    public void onMetadata(Map<String, Object> metadata) {
+    public void onMetadata(List<Id3Frame> id3Frames) {
         if (id3MetadataListener != null && getSelectedTrack(TYPE_METADATA) != TRACK_DISABLED) {
-            id3MetadataListener.onId3Metadata(metadata);
+            id3MetadataListener.onId3Metadata(id3Frames);
         }
     }
 
     @Override
-    public void onAvailableRangeChanged(TimeRange availableRange) {
+    public void onAvailableRangeChanged(int sourceId, TimeRange availableRange) {
         if (infoListener != null) {
-            infoListener.onAvailableRangeChanged(availableRange);
+            infoListener.onAvailableRangeChanged(sourceId, availableRange);
         }
-        playerControl.setAvailableSeekRange(availableRange);
+        if (playerControl != null) {
+            playerControl.setAvailableRange(availableRange);
+        }
+    }
+
+    @Override
+    public void onChunkLoaded(HlsMediaPlaylist.Segment segment) {
+        setProgramDateTimeUTS(segment.programDateTime);
     }
 
     @Override

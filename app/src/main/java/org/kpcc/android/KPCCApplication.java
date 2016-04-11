@@ -32,13 +32,13 @@ public class KPCCApplication extends Application {
         BaseAlarmManager.setupInstance(this);
 
         Parse.initialize(this,
-                AppConfiguration.instance.getSecret("parse.applicationId"),
-                AppConfiguration.instance.getSecret("parse.clientKey")
+                AppConfiguration.getInstance().getSecret("parse.applicationId"),
+                AppConfiguration.getInstance().getSecret("parse.clientKey")
         );
         ParseInstallation.getCurrentInstallation().saveInBackground();
 
-        FlurryAgent.setLogEnabled(AppConfiguration.instance.isDebug);
-        FlurryAgent.init(this, AppConfiguration.instance.getSecret("flurry.apiKey"));
+        FlurryAgent.setLogEnabled(AppConfiguration.getInstance().isDebug);
+        FlurryAgent.init(this, AppConfiguration.getInstance().getSecret("flurry.apiKey"));
 
         // Parse must be initialized first.
         AppNotificationManager.setupInstance(this);

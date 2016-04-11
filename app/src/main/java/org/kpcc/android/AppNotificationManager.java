@@ -14,7 +14,7 @@ import com.parse.ParsePushBroadcastReceiver;
 
 class AppNotificationManager implements SharedPreferences.OnSharedPreferenceChangeListener {
 
-    private static final String CHANNEL_LISTEN_LIVE = AppConfiguration.instance.getConfig("channel.listenLive");
+    private static final String CHANNEL_LISTEN_LIVE = AppConfiguration.getInstance().getConfig("channel.listenLive");
     private static AppNotificationManager instance = null;
 
     private final Application application;
@@ -32,10 +32,14 @@ class AppNotificationManager implements SharedPreferences.OnSharedPreferenceChan
         }
     }
 
-    public static void setupInstance(Application application) {
-        if (instance == null) {
+    static void setupInstance(Application application) {
+        if (getInstance() == null) {
             instance = new AppNotificationManager(application);
         }
+    }
+
+    static AppNotificationManager getInstance() {
+        return instance;
     }
 
     void enableReceivers() {
@@ -66,6 +70,7 @@ class AppNotificationManager implements SharedPreferences.OnSharedPreferenceChan
                 PackageManager.DONT_KILL_APP);
     }
 
+    @Override // SharedPreferences.OnSharedPreferenceChangeListener
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences,
                                           String key) {
         switch (key) {
@@ -92,14 +97,13 @@ class AppNotificationManager implements SharedPreferences.OnSharedPreferenceChan
         disableReceivers();
     }
 
-    public static class BroadcastReceiver extends ParsePushBroadcastReceiver {
-
+    static class BroadcastReceiver extends ParsePushBroadcastReceiver {
         @Override
         protected void onPushOpen(Context context, Intent intent) {
             // Parse automatically opens the MainActivity, which fortunately goes directly
             // to the live fragment so we don't have to do that ourselves. All we have to do is
             // tell the live stream to start playing right away.
-            DataManager.instance.setPlayNow(true);
+            DataManager.getInstance().setPlayNow(true);
             super.onPushOpen(context, intent);
         }
 

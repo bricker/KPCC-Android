@@ -12,7 +12,7 @@ import org.json.JSONObject;
 import java.util.HashMap;
 
 public class FeedbackManager {
-    public static final FeedbackManager instance = new FeedbackManager();
+    private static final FeedbackManager instance = new FeedbackManager();
     private final static String DESC_BUG = "Bug";
     private final static String DESC_SUGGESTION = "Suggestion";
     private final static String DESC_FEEDBACK = "General Feedback";
@@ -25,7 +25,7 @@ public class FeedbackManager {
     private final static String PRIORITY_SUGGESTION = "4";
     private final static String PRIORITY_FEEDBACK = "2";
     private final static String PRIORITY_DEFAULT = "5";
-    private final static String KPCC_EMAIL = AppConfiguration.instance.getConfig("feedback.email");
+    private final static String KPCC_EMAIL = AppConfiguration.getInstance().getConfig("feedback.email");
     private final static String LABEL = "Android Feedback";
     private final static String DEFAULT_USER = "/api/v2/users/21318558";
     private final static String DEFAULT_GROUP = "/api/v2/groups/346862";
@@ -37,8 +37,8 @@ public class FeedbackManager {
     private final HashMap<String, String> mHeaders = new HashMap<>();
 
     private FeedbackManager() {
-        String email = AppConfiguration.instance.getSecret("desk.email");
-        String password = AppConfiguration.instance.getSecret("desk.password");
+        String email = AppConfiguration.getInstance().getSecret("desk.email");
+        String password = AppConfiguration.getInstance().getSecret("desk.password");
 
         // The setBasicAuth method doesn't build the header correctly for this, so we have
         // to do it manually.
@@ -48,6 +48,10 @@ public class FeedbackManager {
 
         mHeaders.put("Content-Type", CONTENT_TYPE);
         mHeaders.put("Accept", CONTENT_TYPE);
+    }
+
+    static FeedbackManager getInstance() {
+        return instance;
     }
 
     private void searchCustomer(final String customerEmail,

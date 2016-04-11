@@ -18,43 +18,131 @@ import java.io.StringReader;
 import java.util.UUID;
 
 public class PrerollManager {
-    public final static long PREROLL_THRESHOLD = 1000 * 60 * 60 * 4; // 4 hours
-    public final static long INSTALL_GRACE = 1000 * 60 * 10; // 10 minutes
-    public final static PrerollManager instance = new PrerollManager();
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    // Static Variables
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    private final static PrerollManager instance = new PrerollManager();
+    private final static String PREROLL_URL = AppConfiguration.getInstance().getConfig("preroll.url");
+    final static private String LAST_PREROLL_PLAY_KEY = "lastPrerollPlay";
+    final static long PREROLL_THRESHOLD = 1000 * 60 * 60 * 4; // 4 hours
+    final static long INSTALL_GRACE = 1000 * 60 * 10; // 10 minutes
 
-    private final static String PREROLL_URL = AppConfiguration.instance.getConfig("preroll.url");
-
-    public static long LAST_PREROLL_PLAY = 0;
-
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    // Member Variables
+    ////////////////////////////////////////////////////////////////////////////////////////////////
     private PrerollCallbackListener mCallback;
 
-    public void getPrerollData(Context context, PrerollCallbackListener callback) {
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    // Static Functions
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    static PrerollManager getInstance() {
+        return instance;
+    }
+
+    synchronized long getLastPlay() {
+        String val = AppConfiguration.getInstance().getDynamicProperty(LAST_PREROLL_PLAY_KEY);
+        long num = 0;
+        if (val != null) {
+            num = Long.parseLong(val);
+        }
+
+        return num;
+    }
+
+    synchronized void setLastPlayToNow() {
+        long now = System.currentTimeMillis();
+        AppConfiguration.getInstance().setDynamicProperty(LAST_PREROLL_PLAY_KEY, String.valueOf(now));
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    // Member Functions
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    void getPrerollData(Context context, PrerollCallbackListener callback) {
         mCallback = callback;
         new PrerollAsync().execute(context);
     }
 
-    public abstract static class PrerollCallbackListener {
-        abstract public void onPrerollResponse(PrerollData prerollData);
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    // Classes
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    static class PrerollData {
+        String mAudioUrl;
+        String mAudioType;
+        Integer mAudioDurationSeconds;
+        String mAssetUrl;
+        String mAssetClickUrl;
+        String mTrackingUrl;
+        String mImpressionUrl;
+
+        String getAudioUrl() {
+            return mAudioUrl;
+        }
+
+        void setAudioUrl(String audioUrl) {
+            mAudioUrl = audioUrl;
+        }
+
+        String getAudioType() {
+            return mAudioType;
+        }
+
+        void setAudioType(String audioType) {
+            mAudioType = audioType;
+        }
+
+        Integer getAudioDurationSeconds() {
+            return mAudioDurationSeconds;
+        }
+
+        void setAudioDurationSeconds(Integer audioDurationSeconds) {
+            mAudioDurationSeconds = audioDurationSeconds;
+        }
+
+        String getAssetUrl() {
+            return mAssetUrl;
+        }
+
+        void setAssetUrl(String assetUrl) {
+            mAssetUrl = assetUrl;
+        }
+
+        String getAssetClickUrl() {
+            return mAssetClickUrl;
+        }
+
+        void setAssetClickUrl(String assetClickUrl) {
+            mAssetClickUrl = assetClickUrl;
+        }
+
+        String getTrackingUrl() {
+            return mTrackingUrl;
+        }
+
+        void setTrackingUrl(String trackingUrl) {
+            mTrackingUrl = trackingUrl;
+        }
+
+        String getImpressionUrl() {
+            return mImpressionUrl;
+        }
+
+        void setImpressionUrl(String impressionUrl) {
+            mImpressionUrl = impressionUrl;
+        }
     }
 
-    public static class PrerollData {
-        public String audioUrl;
-        public String audioType;
-        public Integer audioDurationSeconds;
-        public String assetUrl;
-        public String assetClickUrl;
-        public String trackingUrl;
-        public String impressionUrl;
+    abstract static class PrerollCallbackListener {
+        abstract public void onPrerollResponse(PrerollData prerollData);
     }
 
     private static class XmlParser {
         private final String mData;
 
-        public XmlParser(String data) {
+        XmlParser(String data) {
             mData = data;
         }
 
-        public PrerollData getPrerollData() {
+        PrerollData getPrerollData() {
             PrerollData prerollData = new PrerollData();
 
             try {
@@ -70,46 +158,46 @@ public class PrerollManager {
                     String name = parser.getName();
                     switch (name) {
                         case "Impression":
-                            if (prerollData.impressionUrl == null) {
-                                prerollData.impressionUrl = readText(parser);
+                            if (prerollData.getImpressionUrl() == null) {
+                                prerollData.setImpressionUrl(readText(parser));
                             }
                             continue;
                         case "Duration":
-                            if (prerollData.audioDurationSeconds == null) {
+                            if (prerollData.getAudioDurationSeconds() == null) {
                                 String durationString = readText(parser);
                                 String[] segments = durationString.split(":");
                                 int duration = 0;
                                 duration += Integer.valueOf(segments[0]) * 60 * 60; // hours
                                 duration += Integer.valueOf(segments[1]) * 60; // minutes
                                 duration += Integer.valueOf(segments[2].split("\\.")[0]); // seconds
-                                prerollData.audioDurationSeconds = duration;
+                                prerollData.setAudioDurationSeconds(duration);
                             }
                             continue;
                         case "MediaFile":
-                            if (prerollData.audioUrl == null) {
+                            if (prerollData.getAudioUrl() == null) {
                                 String type = parser.getAttributeValue(null, "type");
                                 if (type != null && type.matches("audio.+")) {
-                                    prerollData.audioType = type;
-                                    prerollData.audioUrl = readText(parser);
+                                    prerollData.setAudioType(type);
+                                    prerollData.setAudioUrl(readText(parser));
                                 }
                             }
                             continue;
                         case "StaticResource":
-                            if (prerollData.assetUrl == null) {
+                            if (prerollData.getAssetUrl() == null) {
                                 String creativeType = parser.getAttributeValue(null, "creativeType");
                                 if (creativeType != null && creativeType.matches("image.+")) {
-                                    prerollData.assetUrl = readText(parser);
+                                    prerollData.setAssetUrl(readText(parser));
                                 }
                             }
                             continue;
                         case "Tracking":
-                            if (prerollData.trackingUrl == null) {
-                                prerollData.trackingUrl = readText(parser);
+                            if (prerollData.getTrackingUrl() == null) {
+                                prerollData.setTrackingUrl(readText(parser));
                             }
                             continue;
                         case "CompanionClickThrough":
-                            if (prerollData.assetClickUrl == null) {
-                                prerollData.assetClickUrl = readText(parser);
+                            if (prerollData.getAssetClickUrl() == null) {
+                                prerollData.setAssetClickUrl(readText(parser));
                             }
                             continue;
                         default: // implicit continue
@@ -154,17 +242,17 @@ public class PrerollManager {
                 if (id == null) {
                     type = "app";
 
-                    id = DataManager.instance.getAdId();
+                    id = DataManager.getInstance().getAdId();
 
                     if (id.isEmpty()) {
                         id = UUID.randomUUID().toString();
-                        DataManager.instance.setAdId(id);
+                        DataManager.getInstance().setAdId(id);
                     }
                 } else {
                     type = "gaid";
                 }
 
-                if (AppConfiguration.instance.isDebug) {
+                if (AppConfiguration.getInstance().isDebug) {
                     id = UUID.randomUUID().toString();
                     type = "app";
                 }

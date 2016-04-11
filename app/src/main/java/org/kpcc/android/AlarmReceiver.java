@@ -10,24 +10,22 @@ public class AlarmReceiver {
         public void onReceive(Context context, Intent intent) {
             Intent activityIntent = new Intent(context, MainActivity.class);
             activityIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            DataManager.instance.setPlayNow(true);
+            DataManager.getInstance().setPlayNow(true);
             context.startActivity(activityIntent);
 
-            BaseAlarmManager.WakeManager.instance.reset();
-            AnalyticsManager.instance.logEvent(AnalyticsManager.EVENT_ALARM_FIRED);
+            BaseAlarmManager.WakeManager.getInstance().reset();
         }
     }
 
     public static class SleepTimer extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
-            if (AppConnectivityManager.instance.streamIsBound) {
-                AppConnectivityManager.instance.streamManager.pauseAllActiveStreams();
+            if (StreamManager.ConnectivityManager.getInstance().getStreamIsBound()) {
+                StreamManager.ConnectivityManager.getInstance().getStreamManager().pauseAllActiveStreams();
             }
 
             // TODO: What is the above fails? Should we retry?
-            BaseAlarmManager.SleepManager.instance.reset();
-            AnalyticsManager.instance.logEvent(AnalyticsManager.EVENT_SLEEP_TIMER_FIRED);
+            BaseAlarmManager.SleepManager.getInstance().reset();
         }
     }
 }

@@ -96,7 +96,8 @@
                     android:id="@+id/rewind"
                     style="@style/live_seek_btn"
                     android:src="@drawable/btn_back_30"
-                    android:text="@string/back_30s" />
+                    android:text="@string/back_30s"
+                    android:visibility="invisible"/>
 
                 <include
                     layout="@layout/audio_button"
@@ -109,7 +110,8 @@
                     android:id="@+id/forward"
                     style="@style/live_seek_btn"
                     android:src="@drawable/btn_forward_30"
-                    android:text="@string/forward_30s"/>
+                    android:text="@string/forward_30s"
+                    android:visibility="invisible"/>
             </LinearLayout>
 
             <FrameLayout

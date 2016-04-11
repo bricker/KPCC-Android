@@ -16,13 +16,18 @@ public class ScheduleOccurrence extends Entity {
     private final static String ENDPOINT = "schedule";
     public final static ApiClient Client = new ApiClient(ENDPOINT);
     private final static String AT_ENDPOINT = "at";
+    private static final String TIME = "time";
 
-    public String title;
-    public long softStartsAtMs;
-    public long startsAtMs;
-    public long endsAtMs;
-    public String programSlug;
 
+    private String mTitle;
+    private long mSoftStartsAtMs;
+    private long mStartsAtMs;
+    private long mEndsAtMs;
+    private String mProgramSlug;
+
+    public String getTitle() {
+        return mTitle;
+    }
 
     public static ScheduleOccurrence buildFromJson(JSONObject jsonSchedule) throws JSONException {
         if (jsonSchedule.length() == 0) {
@@ -31,30 +36,46 @@ public class ScheduleOccurrence extends Entity {
 
         ScheduleOccurrence schedule = new ScheduleOccurrence();
 
-        schedule.title = jsonSchedule.getString(PROP_TITLE);
+        schedule.mTitle = jsonSchedule.getString(PROP_TITLE);
 
         Date softStartsAt = parseISODateTime(jsonSchedule.getString(PROP_SOFT_STARTS_AT));
-        schedule.softStartsAtMs = softStartsAt.getTime();
+        schedule.mSoftStartsAtMs = softStartsAt.getTime();
 
         Date startsAt = parseISODateTime(jsonSchedule.getString(PROP_STARTS_AT));
-        schedule.startsAtMs = startsAt.getTime();
+        schedule.mStartsAtMs = startsAt.getTime();
 
         Date endsAt = parseISODateTime(jsonSchedule.getString(PROP_ENDS_AT));
-        schedule.endsAtMs = endsAt.getTime();
+        schedule.mEndsAtMs = endsAt.getTime();
 
         if (jsonSchedule.has(Program.SINGULAR_KEY)) {
-            schedule.programSlug = jsonSchedule.getJSONObject(Program.SINGULAR_KEY).getString(PROP_SLUG);
+            schedule.mProgramSlug = jsonSchedule.getJSONObject(Program.SINGULAR_KEY).getString(PROP_SLUG);
         }
 
         return schedule;
     }
 
+    public long getSoftStartsAtMs() {
+        return mSoftStartsAtMs;
+    }
+
+    public long getStartsAtMs() {
+        return mStartsAtMs;
+    }
+
+    public long getEndsAtMs() {
+        return mEndsAtMs;
+    }
+
+    public String getProgramSlug() {
+        return mProgramSlug;
+    }
+
     public int length() {
-        return (int)(this.endsAtMs - this.softStartsAtMs);
+        return (int)(mEndsAtMs - mSoftStartsAtMs);
     }
 
     public long timeSinceSoftStartMs() {
-        return System.currentTimeMillis() - this.softStartsAtMs;
+        return System.currentTimeMillis() - mSoftStartsAtMs;
     }
 
     public static class ApiClient extends BaseApiClient {
@@ -64,7 +85,7 @@ public class ScheduleOccurrence extends Entity {
 
         public Request getAtTimestamp(long uts, Response.Listener<JSONObject> listener, Response.ErrorListener errorListener) {
             Map<String,String> params = new HashMap<>();
-            params.put("time", String.valueOf(uts));
+            params.put(TIME, String.valueOf(uts));
             return get(AT_ENDPOINT, params, listener, errorListener);
         }
     }

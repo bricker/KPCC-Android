@@ -81,13 +81,13 @@ public class EpisodesFragment extends Fragment
         mView = inflater.inflate(R.layout.fragment_episodes, container, false);
         getActivity().setTitle(mProgram.title);
         ImageView background = (ImageView) mView.findViewById(R.id.background);
-        NetworkImageManager.instance.setBitmap(background, mProgram.slug, getActivity());
+        NetworkImageManager.getInstance().setBitmap(getActivity(), background, mProgram.slug);
         mListView = (AbsListView) mView.findViewById(android.R.id.list);
         mProgressBar = (LinearLayout) mView.findViewById(R.id.progress_layout);
         mErrorView = (LinearLayout)mView.findViewById(R.id.generic_load_error);
         mErrorText = (TextView)mErrorView.findViewById(R.id.error_text);
 
-        AppConnectivityManager.instance.addOnNetworkConnectivityListener(EpisodesFragment.STACK_TAG, new AppConnectivityManager.NetworkConnectivityListener() {
+        AppConnectivityManager.getInstance().addOnNetworkConnectivityListener(EpisodesFragment.STACK_TAG, new AppConnectivityManager.NetworkConnectivityListener() {
             @Override
             public void onConnect() {
                 if (mProgressBar != null) {
@@ -118,7 +118,7 @@ public class EpisodesFragment extends Fragment
     public void onPause() {
         super.onPause();
         if (mRequest != null) { mRequest.cancel(); }
-        AppConnectivityManager.instance.removeOnNetworkConnectivityListener(EpisodesFragment.STACK_TAG);
+        AppConnectivityManager.getInstance().removeOnNetworkConnectivityListener(EpisodesFragment.STACK_TAG);
     }
 
     private void loadEpisodes() {
@@ -143,12 +143,12 @@ public class EpisodesFragment extends Fragment
                             Episode episode = Episode.buildFromJson(jsonEpisodes.getJSONObject(i));
 
                             // Don't show the episode if there is no audio.
-                            if (episode.audio != null) {
+                            if (episode.getAudio() != null) {
                                 mEpisodes.add(episode);
                             } else {
                                 // If there was no episode but there are segments, use those as episodes.
-                                if (episode.segments.size() > 0) {
-                                    for (Segment segment : episode.segments) {
+                                if (episode.getSegments().size() > 0) {
+                                    for (Segment segment : episode.getSegments()) {
                                         if (segment.audio != null) {
                                             mEpisodes.add(Episode.buildFromSegment(segment));
                                         }
@@ -218,12 +218,12 @@ public class EpisodesFragment extends Fragment
                 TextView date = (TextView) convertView.findViewById(R.id.air_date);
                 ImageView audio_icon = (ImageView) convertView.findViewById(R.id.audio_icon);
 
-                title.setText(episode.title);
-                date.setText(episode.formattedAirDate);
+                title.setText(episode.getTitle());
+                date.setText(episode.getFormattedAirDate());
 
-                if (AppConnectivityManager.instance.streamIsBound) {
-                    StreamManager.EpisodeStream currentPlayer = AppConnectivityManager.instance.streamManager.currentEpisodePlayer;
-                    if (currentPlayer != null && currentPlayer.audioUrl.equals(episode.audio.url)) {
+                if (StreamManager.ConnectivityManager.getInstance().getStreamIsBound()) {
+                    OnDemandPlayer currentPlayer = StreamManager.ConnectivityManager.getInstance().getStreamManager().getCurrentOnDemandPlayer();
+                    if (currentPlayer != null && currentPlayer.getAudioUrl().equals(episode.getAudio().getUrl())) {
                         audio_icon.setVisibility(View.VISIBLE);
                     } else {
                         audio_icon.setVisibility(View.GONE);

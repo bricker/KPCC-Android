@@ -18,7 +18,7 @@ public class SleepFragment extends Fragment {
     private Button mCancelButton;
     private TextView mCurrentTimerHeader;
     private SeekBar mSeekbar;
-    private ProgressManager mProgressObserver;
+    private PeriodicBackgroundUpdater mProgressObserver;
     private TextView mSelectionHr;
     private TextView mSelectionMin;
     private TextView mSelectionSec;
@@ -49,7 +49,7 @@ public class SleepFragment extends Fragment {
         mStrMin = getActivity().getResources().getString(R.string.timer_min);
         mStrSec = getActivity().getResources().getString(R.string.timer_sec);
 
-        mProgressObserver = new ProgressManager(new ProgressManager.TimerRunner() {
+        mProgressObserver = new PeriodicBackgroundUpdater(new PeriodicBackgroundUpdater.TimerRunner() {
             @Override
             public void onTimerComplete() {
                 showSeekPrompt();
@@ -92,16 +92,16 @@ public class SleepFragment extends Fragment {
             public void onClick(View v) {
                 int interval = mSeekbar.getProgress();
                 long relativeMillis = interval * 5 * 60 * 1000;
-                BaseAlarmManager.SleepManager.instance.set(relativeMillis);
+                BaseAlarmManager.SleepManager.getInstance().set(relativeMillis);
                 showCurrentTimerData();
 
                 // Go to the live stream if an episode isn't already playing.
-                if (AppConnectivityManager.instance.streamManager != null) {
-                    StreamManager.EpisodeStream currentEpisodePlayer = AppConnectivityManager.instance.streamManager.currentEpisodePlayer;
+                if (StreamManager.ConnectivityManager.getInstance().getStreamManager() != null) {
+                    OnDemandPlayer currentEpisodePlayer = StreamManager.ConnectivityManager.getInstance().getStreamManager().getCurrentOnDemandPlayer();
                     if (currentEpisodePlayer == null || !currentEpisodePlayer.isPlaying()) {
                         Intent activityIntent = new Intent(getActivity(), MainActivity.class);
                         activityIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                        DataManager.instance.setPlayNow(true);
+                        DataManager.getInstance().setPlayNow(true);
                         startActivity(activityIntent);
                     }
                 }
@@ -111,12 +111,12 @@ public class SleepFragment extends Fragment {
         mCancelButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                BaseAlarmManager.SleepManager.instance.cancel();
+                BaseAlarmManager.SleepManager.getInstance().cancel();
                 showSeekPrompt();
             }
         });
 
-        if (BaseAlarmManager.SleepManager.instance.isRunning()) {
+        if (BaseAlarmManager.SleepManager.getInstance().isRunning()) {
             showCurrentTimerData();
         } else {
             showSeekPrompt();

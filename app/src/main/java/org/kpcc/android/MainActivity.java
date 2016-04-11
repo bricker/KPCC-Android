@@ -9,7 +9,6 @@ import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBar;
-import android.support.v7.app.ActionBarActivity;
 import android.support.v7.app.AppCompatActivity;
 import android.text.Spannable;
 import android.text.SpannableString;
@@ -19,17 +18,18 @@ import uk.co.chrisjenx.calligraphy.CalligraphyContextWrapper;
 
 
 public class MainActivity extends AppCompatActivity {
-    private static final String DONATE_URL = "https://scprcontribute.publicradio.org/contribute.php";
+    private static final String DONATE_URL = AppConfiguration.getInstance().getConfig("donate.url");
     private NavigationDrawerFragment mNavigationDrawerFragment;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        AppConnectivityManager.instance.bindStreamService();
+        StreamManager.ConnectivityManager.setupInstance(this);
+        StreamManager.ConnectivityManager.getInstance().bindStreamService();
 
-        if (Navigation.instance.navigationItems.isEmpty()) {
-            Navigation.instance.addItem(R.string.kpcc_live, R.drawable.menu_antenna, LiveFragment.STACK_TAG,
+        if (Navigation.getInstance().navigationItems.isEmpty()) {
+            Navigation.getInstance().addItem(R.string.kpcc_live, R.drawable.menu_antenna, LiveFragment.STACK_TAG,
                     AnalyticsManager.EVENT_MENU_SELECTION_LIVE_STREAM,
                     new Navigation.NavigationItemSelectedCallback() {
                         @Override
@@ -47,7 +47,7 @@ public class MainActivity extends AppCompatActivity {
                     }
             );
 
-            Navigation.instance.addItem(R.string.programs, R.drawable.menu_microphone, ProgramsFragment.STACK_TAG,
+            Navigation.getInstance().addItem(R.string.programs, R.drawable.menu_microphone, ProgramsFragment.STACK_TAG,
                     AnalyticsManager.EVENT_MENU_SELECTION_PROGRAMS,
                     new Navigation.NavigationItemSelectedCallback() {
                         @Override
@@ -65,7 +65,7 @@ public class MainActivity extends AppCompatActivity {
                     }
             );
 
-            Navigation.instance.addItem(R.string.headlines, R.drawable.menu_glasses, HeadlinesFragment.STACK_TAG,
+            Navigation.getInstance().addItem(R.string.headlines, R.drawable.menu_glasses, HeadlinesFragment.STACK_TAG,
                     AnalyticsManager.EVENT_MENU_SELECTION_HEADLINES,
                     new Navigation.NavigationItemSelectedCallback() {
                         @Override
@@ -83,7 +83,7 @@ public class MainActivity extends AppCompatActivity {
                     }
             );
 
-            Navigation.instance.addItem(R.string.wake_sleep, R.drawable.menu_clock, AlarmFragment.STACK_TAG,
+            Navigation.getInstance().addItem(R.string.wake_sleep, R.drawable.menu_clock, AlarmFragment.STACK_TAG,
                     AnalyticsManager.EVENT_MENU_SELECTION_WAKE_SLEEP,
                     new Navigation.NavigationItemSelectedCallback() {
                         @Override
@@ -101,7 +101,7 @@ public class MainActivity extends AppCompatActivity {
                     }
             );
 
-            Navigation.instance.addItem(R.string.donate, R.drawable.menu_heart_plus, null,
+            Navigation.getInstance().addItem(R.string.donate, R.drawable.menu_heart_plus, null,
                     AnalyticsManager.EVENT_MENU_SELECTION_DONATE,
                     new Navigation.NavigationItemSelectedCallback() {
                         @Override
@@ -116,7 +116,7 @@ public class MainActivity extends AppCompatActivity {
                     }
             );
 
-            Navigation.instance.addItem(R.string.feedback, R.drawable.menu_feedback, FeedbackFragment.STACK_TAG,
+            Navigation.getInstance().addItem(R.string.feedback, R.drawable.menu_feedback, FeedbackFragment.STACK_TAG,
                     AnalyticsManager.EVENT_MENU_SELECTION_FEEDBACK,
                     new Navigation.NavigationItemSelectedCallback() {
                         @Override
@@ -134,7 +134,7 @@ public class MainActivity extends AppCompatActivity {
                     }
             );
 
-            Navigation.instance.addItem(R.string.settings, R.drawable.menu_settings, SettingsFragment.STACK_TAG,
+            Navigation.getInstance().addItem(R.string.settings, R.drawable.menu_settings, SettingsFragment.STACK_TAG,
                     AnalyticsManager.EVENT_MENU_SELECTION_SETTINGS,
                     new Navigation.NavigationItemSelectedCallback() {
                         @Override
@@ -180,10 +180,6 @@ public class MainActivity extends AppCompatActivity {
         super.setTitle(s);
     }
 
-    public NavigationDrawerFragment getNavigationDrawerFragment() {
-        return mNavigationDrawerFragment;
-    }
-
     @Override
     protected void attachBaseContext(Context newBase) {
         super.attachBaseContext(CalligraphyContextWrapper.wrap(newBase));
@@ -192,7 +188,10 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        AnalyticsManager.instance.flush();
-        AppConnectivityManager.instance.unbindStreamService();
+        StreamManager.ConnectivityManager.getInstance().unbindStreamService();
+    }
+
+    NavigationDrawerFragment getNavigationDrawerFragment() {
+        return mNavigationDrawerFragment;
     }
 }

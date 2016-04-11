@@ -69,7 +69,7 @@ public class FeedbackFragment extends Fragment {
         mErrorMessage = (TextView) view.findViewById(R.id.errorMessage);
         mProgressBar = (ProgressBar) view.findViewById(R.id.progress_circular);
 
-        AppConnectivityManager.instance.addOnNetworkConnectivityListener(FeedbackFragment.STACK_TAG,
+        AppConnectivityManager.getInstance().addOnNetworkConnectivityListener(FeedbackFragment.STACK_TAG,
                 new AppConnectivityManager.NetworkConnectivityListener() {
             @Override
             public void onConnect() {
@@ -198,7 +198,7 @@ public class FeedbackFragment extends Fragment {
                 mIsLoading = true;
                 showLoading();
 
-                FeedbackManager.instance.sendFeedback(mCurrentType, mCurrentComments, mCurrentName, mCurrentEmail,
+                FeedbackManager.getInstance().sendFeedback(mCurrentType, mCurrentComments, mCurrentName, mCurrentEmail,
                         new FeedbackManager.FeedbackCallback() {
                             @Override
                             public void onSuccess() {
@@ -227,7 +227,7 @@ public class FeedbackFragment extends Fragment {
     public void onPause() {
         super.onPause();
         // Cleanup our reference.
-        AppConnectivityManager.instance.removeOnNetworkConnectivityListener(FeedbackFragment.STACK_TAG);
+        AppConnectivityManager.getInstance().removeOnNetworkConnectivityListener(FeedbackFragment.STACK_TAG);
     }
 
     private void setButtonState() {
@@ -243,7 +243,7 @@ public class FeedbackFragment extends Fragment {
     }
 
     private void enableButton() {
-        if (AppConnectivityManager.instance.isConnectedToNetwork()) {
+        if (AppConnectivityManager.getInstance().isConnectedToNetwork()) {
             mSubmitButton.setEnabled(true);
             mSubmitButton.setClickable(true);
             mSubmitButton.setAlpha(1.0f);

@@ -39,15 +39,19 @@ public class AnalyticsManager {
     public final static String PARAM_SESSION_LENGTH = "sessionLengthInSeconds";
     public final static String PARAM_ACTIVITY_TYPE = "activityType";
 
-    public static AnalyticsManager instance = null;
+    private static AnalyticsManager instance = null;
 
     private AnalyticsManager(Context context) {
     }
 
     public static void setupInstance(Context context) {
-        if (instance == null) {
+        if (getInstance() == null) {
             instance = new AnalyticsManager(context);
         }
+    }
+
+    static AnalyticsManager getInstance() {
+        return instance;
     }
 
     public void logEvent(String name, JSONObject parameters) {

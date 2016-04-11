@@ -73,7 +73,7 @@ public class EpisodesPagerFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_episodes_pager, container, false);
 
         ImageView background = (ImageView) view.findViewById(R.id.background);
-        NetworkImageManager.instance.setBitmap(background, mProgramSlug, getActivity());
+        NetworkImageManager.getInstance().setBitmap(getActivity(), background, mProgramSlug);
 
         mAdapter = new EpisodePagerAdapter(getChildFragmentManager());
         pager = (ViewPager) view.findViewById(R.id.pager);
@@ -98,16 +98,16 @@ public class EpisodesPagerFragment extends Fragment {
                     JSONObject params = new JSONObject();
 
                     try {
-                        params.put(AnalyticsManager.PARAM_PROGRAM_PUBLISHED_AT, fragment.episode.airDate);
+                        params.put(AnalyticsManager.PARAM_PROGRAM_PUBLISHED_AT, fragment.episode.getAirDate());
                         params.put(AnalyticsManager.PARAM_PROGRAM_TITLE, fragment.program.title);
-                        params.put(AnalyticsManager.PARAM_EPISODE_TITLE, fragment.episode.title);
-                        params.put(AnalyticsManager.PARAM_PROGRAM_LENGTH, fragment.episode.audio.durationSeconds);
+                        params.put(AnalyticsManager.PARAM_EPISODE_TITLE, fragment.episode.getTitle());
+                        params.put(AnalyticsManager.PARAM_PROGRAM_LENGTH, fragment.episode.getAudio().getDurationSeconds());
                         params.put(AnalyticsManager.PARAM_PLAYED_DURATION, fragment.getCurrentPlayerPositionSeconds());
                     } catch (JSONException e) {
                         // Nothing to do. No data will be sent with this event.
                     }
 
-                    AnalyticsManager.instance.logEvent(AnalyticsManager.EVENT_ON_DEMAND_SKIPPED, params);
+                    AnalyticsManager.getInstance().logEvent(AnalyticsManager.EVENT_ON_DEMAND_SKIPPED, params);
                 }
 
                 mPrevPos = position;

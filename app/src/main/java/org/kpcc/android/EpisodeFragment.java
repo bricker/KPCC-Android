@@ -15,7 +15,6 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 
 import org.json.JSONException;
-import org.json.JSONObject;
 import org.kpcc.api.Episode;
 import org.kpcc.api.Program;
 
@@ -23,21 +22,38 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 
 public class EpisodeFragment extends Fragment {
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    // Static Variables
+    ////////////////////////////////////////////////////////////////////////////////////////////////
     private static final int SHARE_TYPE_REQUEST = 1;
     private static final String ARG_PROGRAM_SLUG = "programSlug";
     private static final String ARG_EPISODE = "episode";
     private static final String SHARE_TEXT = "%s - %s - %s";
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    // Member Variables
+    ////////////////////////////////////////////////////////////////////////////////////////////////
     public final AtomicBoolean pagerVisible = new AtomicBoolean(false);
     public Episode episode;
     public Program program;
-    private StreamManager.EpisodeStream mPlayer;
+    private OnDemandPlayer mPlayer;
     private SeekBar mSeekBar;
     private TextView mCurrentTime;
     private AudioButtonManager mAudioButtonManager;
     // Unrecoverable error. Just show an error message if this is true.
     private boolean mDidError = false;
-    private ProgressManager mProgressManager;
+    private PeriodicBackgroundUpdater mPeriodicBackgroundUpdater;
 
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    // Constructors
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+
+    /**
+     *
+     * @param programSlug
+     * @param episodeJson
+     * @return
+     */
     public static EpisodeFragment newInstance(String programSlug, String episodeJson) {
         Bundle args = new Bundle();
         args.putString(ARG_PROGRAM_SLUG, programSlug);
@@ -48,7 +64,16 @@ public class EpisodeFragment extends Fragment {
         return fragment;
     }
 
-    @Override
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    // Implementations
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+
+    /**
+     *
+     * @param savedInstanceState
+     */
+    @Override // Fragment
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
@@ -64,7 +89,14 @@ public class EpisodeFragment extends Fragment {
         }
     }
 
-    @Override
+    /**
+     *
+     * @param inflater
+     * @param container
+     * @param savedInstanceState
+     * @return
+     */
+    @Override // Fragment
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
 
@@ -94,30 +126,18 @@ public class EpisodeFragment extends Fragment {
                 Intent sendIntent = new Intent();
                 sendIntent.setAction(Intent.ACTION_SEND);
                 sendIntent.putExtra(Intent.EXTRA_TEXT,
-                        String.format(SHARE_TEXT, episode.title, program.title, episode.publicUrl));
+                        String.format(SHARE_TEXT, episode.getTitle(), program.title, episode.getPublicUrl()));
                 sendIntent.setType("text/plain");
-
-                JSONObject params = new JSONObject();
-                try {
-                    params.put(AnalyticsManager.PARAM_PROGRAM_PUBLISHED_AT, episode.airDate);
-                    params.put(AnalyticsManager.PARAM_PROGRAM_TITLE, program.title);
-                    params.put(AnalyticsManager.PARAM_EPISODE_TITLE, episode.title);
-                    params.put(AnalyticsManager.PARAM_ACTIVITY_TYPE, "UNKNOWN");
-                } catch (JSONException e) {
-                    // No params will be sent.
-                }
 
                 getActivity().startActivityForResult(
                         Intent.createChooser(sendIntent, getString(R.string.share_episode)),
                         SHARE_TYPE_REQUEST);
-
-                AnalyticsManager.instance.logEvent(AnalyticsManager.EVENT_EPISODE_SHARED, params);
             }
         });
 
         mSeekBar = (SeekBar) view.findViewById(R.id.progress_bar);
         mCurrentTime = (TextView) view.findViewById(R.id.audio_current_time);
-        mSeekBar.setMax(episode.audio.durationSeconds * 1000);
+        mSeekBar.setMax(episode.getAudio().getDurationSeconds() * 1000);
         mSeekBar.setEnabled(false);
 
         mSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
@@ -142,10 +162,10 @@ public class EpisodeFragment extends Fragment {
         });
 
         programTitle.setText(program.title);
-        date.setText(episode.formattedAirDate);
-        totalTime.setText(StreamManager.getTimeFormat(episode.audio.durationSeconds));
+        date.setText(episode.getFormattedAirDate());
+        totalTime.setText(Stream.getTimeFormat(episode.getAudio().getDurationSeconds()));
 
-        String title = episode.title;
+        String title = episode.getTitle();
 
         float length = (float) title.length();
         if (length < 30) {
@@ -174,7 +194,7 @@ public class EpisodeFragment extends Fragment {
             }
         });
 
-        AppConnectivityManager.instance.addOnNetworkConnectivityListener(episode.publicUrl, new AppConnectivityManager.NetworkConnectivityListener() {
+        AppConnectivityManager.getInstance().addOnNetworkConnectivityListener(episode.getPublicUrl(), new AppConnectivityManager.NetworkConnectivityListener() {
             @Override
             public void onConnect() {
                 if (mAudioButtonManager == null) {
@@ -199,7 +219,10 @@ public class EpisodeFragment extends Fragment {
         return view;
     }
 
-    @Override
+    /**
+     *
+     */
+    @Override // Fragment
     public void onResume() {
         super.onResume();
 
@@ -214,8 +237,8 @@ public class EpisodeFragment extends Fragment {
         MainActivity activity = (MainActivity) getActivity();
         boolean alreadyPlaying = false;
 
-        StreamManager.EpisodeStream currentPlayer = AppConnectivityManager.instance.streamManager.currentEpisodePlayer;
-        if (currentPlayer != null && currentPlayer.audioUrl.equals(episode.audio.url)) {
+        OnDemandPlayer currentPlayer = StreamManager.ConnectivityManager.getInstance().getStreamManager().getCurrentOnDemandPlayer();
+        if (currentPlayer != null && currentPlayer.getAudioUrl().equals(episode.getAudio().getUrl())) {
             mPlayer = currentPlayer;
             mSeekBar.setEnabled(true);
 
@@ -226,14 +249,14 @@ public class EpisodeFragment extends Fragment {
 
             // Audio should be released when next one starts, based on Audio Focus rules.
         } else {
-            mPlayer = new StreamManager.EpisodeStream(episode.audio.url,
-                    program.slug, episode.audio.durationSeconds, activity);
+            mPlayer = new OnDemandPlayer(activity, episode.getAudio().getUrl(),
+                    program.slug, episode.getAudio().getDurationSeconds());
         }
 
 
-        mPlayer.setOnAudioEventListener(new StreamManager.AudioEventListener() {
+        mPlayer.setAudioEventListener(new Stream.AudioEventListener() {
             @Override
-            public void onLoading() {
+            public void onPreparing() {
                 mAudioButtonManager.toggleLoading();
             }
 
@@ -242,31 +265,36 @@ public class EpisodeFragment extends Fragment {
                 mSeekBar.setEnabled(true);
                 mAudioButtonManager.togglePlayingForPause();
 
-                if (mProgressManager != null) { mProgressManager.start(); }
-                logEpisodeStreamEvent(AnalyticsManager.EVENT_ON_DEMAND_BEGAN);
+                if (mPeriodicBackgroundUpdater != null) {
+                    mPeriodicBackgroundUpdater.start();
+                }
             }
 
             @Override
             public void onPause() {
                 mAudioButtonManager.togglePaused();
-                if (mProgressManager != null) { mProgressManager.release(); }
-
-                logEpisodeStreamEvent(AnalyticsManager.EVENT_ON_DEMAND_PAUSED);
+                if (mPeriodicBackgroundUpdater != null) {
+                    mPeriodicBackgroundUpdater.release();
+                }
             }
 
             @Override
             public void onStop() {
                 mAudioButtonManager.toggleStopped();
-                if (mProgressManager != null) { mProgressManager.release(); }
+                if (mPeriodicBackgroundUpdater != null) {
+                    mPeriodicBackgroundUpdater.release();
+                }
             }
 
             @Override
             public void onCompletion() {
-                if (!AppConnectivityManager.instance.streamIsBound || !isVisible()) {
+                if (!StreamManager.ConnectivityManager.getInstance().getStreamIsBound() || !isVisible()) {
                     return;
                 }
 
-                if (mProgressManager != null) { mProgressManager.release(); }
+                if (mPeriodicBackgroundUpdater != null) {
+                    mPeriodicBackgroundUpdater.release();
+                }
 
                 FragmentManager fm = getActivity().getSupportFragmentManager();
                 EpisodesPagerFragment fragment = (EpisodesPagerFragment) fm.findFragmentByTag(EpisodesPagerFragment.STACK_TAG);
@@ -275,18 +303,20 @@ public class EpisodeFragment extends Fragment {
                     if (fragment.pager.canScrollHorizontally(1)) {
                         fragment.pager.setCurrentItem(fragment.pager.getCurrentItem() + 1);
                     } else {
-                        // Go back to the episodes list.
-                        fm.popBackStackImmediate();
+                        try {
+                            // Go back to the episodes list.
+                            fm.popBackStackImmediate();
+                        } catch(java.lang.IllegalStateException e) {
+                            // Do nothing - fragment was lost (app was backgrounded) so can't do anything.
+                        }
                     }
                 }
-
-                logEpisodeStreamEvent(AnalyticsManager.EVENT_ON_DEMAND_COMPLETED);
             }
 
             @Override
             public void onProgress(int progress) {
                 mSeekBar.setProgress(progress);
-                mCurrentTime.setText(StreamManager.getTimeFormat(progress / 1000));
+                mCurrentTime.setText(Stream.getTimeFormat(progress / 1000));
             }
 
             @Override
@@ -307,8 +337,8 @@ public class EpisodeFragment extends Fragment {
             return;
         }
 
-        mProgressManager = new ProgressManager(new ProgressManager.ProgressBarRunner(mPlayer), 100);
-        if (mPlayer.isPlaying()) { mProgressManager.start(); }
+        mPeriodicBackgroundUpdater = new PeriodicBackgroundUpdater(new PeriodicBackgroundUpdater.ProgressBarRunner(mPlayer), 100);
+        if (mPlayer.isPlaying()) { mPeriodicBackgroundUpdater.start(); }
 
         // No audio will play if:
         // 1. Stream isn't ready
@@ -316,7 +346,7 @@ public class EpisodeFragment extends Fragment {
         // 3. The view isn't visible.
         // ViewPager calls the 'onCreateView' method for surrounding views, so we can't
         // play the audio automatically in this method.
-        if (!AppConnectivityManager.instance.streamIsBound || episode.audio == null) {
+        if (!StreamManager.ConnectivityManager.getInstance().getStreamIsBound() || episode.getAudio() == null) {
             mAudioButtonManager.toggleStopped();
             mAudioButtonManager.showError(R.string.audio_error);
             return;
@@ -329,34 +359,41 @@ public class EpisodeFragment extends Fragment {
         }
     }
 
-    @Override
+    /**
+     *
+     */
+    @Override // Fragment
     public void onPause() {
         super.onPause();
         pagerVisible.set(false);
 
         // If we caught an error in the episode page and episode URL was never set, then an error
         // will be raised when the user tries to back out.
-        if (episode.publicUrl != null) {
-            AppConnectivityManager.instance.removeOnNetworkConnectivityListener(episode.publicUrl);
+        if (episode.getPublicUrl() != null) {
+            AppConnectivityManager.getInstance().removeOnNetworkConnectivityListener(episode.getPublicUrl());
         }
 
-        if (mProgressManager != null) { mProgressManager.release(); }
+        if (mPeriodicBackgroundUpdater != null) { mPeriodicBackgroundUpdater.release(); }
     }
 
-    public boolean episodeWasSkipped() {
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    // Member Functions
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    boolean episodeWasSkipped() {
         if (streamNotAvailable()) {
             return false;
         }
 
         try {
             long current = getCurrentPlayerPositionSeconds();
-            return current < (mPlayer.durationSeconds / 4);
+            return current < (mPlayer.getDuration() / 4);
         } catch (IllegalStateException e) {
             return false;
         }
     }
 
-    public long getCurrentPlayerPositionSeconds() throws IllegalStateException {
+    long getCurrentPlayerPositionSeconds() throws IllegalStateException {
         if (streamNotAvailable()) {
             return 0;
         }
@@ -365,25 +402,8 @@ public class EpisodeFragment extends Fragment {
     }
 
     private boolean streamNotAvailable() {
-        return mPlayer == null || !AppConnectivityManager.instance.streamIsBound || AppConnectivityManager.instance.streamManager.currentEpisodePlayer == null;
-    }
-
-    private void logEpisodeStreamEvent(String key) {
-        JSONObject params = new JSONObject();
-
-        try {
-            params.put(AnalyticsManager.PARAM_PROGRAM_PUBLISHED_AT, episode.airDate);
-            params.put(AnalyticsManager.PARAM_PROGRAM_TITLE, program.title);
-            params.put(AnalyticsManager.PARAM_EPISODE_TITLE, episode.title);
-            params.put(AnalyticsManager.PARAM_PROGRAM_LENGTH, episode.audio.durationSeconds);
-
-            if (key.equals(AnalyticsManager.EVENT_ON_DEMAND_PAUSED)) {
-                params.put(AnalyticsManager.PARAM_PLAYED_DURATION, mPlayer.getCurrentPosition() / 1000);
-            }
-        } catch (JSONException e) {
-            // Nothing to do. No data will be sent with this event.
-        }
-
-        AnalyticsManager.instance.logEvent(key, params);
+        return mPlayer == null ||
+                !StreamManager.ConnectivityManager.getInstance().getStreamIsBound() ||
+                StreamManager.ConnectivityManager.getInstance().getStreamManager().getCurrentOnDemandPlayer() == null;
     }
 }

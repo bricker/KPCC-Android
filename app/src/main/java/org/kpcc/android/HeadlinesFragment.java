@@ -121,7 +121,7 @@ public class HeadlinesFragment extends Fragment {
 
     @Override
     public void onPause() {
-        AnalyticsManager.instance.logEvent(AnalyticsManager.EVENT_CLOSED_HEADLINES);
+        AnalyticsManager.getInstance().logEvent(AnalyticsManager.EVENT_CLOSED_HEADLINES);
 
         if (mBrowser != null) {
             mBrowser.stopLoading();

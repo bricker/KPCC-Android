@@ -28,7 +28,7 @@ public class BaseAlarmManager {
 
 
     public static class WakeManager extends BaseAlarmManager {
-        public static WakeManager instance;
+        private static WakeManager instance;
         public static final String INTENT_ACTION = "org.kpcc.android.LIVESTREAM_ALARM";
         private static final int INTENT_ID = 0;
 
@@ -38,6 +38,10 @@ public class BaseAlarmManager {
 
         WakeManager(Context context) {
             super(context);
+        }
+
+        static WakeManager getInstance() {
+            return instance;
         }
 
         public void set(int hourOfDay, int minute) {
@@ -68,13 +72,13 @@ public class BaseAlarmManager {
                 mAlarmManager.setExact(AlarmManager.RTC_WAKEUP, alarmMillis, pendingIntent);
             }
 
-            DataManager.instance.setAlarmDate(alarmMillis);
-            AnalyticsManager.instance.logEvent(AnalyticsManager.EVENT_ALARM_ARMED);
+            DataManager.getInstance().setAlarmDate(alarmMillis);
+            AnalyticsManager.getInstance().logEvent(AnalyticsManager.EVENT_ALARM_ARMED);
         }
 
         public void cancel() {
             reset();
-            AnalyticsManager.instance.logEvent(AnalyticsManager.EVENT_ALARM_CANCELED);
+            AnalyticsManager.getInstance().logEvent(AnalyticsManager.EVENT_ALARM_CANCELED);
         }
 
         public void reset() {
@@ -82,7 +86,7 @@ public class BaseAlarmManager {
             PendingIntent pendingIntent = buildPendingIntent(intent);
             mAlarmManager.cancel(pendingIntent);
             pendingIntent.cancel();
-            DataManager.instance.clearAlarmDate();
+            DataManager.getInstance().clearAlarmDate();
         }
 
         public boolean isRunning() {
@@ -107,7 +111,7 @@ public class BaseAlarmManager {
 
 
     public static class SleepManager extends BaseAlarmManager {
-        public static SleepManager instance;
+        private static SleepManager instance;
         public static final String INTENT_ACTION = "org.kpcc.android.SLEEP_TIMER";
         private static final int INTENT_ID = 1;
 
@@ -117,6 +121,10 @@ public class BaseAlarmManager {
 
         SleepManager(Context context) {
             super(context);
+        }
+
+        static SleepManager getInstance() {
+            return instance;
         }
 
 
@@ -133,14 +141,14 @@ public class BaseAlarmManager {
                 mAlarmManager.setExact(AlarmManager.ELAPSED_REALTIME_WAKEUP, endMillis, pendingIntent);
             }
 
-            DataManager.instance.setTimerMillis(endMillis);
-            AnalyticsManager.instance.logEvent(AnalyticsManager.EVENT_SLEEP_TIMER_ARMED);
+            DataManager.getInstance().setTimerMillis(endMillis);
+            AnalyticsManager.getInstance().logEvent(AnalyticsManager.EVENT_SLEEP_TIMER_ARMED);
         }
 
 
         public void cancel() {
             reset();
-            AnalyticsManager.instance.logEvent(AnalyticsManager.EVENT_SLEEP_TIMER_CANCELED);
+            AnalyticsManager.getInstance().logEvent(AnalyticsManager.EVENT_SLEEP_TIMER_CANCELED);
         }
 
         public void reset() {
@@ -148,7 +156,7 @@ public class BaseAlarmManager {
             PendingIntent pendingIntent = buildPendingIntent(intent);
             mAlarmManager.cancel(pendingIntent);
             pendingIntent.cancel();
-            DataManager.instance.clearTimerMillis();
+            DataManager.getInstance().clearTimerMillis();
         }
 
         public boolean isRunning() {

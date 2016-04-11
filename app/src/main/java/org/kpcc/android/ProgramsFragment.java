@@ -41,7 +41,7 @@ public class ProgramsFragment extends Fragment
         super.onCreate(savedInstanceState);
         setRetainInstance(true);
 
-        AppConnectivityManager.instance.addOnNetworkConnectivityListener(ProgramsFragment.STACK_TAG, new AppConnectivityManager.NetworkConnectivityListener() {
+        AppConnectivityManager.getInstance().addOnNetworkConnectivityListener(ProgramsFragment.STACK_TAG, new AppConnectivityManager.NetworkConnectivityListener() {
             @Override
             public void onConnect() {
                 if (mProgressBar != null) {
@@ -89,7 +89,7 @@ public class ProgramsFragment extends Fragment
             mRequest.cancel();
         }
 
-        AppConnectivityManager.instance.removeOnNetworkConnectivityListener(ProgramsFragment.STACK_TAG);
+        AppConnectivityManager.getInstance().removeOnNetworkConnectivityListener(ProgramsFragment.STACK_TAG);
     }
 
     @Override
@@ -104,7 +104,7 @@ public class ProgramsFragment extends Fragment
             // No params
         }
 
-        AnalyticsManager.instance.logEvent(AnalyticsManager.EVENT_PROGRAM_SELECTED, params);
+        AnalyticsManager.getInstance().logEvent(AnalyticsManager.EVENT_PROGRAM_SELECTED, params);
 
         FragmentManager fragmentManager = getActivity().getSupportFragmentManager();
         fragmentManager.beginTransaction()
@@ -137,9 +137,9 @@ public class ProgramsFragment extends Fragment
                 ImageView audio_icon = (ImageView) view.findViewById(R.id.audio_icon);
                 TextView letter = (TextView) view.findViewById(R.id.program_letter);
 
-                if (AppConnectivityManager.instance.streamIsBound) {
-                    StreamManager.EpisodeStream currentPlayer = AppConnectivityManager.instance.streamManager.currentEpisodePlayer;
-                    if (currentPlayer != null && currentPlayer.programSlug.equals(program.slug)) {
+                if (StreamManager.ConnectivityManager.getInstance().getStreamIsBound()) {
+                    OnDemandPlayer currentPlayer = StreamManager.ConnectivityManager.getInstance().getStreamManager().getCurrentOnDemandPlayer();
+                    if (currentPlayer != null && currentPlayer.getProgramSlug().equals(program.slug)) {
                         arrow.setVisibility(View.GONE);
                         audio_icon.setVisibility(View.VISIBLE);
                     } else {

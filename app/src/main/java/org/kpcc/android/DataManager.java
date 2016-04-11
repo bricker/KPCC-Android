@@ -13,7 +13,7 @@ public class DataManager {
     private final static String PREF_ALARM_DATE = "alarm_date";
     private final static String PREF_TIMER_MILLIS = "timer_date";
 
-    public static DataManager instance;
+    private static DataManager instance;
     private final SharedPreferences mPrefs;
 
     public static void setupInstance(Context context) {
@@ -22,6 +22,10 @@ public class DataManager {
 
     private DataManager(Context context) {
         mPrefs = PreferenceManager.getDefaultSharedPreferences(context.getApplicationContext());
+    }
+
+    static DataManager getInstance() {
+        return instance;
     }
 
     public String getAdId() {

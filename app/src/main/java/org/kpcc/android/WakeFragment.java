@@ -47,7 +47,7 @@ public class WakeFragment extends Fragment {
                 int hourOfDay = mTimePicker.getCurrentHour();
                 int minute = mTimePicker.getCurrentMinute();
 
-                BaseAlarmManager.WakeManager.instance.set(hourOfDay, minute);
+                BaseAlarmManager.WakeManager.getInstance().set(hourOfDay, minute);
                 showCurrentAlarmData();
             }
         });
@@ -55,12 +55,12 @@ public class WakeFragment extends Fragment {
         mCancelButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                BaseAlarmManager.WakeManager.instance.cancel();
+                BaseAlarmManager.WakeManager.getInstance().cancel();
                 showTimePickerPrompt();
             }
         });
 
-        if (BaseAlarmManager.WakeManager.instance.isRunning()) {
+        if (BaseAlarmManager.WakeManager.getInstance().isRunning()) {
             showCurrentAlarmData();
         } else {
             final Calendar c = Calendar.getInstance();
@@ -87,7 +87,7 @@ public class WakeFragment extends Fragment {
         mCurrentAlarmHeader.setVisibility(View.VISIBLE);
         mCurrentAlarmTime.setVisibility(View.VISIBLE);
 
-        Date date = DataManager.instance.getAlarmDate();
+        Date date = DataManager.getInstance().getAlarmDate();
 
         String hour;
         String ampm;

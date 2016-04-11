@@ -12,55 +12,76 @@ import android.os.IBinder;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class AppConnectivityManager {
-    public static AppConnectivityManager instance;
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    // Static Variables
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    private static AppConnectivityManager instance;
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    // Member Variables
+    ////////////////////////////////////////////////////////////////////////////////////////////////
     private final ConnectivityManager mConnectivityManager;
-    public boolean streamIsBound = false;
-    public final ArrayList<OnStreamBindListener> mStreamBindListeners = new ArrayList<>();
-    private final HashMap<String, NetworkConnectivityListener> networkConnectivityListeners = new HashMap<>();
-    public StreamManager streamManager;
-    private final Context mContext;
+    private final Map<String, NetworkConnectivityListener> mNetworkConnectivityListeners = new HashMap<>();
 
-    private final ServiceConnection mConnection = new ServiceConnection() {
-        @Override
-        public void onServiceConnected(ComponentName className, IBinder service) {
-            StreamManager.LocalBinder binder = (StreamManager.LocalBinder) service;
-            streamManager = binder.getService();
-            streamIsBound = true;
-
-            for (OnStreamBindListener listener : mStreamBindListeners) {
-                listener.onBind();
-            }
-
-            mStreamBindListeners.clear();
-        }
-
-        @Override
-        public void onServiceDisconnected(ComponentName arg0) {
-            if (streamIsBound) {
-                streamManager.releaseAllActiveStreams();
-            }
-
-            streamIsBound = false;
-        }
-    };
-
-    public static void setupInstance(Context context) {
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    // Static Functions
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    static void setupInstance(Context context) {
         instance = new AppConnectivityManager(context);
     }
 
-    private AppConnectivityManager(Context context) {
-        mConnectivityManager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
-        mContext = context;
+    static AppConnectivityManager getInstance() {
+        return instance;
     }
 
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    // Constructors
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    private AppConnectivityManager(Context context) {
+        mConnectivityManager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    // Getters / Setters
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    // Implementations
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    // Member Functions
+    ////////////////////////////////////////////////////////////////////////////////////////////////
     boolean isConnectedToNetwork() {
         NetworkInfo activeNetwork = mConnectivityManager.getActiveNetworkInfo();
         return activeNetwork != null && activeNetwork.isConnectedOrConnecting();
     }
 
+    void addOnNetworkConnectivityListener(String tag, NetworkConnectivityListener listener, boolean doNow) {
+        mNetworkConnectivityListeners.put(tag, listener);
 
+        if (!doNow) {
+            return;
+        }
+
+        if (AppConnectivityManager.getInstance().isConnectedToNetwork()) {
+            listener.onConnect();
+        } else {
+            listener.onDisconnect();
+        }
+    }
+
+    void removeOnNetworkConnectivityListener(String tag) {
+        mNetworkConnectivityListeners.remove(tag);
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    // Classes
+    ////////////////////////////////////////////////////////////////////////////////////////////////
     public static class ConnectivityReceiver extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -68,10 +89,10 @@ public class AppConnectivityManager {
             boolean isFailover = extras.getBoolean(ConnectivityManager.EXTRA_IS_FAILOVER);
             boolean noConnection = extras.getBoolean(ConnectivityManager.EXTRA_NO_CONNECTIVITY);
 
-            for (NetworkConnectivityListener listener : AppConnectivityManager.instance.networkConnectivityListeners.values()) {
+            for (NetworkConnectivityListener listener : AppConnectivityManager.getInstance().mNetworkConnectivityListeners.values()) {
                 if (isFailover) {
                     // TODO Do something?
-                } else if (noConnection || !AppConnectivityManager.instance.isConnectedToNetwork()) {
+                } else if (noConnection || !AppConnectivityManager.getInstance().isConnectedToNetwork()) {
                     listener.onDisconnect();
                 } else {
                     listener.onConnect();
@@ -80,52 +101,8 @@ public class AppConnectivityManager {
         }
     }
 
-
-    void addOnStreamBindListener(OnStreamBindListener listener) {
-        if (streamIsBound) {
-            listener.onBind();
-        } else {
-            mStreamBindListeners.add(listener);
-        }
-    }
-
-    void bindStreamService() {
-        Intent intent = new Intent(mContext, StreamManager.class);
-        mContext.startService(intent);
-        mContext.bindService(intent, mConnection, Context.BIND_AUTO_CREATE);
-    }
-
-    void unbindStreamService() {
-        if (streamIsBound) {
-            mContext.unbindService(mConnection);
-            streamIsBound = false;
-        }
-    }
-
-    interface OnStreamBindListener {
-        void onBind();
-    }
-
-    void addOnNetworkConnectivityListener(String tag, NetworkConnectivityListener listener, boolean doNow) {
-        networkConnectivityListeners.put(tag, listener);
-
-        if (!doNow) {
-            return;
-        }
-
-        if (AppConnectivityManager.instance.isConnectedToNetwork()) {
-            listener.onConnect();
-        } else {
-            listener.onDisconnect();
-        }
-    }
-
-    void removeOnNetworkConnectivityListener(String tag) {
-        networkConnectivityListeners.remove(tag);
-    }
-
-    abstract static class NetworkConnectivityListener {
-        public abstract void onConnect();
-        public abstract void onDisconnect();
+    interface NetworkConnectivityListener {
+        void onConnect();
+        void onDisconnect();
     }
 }

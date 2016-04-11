@@ -7,7 +7,6 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBar;
-import android.support.v7.app.ActionBarActivity;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.LayoutInflater;
@@ -40,7 +39,7 @@ public class NavigationDrawerFragment extends Fragment {
         super.onCreate(savedInstanceState);
         setRetainInstance(true);
 
-        mAnalyticsManager = AnalyticsManager.instance;
+        mAnalyticsManager = AnalyticsManager.getInstance();
 
         if (savedInstanceState != null) {
             mCurrentSelectedPosition = savedInstanceState.getInt(STATE_SELECTED_POSITION);
@@ -72,7 +71,7 @@ public class NavigationDrawerFragment extends Fragment {
         });
 
         mDrawerListView.setAdapter(new ArrayAdapter<Navigation.NavigationItem>(getActivity(),
-                R.layout.list_item_drawer, Navigation.instance.navigationItems) {
+                R.layout.list_item_drawer, Navigation.getInstance().navigationItems) {
             @Override
             public View getView(int position, View convertView, ViewGroup parent) {
                 View view = convertView;
@@ -82,12 +81,12 @@ public class NavigationDrawerFragment extends Fragment {
                     view = inflater.inflate(R.layout.list_item_drawer, null);
                 }
 
-                Navigation.NavigationItem item = Navigation.instance.navigationItems.get(position);
+                Navigation.NavigationItem item = Navigation.getInstance().navigationItems.get(position);
                 ImageView icon = (ImageView) view.findViewById(R.id.icon);
                 TextView title = (TextView) view.findViewById(R.id.title);
 
-                title.setText(item.titleId);
-                icon.setImageResource(item.iconId);
+                title.setText(item.getTitleId());
+                icon.setImageResource(item.getIconId());
 
                 return view;
             }
@@ -182,7 +181,7 @@ public class NavigationDrawerFragment extends Fragment {
             // If the drawer is NOT open, then load the fragment immediately.
 
             FragmentManager fm = getActivity().getSupportFragmentManager();
-            Fragment frag = fm.findFragmentByTag(getCurrentItem().stackTag);
+            Fragment frag = fm.findFragmentByTag(getCurrentItem().getStackTag());
             boolean isAlreadyVisible = frag != null && frag.isVisible();
             mDoFragmentTransaction.set(!isAlreadyVisible);
 
@@ -240,11 +239,11 @@ public class NavigationDrawerFragment extends Fragment {
 
     private void updateFragment(boolean logEvent, boolean addToBackStack) {
         // update the main content by replacing fragments
-        getCurrentItem().performCallback(getActivity(), logEvent, addToBackStack);
+        getCurrentItem().performCallback(getActivity(), addToBackStack);
     }
 
     private Navigation.NavigationItem getCurrentItem() {
-        return Navigation.instance.navigationItems.get(mCurrentSelectedPosition);
+        return Navigation.getInstance().navigationItems.get(mCurrentSelectedPosition);
     }
 
 }

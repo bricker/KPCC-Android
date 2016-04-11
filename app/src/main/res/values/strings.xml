@@ -33,9 +33,13 @@
     <string name="forward_30s">Forward 30 seconds</string>
     <string name="rewind_start">Rewind to the start of this show</string>
     <string name="back_to_live">Back to Live</string>
-    <string name="less_than_a_minute">Less than a minute</string>
     <string name="behind_live">behind live</string>
+    <string name="minuteShort">m</string>
+    <string name="minute">minute</string>
     <string name="minutes">minutes</string>
+    <string name="hourShort">h</string>
+    <string name="hour">hour</string>
+    <string name="hours">hours</string>
 
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>
