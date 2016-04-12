@@ -25,6 +25,7 @@ public class LivePlayer extends Stream {
     ////////////////////////////////////////////////////////////////////////////////////////////////
     final private PrerollCompleteCallback mPrerollCompleteCallback;
     private long mPausedAt = 0;
+    private long mLiveOffsetMs = 0;
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
     // Constructors
@@ -84,11 +85,18 @@ public class LivePlayer extends Stream {
         super.release();
     }
 
+    @Override
+    void seekTo(long pos) {
+        super.seekTo(pos);
+        setLiveOffsetMs(getDuration() - pos);
+    }
+
     ////////////////////////////////////////////////////////////////////////////////////////////////
     // Member Functions
     ////////////////////////////////////////////////////////////////////////////////////////////////
     void seekToLive() {
-        seekTo(getDuration());
+        seekTo(0);
+        setLiveOffsetMs(0);
     }
 
     void pauseTemporary() {
@@ -111,18 +119,35 @@ public class LivePlayer extends Stream {
     void skipBackward() {
         if (canSeekBackward()) {
             seekTo(getCurrentPosition() - JUMP_INTERVAL_MS);
+            decreaseLiveOffsetMs(JUMP_INTERVAL_MS);
         }
     }
 
     void skipForward() {
         if (canSeekForward()) {
             seekTo(getCurrentPosition() + JUMP_INTERVAL_MS);
+            increaseLiveOffsetMs(JUMP_INTERVAL_MS);
         }
     }
 
     long getAudioTimestamp() {
-        if (getAudioPlayer() == null) return 0;
-        return getAudioPlayer().getProgramDateTimeUTS();
+        return System.currentTimeMillis() - getLiveOffsetMs();
+    }
+
+    synchronized void decreaseLiveOffsetMs(int ms) {
+        mLiveOffsetMs -= ms;
+    }
+
+    synchronized void increaseLiveOffsetMs(int ms) {
+        mLiveOffsetMs += ms;
+    }
+
+    synchronized void setLiveOffsetMs(long ms) {
+        mLiveOffsetMs = ms;
+    }
+
+    long getLiveOffsetMs() {
+        return mLiveOffsetMs;
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////

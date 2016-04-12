@@ -27,26 +27,4 @@ public class RawPlayer extends Stream implements AudioPlayer.Listener {
     ////////////////////////////////////////////////////////////////////////////////////////////////
     // Implementations
     ////////////////////////////////////////////////////////////////////////////////////////////////
-    @Override // AudioPlayer.Listener
-    public void onStateChanged(final boolean playWhenReady, final int playbackState) {
-        switch (playbackState) {
-            case ExoPlayer.STATE_IDLE:
-                break;
-            case ExoPlayer.STATE_PREPARING:
-                break;
-            case ExoPlayer.STATE_BUFFERING:
-                break;
-            case ExoPlayer.STATE_READY:
-                break;
-            case ExoPlayer.STATE_ENDED:
-                getAudioEventListener().onCompletion();
-                release();
-                break;
-        }
-    }
-
-    @Override // AudioPlayer.Listener
-    public void onError(final Exception e) {
-        getAudioEventListener().onError();
-    }
 }

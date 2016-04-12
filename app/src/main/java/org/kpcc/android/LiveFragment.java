@@ -60,6 +60,7 @@ public class LiveFragment extends Fragment {
     private final AtomicBoolean didInitAudio = new AtomicBoolean(false);
     private ScheduleOccurrence mCurrentSchedule = null;
     private AtomicBoolean mScheduleUpdaterMutex = new AtomicBoolean(false);
+    private int lastProgress = 0;
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
     // Implementations
@@ -183,6 +184,9 @@ public class LiveFragment extends Fragment {
         mLiveSeekViewManager.getSeekBar().setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                // The jump buttons COULD use this function, but since we know exactly how much they are
+                // jumping it's more comfortable to just update the seekbar and livestream manually in
+                // those cases.
                 if (!fromUser) {
                     return;
                 }
@@ -197,7 +201,8 @@ public class LiveFragment extends Fragment {
                     return;
                 }
 
-                livePlayer.seekTo(mLiveSeekViewManager.getProgramStartUTS() + progress);
+                long programStartPositionInHLSWindow = mLiveSeekViewManager.getProgramStartWindowPosition(livePlayer.getDuration());
+                livePlayer.seekTo(programStartPositionInHLSWindow + progress);
             }
 
             @Override
@@ -247,10 +252,22 @@ public class LiveFragment extends Fragment {
                 final LivePlayer livePlayer = getLivePlayer();
                 if (livePlayer == null) return;
 
-                livePlayer.pause();
-                livePlayer.seekToLive();
+                playRewindBeat(new Stream.AudioEventListener() {
+                    @Override
+                    public void onPlay() {
+                        livePlayer.pause();
+                        livePlayer.seekToLive();
+                        mAudioButtonManager.toggleLoading();
+                    }
 
-                playRewindBeat();
+                    @Override
+                    public void onCompletion() {
+                        LivePlayer livePlayer = getLivePlayer();
+                        if (livePlayer == null) return;
+
+                        livePlayer.play();
+                    }
+                });
             }
         });
 
@@ -260,10 +277,23 @@ public class LiveFragment extends Fragment {
                 final LivePlayer livePlayer = getLivePlayer();
                 if (livePlayer == null) return;
 
-                livePlayer.pause();
-                livePlayer.seekTo(mLiveSeekViewManager.getProgramStartUTS());
+                playRewindBeat(new Stream.AudioEventListener() {
+                    @Override
+                    public void onPlay() {
+                        livePlayer.pause();
+                        long programStartPositionInHLSWindow = mLiveSeekViewManager.getProgramStartWindowPosition(livePlayer.getDuration());
+                        livePlayer.seekTo(programStartPositionInHLSWindow);
+                        mAudioButtonManager.toggleLoading();
+                    }
 
-                playRewindBeat();
+                    @Override
+                    public void onCompletion() {
+                        LivePlayer livePlayer = getLivePlayer();
+                        if (livePlayer == null) return;
+
+                        livePlayer.play();
+                    }
+                });
             }
         });
 
@@ -359,21 +389,10 @@ public class LiveFragment extends Fragment {
     /**
      *
      */
-    private void playRewindBeat() {
+    private void playRewindBeat(Stream.AudioEventListener eventListener) {
         RawPlayer rewindAudio = new RawPlayer(getActivity(), ASSET_AUDIO_REWIND_MP3);
 
-        rewindAudio.setAudioEventListener(new Stream.AudioEventListener() {
-            @Override
-            public void onPlay() { mAudioButtonManager.toggleLoading(); }
-
-            @Override
-            public void onCompletion() {
-                LivePlayer livePlayer = getLivePlayer();
-                if (livePlayer == null) return;
-
-                livePlayer.play();
-            }
-        });
+        rewindAudio.setAudioEventListener(eventListener);
 
         rewindAudio.prepareAndStart();
     }
@@ -529,12 +548,9 @@ public class LiveFragment extends Fragment {
             LivePlayer livePlayer = getLivePlayer();
             if (livePlayer == null) return;
 
-            long currentProgUTS= livePlayer.getAudioTimestamp();
-            long now = System.currentTimeMillis();
-            int currentToLiveDiffMs = (int)(now - currentProgUTS);
-
             mLiveSeekViewManager.setSecondaryProgressFromSchedule();
 
+            long currentToLiveDiffMs = livePlayer.getLiveOffsetMs();
             long minBehindLive = TimeUnit.MILLISECONDS.toMinutes(currentToLiveDiffMs);
 
             if (minBehindLive >= 2) {
@@ -560,6 +576,7 @@ public class LiveFragment extends Fragment {
                 mStatus.setText(val);
                 mLiveSeekViewManager.showGoLiveBtn();
             } else {
+                long now = System.currentTimeMillis();
                 ScheduleOccurrence schedule = getCurrentSchedule();
                 // If we're before this occurrence's 'soft start', then say "up next".
                 // Otherwise, set "On Now".
@@ -670,27 +687,22 @@ public class LiveFragment extends Fragment {
 
         @Override
         public void onPlay() {
-            getActivity().runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    mAudioButtonManager.togglePlayingForPause();
-                    mLiveSeekViewManager.showSeekButtons();
-                    mLiveSeekViewManager.enableSeekBar();
-                }
-            });
+            mAudioButtonManager.togglePlayingForPause();
+            mLiveSeekViewManager.showSeekButtons();
+            mLiveSeekViewManager.enableSeekBar();
 
             LivePlayer livePlayer = getLivePlayer();
             if (livePlayer != null && mLiveSeekBarUpdater == null) {
-                mLiveSeekBarUpdater = new PeriodicBackgroundUpdater(new PeriodicBackgroundUpdater.ProgressBarRunner(livePlayer), LIVE_SEEKBAR_REFRESH_INTERVAL);
+                mLiveSeekBarUpdater = new PeriodicBackgroundUpdater(
+                        new PeriodicBackgroundUpdater.ProgressBarRunner(livePlayer), LIVE_SEEKBAR_REFRESH_INTERVAL);
             }
 
             mLiveSeekBarUpdater.start();
             if (mLiveStatusUpdater != null) mLiveStatusUpdater.start();
 
             if (livePlayer != null) {
-                long progStartUTS = mLiveSeekViewManager.getProgramStartUTS();
-                long currentUTS = livePlayer.getAudioTimestamp();
-                mLiveSeekViewManager.setSeekProgress((int) (currentUTS - progStartUTS));
+                // Set the progress. This is for when the user has left the fragment and come back.
+                mLiveSeekViewManager.setSeekProgressFromOffset(livePlayer.getLiveOffsetMs(), livePlayer.getDuration());
             }
         }
 

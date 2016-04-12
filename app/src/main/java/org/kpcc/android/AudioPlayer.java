@@ -183,7 +183,6 @@ public class AudioPlayer implements ExoPlayer.Listener, ChunkSampleSource.EventL
     private CodecCounters codecCounters;
     private Format videoFormat;
     private int videoTrackToRestore;
-    private long programDateTimeUTS = 0L;
 
     private BandwidthMeter bandwidthMeter;
     private boolean backgrounded;
@@ -273,12 +272,6 @@ public class AudioPlayer implements ExoPlayer.Listener, ChunkSampleSource.EventL
             captionListener.onCues(Collections.<Cue>emptyList());
         }
     }
-
-    public synchronized void setProgramDateTimeUTS(Date programDateTime) {
-        this.programDateTimeUTS = programDateTime.getTime();
-    }
-
-    public long getProgramDateTimeUTS() { return programDateTimeUTS; }
 
     public boolean getBackgrounded() {
         return backgrounded;
@@ -555,7 +548,7 @@ public class AudioPlayer implements ExoPlayer.Listener, ChunkSampleSource.EventL
 
     @Override
     public void onChunkLoaded(HlsMediaPlaylist.Segment segment) {
-        setProgramDateTimeUTS(segment.programDateTime);
+        // Nothing at the moment
     }
 
     @Override

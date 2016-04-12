@@ -172,13 +172,21 @@ public class LiveSeekViewManager {
     void setSecondaryProgressFromSchedule() {
         long now = System.currentTimeMillis();
         long programStartUTS = getProgramStartUTS();
-
         mSeekBar.setSecondaryProgress((int) (now - programStartUTS));
     }
 
     void setSeekProgressToLiveHead() {
         mSeekBar.setProgress(mSeekBar.getSecondaryProgress());
     }
+
+    void setSeekProgressFromOffset(long offset, long duration) {
+        long now = System.currentTimeMillis();
+        long currentPositionInWindow = duration - offset;
+        long programStartWindowPosition = getProgramStartWindowPosition(duration);
+        setSeekProgress((int)(currentPositionInWindow - programStartWindowPosition));
+
+    }
+
 
     int getLiveHeadProgress() {
         return mSeekBar.getSecondaryProgress();
@@ -191,7 +199,6 @@ public class LiveSeekViewManager {
     boolean hasExceededLowerSeekBound() {
         return mSeekBar.getProgress() <= 0;
     }
-
 
     long getProgramStartUTS() {
         long now = System.currentTimeMillis();
@@ -212,5 +219,25 @@ public class LiveSeekViewManager {
         } else {
             return (int)(schedule.getEndsAtMs() - schedule.getSoftStartsAtMs());
         }
+    }
+
+    /**
+     * This is used for two things:
+     * 1. Rewinding to start of program. This function returns the DVR position of the start of the program.
+     * 2. To seek to requested position when manually seeking (via seekbar).
+     * We get the program start DVR position, and then (outside of this function) we add the progress value
+     * to determine
+     * @param duration
+     * @return
+     */
+    long getProgramStartWindowPosition(long duration) {
+        // If we go back to the beginning of the program, how far behind live does that put us?
+        // We have to go back to the beginning of the program because that's the closest known
+        // absolute timestamp. This gets us the number of milliseconds behind live.
+        long timeSinceProgramStart = System.currentTimeMillis() - getProgramStartUTS();
+
+        // Now we subtract that number from the HLS duration to convert it to number of milliseconds
+        // INTO the live window we are.
+        return duration - timeSinceProgramStart;
     }
 }
