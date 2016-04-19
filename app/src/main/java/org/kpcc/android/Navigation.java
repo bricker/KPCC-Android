@@ -16,8 +16,8 @@ class Navigation {
     }
 
     void addItem(int titleId, int iconId, String stackTag,
-                        String analyticsKey, NavigationItemSelectedCallback callback) {
-        navigationItems.add(new NavigationItem(titleId, iconId, stackTag, analyticsKey, callback));
+                 NavigationItemSelectedCallback callback) {
+        navigationItems.add(new NavigationItem(titleId, iconId, stackTag, callback));
     }
 
     static abstract class NavigationItemSelectedCallback {
@@ -46,7 +46,7 @@ class Navigation {
         }
 
         NavigationItem(int titleId, int iconId, String stackTag,
-                       String analyticsKey, NavigationItemSelectedCallback callback) {
+                       NavigationItemSelectedCallback callback) {
             this.mTitleId = titleId;
             this.mIconId = iconId;
             this.mCallback = callback;

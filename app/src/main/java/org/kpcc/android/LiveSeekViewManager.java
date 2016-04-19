@@ -11,18 +11,23 @@ import org.kpcc.api.ScheduleOccurrence;
 /**
  * Created by rickb014 on 4/4/16.
  */
-public class LiveSeekViewManager {
+class LiveSeekViewManager {
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    // Static Variables
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    private static final int DEFAULT_BLOCK_MS = 1000*60*60;
+
     ////////////////////////////////////////////////////////////////////////////////////////////////
     // Member Variables
     ////////////////////////////////////////////////////////////////////////////////////////////////
-    private SeekBar mSeekBar;
-    private ImageButton mRewindBtn;
-    private ImageButton mForwardBtn;
-    private Button mGoLiveBtn;
-    private Button mProgramStartBtn;
-    private FrameLayout mLiveJumpBtns;
-    private FrameLayout mGoLiveBtnWrapper;
-    private FrameLayout mProgStartBtnWrapper;
+    private final SeekBar mSeekBar;
+    private final ImageButton mRewindBtn;
+    private final ImageButton mForwardBtn;
+    private final Button mGoLiveBtn;
+    private final Button mProgramStartBtn;
+    private final FrameLayout mLiveJumpBtns;
+    private final FrameLayout mGoLiveBtnWrapper;
+    private final FrameLayout mProgStartBtnWrapper;
     private ScheduleOccurrence mScheduleOccurrence;
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -62,7 +67,7 @@ public class LiveSeekViewManager {
         return mProgramStartBtn;
     }
 
-    ScheduleOccurrence getSchedule() {
+    private ScheduleOccurrence getSchedule() {
         return mScheduleOccurrence;
     }
 
@@ -73,23 +78,27 @@ public class LiveSeekViewManager {
     ////////////////////////////////////////////////////////////////////////////////////////////////
     // Member Functions
     ////////////////////////////////////////////////////////////////////////////////////////////////
-    void reset() {
+
+    //
+    // View Management
+    //
+    synchronized void reset() {
         mLiveJumpBtns.setVisibility(View.GONE);
         hideSeekBar();
         hideSeekButtons();
     }
 
-    void showProgramStartBtn() {
+    synchronized void showProgramStartBtn() {
         mProgStartBtnWrapper.setVisibility(View.VISIBLE);
         mGoLiveBtnWrapper.setVisibility(View.GONE);
     }
 
-    void showGoLiveBtn() {
+    synchronized void showGoLiveBtn() {
         mProgStartBtnWrapper.setVisibility(View.GONE);
         mGoLiveBtnWrapper.setVisibility(View.VISIBLE);
     }
 
-    void skipBackward(boolean canSkipBackward) {
+    synchronized void skipBackward(boolean canSkipBackward) {
         mSeekBar.setProgress(mSeekBar.getProgress() - LivePlayer.JUMP_INTERVAL_MS);
         mForwardBtn.setAlpha(1.0f);
         mForwardBtn.setEnabled(true);
@@ -97,59 +106,66 @@ public class LiveSeekViewManager {
         toggleBackwardBtn(canSkipBackward);
     }
 
-    void skipForward(boolean canSkipForward) {
+    synchronized void skipForward(boolean canSkipForward) {
         mSeekBar.setProgress(mSeekBar.getProgress() + LivePlayer.JUMP_INTERVAL_MS);
         mRewindBtn.setAlpha(1.0f);
         mRewindBtn.setEnabled(true);
         toggleForwardBtn(canSkipForward);
     }
 
-    void toggleBackwardBtn(boolean canSkipBackward) {
+    synchronized void toggleBackwardBtn(boolean canSkipBackward) {
         if (!canSkipBackward) {
             mRewindBtn.setAlpha(0.4f);
             mRewindBtn.setEnabled(false);
         }
     }
 
-    void toggleForwardBtn(boolean canSkipForward) {
+    synchronized void toggleForwardBtn(boolean canSkipForward) {
         if (!canSkipForward) {
             mForwardBtn.setAlpha(0.4f);
             mForwardBtn.setEnabled(false);
         }
     }
 
-    void enableSeekBar() {
+    synchronized void enableSeekBar() {
         mSeekBar.setVisibility(View.VISIBLE);
         mSeekBar.setEnabled(true);
     }
 
-    void disableSeekBar() {
+    synchronized void disableSeekBar() {
         mSeekBar.setEnabled(false);
     }
 
-    void hideSeekBar() {
+    private synchronized void hideSeekBar() {
         mSeekBar.setVisibility(View.GONE);
         disableSeekBar();
     }
 
-    void showSeekButtons() {
+    private synchronized void showSeekBar() {
+        mSeekBar.setVisibility(View.VISIBLE);
+        enableSeekBar();
+    }
+
+    synchronized void showSeekButtons() {
         mRewindBtn.setVisibility(View.VISIBLE);
         mForwardBtn.setVisibility(View.VISIBLE);
     }
 
-    void hideSeekButtons() {
+    private synchronized void hideSeekButtons() {
         mRewindBtn.setVisibility(View.INVISIBLE);
         mForwardBtn.setVisibility(View.INVISIBLE);
     }
 
-    void showAfterPreroll() {
+    synchronized void showAfterPreroll() {
         mLiveJumpBtns.setVisibility(View.VISIBLE);
         showSeekButtons();
+        showSeekBar();
     }
 
-    void hideForPreroll() {
+    synchronized void hideForPreroll() {
         mLiveJumpBtns.setVisibility(View.INVISIBLE);
         hideSeekButtons();
+        hideSeekBar();
     }
 
 
@@ -158,35 +174,31 @@ public class LiveSeekViewManager {
     //
 
     void incrementProgress() {
-        mSeekBar.setProgress(mSeekBar.getProgress() + LiveFragment.LIVE_SEEKBAR_REFRESH_INTERVAL);
+        setSeekProgress(mSeekBar.getProgress() + LiveFragment.LIVE_SEEKBAR_REFRESH_INTERVAL);
     }
 
-    void setSeekProgress(int progress) {
+    private synchronized void setSeekProgress(int progress) {
         mSeekBar.setProgress(progress);
     }
 
-    void setSeekBarMaxFromSchedule() {
+    void setSeekProgressFromPlayerPosition(long upperBoundMs, long currentPositionMs) {
+        long programStartWindowPositionMs = getProgramStartWindowPositionMs(upperBoundMs);
+        setSeekProgress((int)(currentPositionMs - programStartWindowPositionMs));
+    }
+
+    synchronized void setSeekBarMaxFromSchedule() {
         mSeekBar.setMax(getProgramDuration());
     }
 
-    void setSecondaryProgressFromSchedule() {
+    synchronized void setSecondaryProgressFromSchedule() {
         long now = System.currentTimeMillis();
         long programStartUTS = getProgramStartUTS();
         mSeekBar.setSecondaryProgress((int) (now - programStartUTS));
     }
 
-    void setSeekProgressToLiveHead() {
-        mSeekBar.setProgress(mSeekBar.getSecondaryProgress());
+    synchronized void setSeekProgressToLiveHead() {
+        setSeekProgress(mSeekBar.getSecondaryProgress());
     }
-
-    void setSeekProgressFromOffset(long offset, long duration) {
-        long now = System.currentTimeMillis();
-        long currentPositionInWindow = duration - offset;
-        long programStartWindowPosition = getProgramStartWindowPosition(duration);
-        setSeekProgress((int)(currentPositionInWindow - programStartWindowPosition));
-
-    }
-
 
     int getLiveHeadProgress() {
         return mSeekBar.getSecondaryProgress();
@@ -200,22 +212,23 @@ public class LiveSeekViewManager {
         return mSeekBar.getProgress() <= 0;
     }
 
-    long getProgramStartUTS() {
+    private long getProgramStartUTS() {
         long now = System.currentTimeMillis();
         ScheduleOccurrence schedule = getSchedule();
         if (schedule == null) {
-            return now - (now % 1000*60*60);
+            // One hour program blocks when there is no schedule available.
+            return now - (now % DEFAULT_BLOCK_MS);
         } else {
             return schedule.getSoftStartsAtMs();
         }
     }
 
-    int getProgramDuration() {
+    private int getProgramDuration() {
         ScheduleOccurrence schedule = getSchedule();
 
         if (schedule == null) {
             // If there's no schedule then we'll just go in hour-long intervals.
-            return 1000*60*60;
+            return DEFAULT_BLOCK_MS;
         } else {
             return (int)(schedule.getEndsAtMs() - schedule.getSoftStartsAtMs());
         }
@@ -227,17 +240,19 @@ public class LiveSeekViewManager {
      * 2. To seek to requested position when manually seeking (via seekbar).
      * We get the program start DVR position, and then (outside of this function) we add the progress value
      * to determine
-     * @param duration
+     * @param upperBoundMs
      * @return
      */
-    long getProgramStartWindowPosition(long duration) {
+    long getProgramStartWindowPositionMs(long upperBoundMs) {
         // If we go back to the beginning of the program, how far behind live does that put us?
         // We have to go back to the beginning of the program because that's the closest known
         // absolute timestamp. This gets us the number of milliseconds behind live.
-        long timeSinceProgramStart = System.currentTimeMillis() - getProgramStartUTS();
+        long msSinceProgramStart = System.currentTimeMillis() - getProgramStartUTS();
 
-        // Now we subtract that number from the HLS duration to convert it to number of milliseconds
-        // INTO the live window we are.
-        return duration - timeSinceProgramStart;
+        // Now we subtract that number from the HLS upper range.
+        // This gives us the number of milliseconds INTO the live window we are.
+        // In other words, we are calculating the "currentPosition" property before the player
+        // knows it.
+        return upperBoundMs - msSinceProgramStart;
     }
 }

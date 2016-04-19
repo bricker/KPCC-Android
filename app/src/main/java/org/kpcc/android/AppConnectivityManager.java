@@ -1,19 +1,14 @@
 package org.kpcc.android;
 
 import android.content.BroadcastReceiver;
-import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
-import android.content.ServiceConnection;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Bundle;
-import android.os.IBinder;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 public class AppConnectivityManager {
     ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -85,6 +80,8 @@ public class AppConnectivityManager {
     public static class ConnectivityReceiver extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
+            if (!intent.getAction().equals(ConnectivityManager.CONNECTIVITY_ACTION)) return;
+
             Bundle extras = intent.getExtras();
             boolean isFailover = extras.getBoolean(ConnectivityManager.EXTRA_IS_FAILOVER);
             boolean noConnection = extras.getBoolean(ConnectivityManager.EXTRA_NO_CONNECTIVITY);

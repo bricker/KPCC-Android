@@ -38,11 +38,11 @@ class AppNotificationManager implements SharedPreferences.OnSharedPreferenceChan
         }
     }
 
-    static AppNotificationManager getInstance() {
+    private static AppNotificationManager getInstance() {
         return instance;
     }
 
-    void enableReceivers() {
+    private void enableReceivers() {
         PackageManager pm = application.getPackageManager();
 
         ComponentName receiver1 = new ComponentName(application, BroadcastReceiver.class);
@@ -56,7 +56,7 @@ class AppNotificationManager implements SharedPreferences.OnSharedPreferenceChan
                 PackageManager.DONT_KILL_APP);
     }
 
-    void disableReceivers() {
+    private void disableReceivers() {
         PackageManager pm = application.getPackageManager();
 
         ComponentName receiver1 = new ComponentName(application, BroadcastReceiver.class);
@@ -87,17 +87,17 @@ class AppNotificationManager implements SharedPreferences.OnSharedPreferenceChan
         }
     }
 
-    void subscribe(String channel) {
+    private void subscribe(String channel) {
         ParsePush.subscribeInBackground(channel);
         enableReceivers();
     }
 
-    void unsubscribe(String channel) {
+    private void unsubscribe(String channel) {
         ParsePush.unsubscribeInBackground(channel);
         disableReceivers();
     }
 
-    static class BroadcastReceiver extends ParsePushBroadcastReceiver {
+    public static class BroadcastReceiver extends ParsePushBroadcastReceiver {
         @Override
         protected void onPushOpen(Context context, Intent intent) {
             // Parse automatically opens the MainActivity, which fortunately goes directly

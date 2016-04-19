@@ -250,7 +250,7 @@ public class EpisodeFragment extends Fragment {
             // Audio should be released when next one starts, based on Audio Focus rules.
         } else {
             mPlayer = new OnDemandPlayer(activity, episode.getAudio().getUrl(),
-                    program.slug, episode.getAudio().getDurationSeconds());
+                    program.slug);
         }
 
 

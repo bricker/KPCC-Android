@@ -2,19 +2,19 @@ package org.kpcc.android;
 
 import android.os.Handler;
 import android.os.SystemClock;
-import android.util.Log;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Created by rickb014 on 8/9/15.
  */
-public class PeriodicBackgroundUpdater implements Runnable {
+class PeriodicBackgroundUpdater implements Runnable {
     ////////////////////////////////////////////////////////////////////////////////////////////////
     // Member variables
     ////////////////////////////////////////////////////////////////////////////////////////////////
     private Thread mBackgroundThread;
     private final AtomicBoolean mIsObserving = new AtomicBoolean(false);
+    private final AtomicBoolean mIsPaused = new AtomicBoolean(false);
     private final Handler mHandler = new Handler();
     private final Runnable mRunner;
     private final int mInterval;
@@ -34,7 +34,9 @@ public class PeriodicBackgroundUpdater implements Runnable {
     public void run() {
         while (mIsObserving.get()) {
             try {
-                mHandler.post(mRunner);
+                if (!mIsPaused.get()) {
+                    mHandler.post(mRunner);
+                }
                 Thread.sleep(mInterval);
             } catch (InterruptedException | IllegalStateException e) {
                 // If the progress observer fails, just stop the observer.
@@ -49,7 +51,7 @@ public class PeriodicBackgroundUpdater implements Runnable {
     ////////////////////////////////////////////////////////////////////////////////////////////////
     // Member Functions
     ////////////////////////////////////////////////////////////////////////////////////////////////
-    boolean isObserving() {
+    private boolean isObserving() {
         return mIsObserving.get();
     }
 
@@ -91,6 +93,13 @@ public class PeriodicBackgroundUpdater implements Runnable {
         mBackgroundThread = null;
     }
 
+    synchronized void pause() {
+        mIsPaused.set(true);
+    }
+
+    synchronized void resume() {
+        mIsPaused.set(false);
+    }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
     // Runnable Implementations

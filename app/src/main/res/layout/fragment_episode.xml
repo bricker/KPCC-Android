@@ -117,7 +117,8 @@
                     android:layout_height="35dp"
                     android:src="@drawable/ic_share"
                     android:layout_centerHorizontal="true"
-                    android:layout_alignParentBottom="true" />
+                    android:layout_alignParentBottom="true"
+                    android:contentDescription="@string/share_episode"/>
             </RelativeLayout>
         </FrameLayout>
     </FrameLayout>

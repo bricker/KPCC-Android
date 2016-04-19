@@ -37,7 +37,7 @@ public class Audio extends Entity {
         return mUrl;
     }
 
-    public void setUrl(String url) {
+    private void setUrl(String url) {
         mUrl = url;
     }
 
@@ -45,7 +45,7 @@ public class Audio extends Entity {
         return mDurationSeconds;
     }
 
-    public void setDurationSeconds(int durationSeconds) {
+    private void setDurationSeconds(int durationSeconds) {
         mDurationSeconds = durationSeconds;
     }
 }

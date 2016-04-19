@@ -28,7 +28,6 @@ public class KPCCApplication extends Application {
         AppConfiguration.setupInstance(this);
         DataManager.setupInstance(this);
         HttpRequest.Manager.setupInstance(this);
-        AnalyticsManager.setupInstance(this);
         BaseAlarmManager.setupInstance(this);
 
         Parse.initialize(this,

@@ -8,7 +8,9 @@ import android.webkit.MimeTypeMap;
 import com.google.android.exoplayer.ExoPlayer;
 import com.google.android.exoplayer.util.MimeTypes;
 
+import java.util.Locale;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Created by rickb014 on 4/3/16.
@@ -40,30 +42,17 @@ abstract class Stream implements AudioManager.OnAudioFocusChangeListener, AudioP
     private final AudioManager mAudioManager;
     private AudioFocusState mAudioFocusState;
     private boolean mIsTemporarilyPaused;
+    private final AtomicBoolean mIsPaused = new AtomicBoolean(false); // ExoPlayer doesn't have a proper "paused" state so we keep track of it here.
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
     // Static Functions
     ////////////////////////////////////////////////////////////////////////////////////////////////
     static String getTimeFormat(int seconds) {
-        return String.format("%01d:%02d:%02d",
+        return String.format(Locale.ENGLISH, "%01d:%02d:%02d",
                 TimeUnit.SECONDS.toHours(seconds),
                 TimeUnit.SECONDS.toMinutes(seconds) % TimeUnit.HOURS.toMinutes(1),
                 TimeUnit.SECONDS.toSeconds(seconds) % TimeUnit.MINUTES.toSeconds(1)
         );
-    }
-
-    static String getMimeTypeFromAudioUrl(String audioUrl) {
-        String mimeType = MimeTypes.AUDIO_MPEG; // Default mime type.
-
-        String ext = MimeTypeMap.getFileExtensionFromUrl(audioUrl);
-        if (ext != null) {
-            mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(ext);
-        } else {
-            // TODO: Extension couldn't be determined. We should notify the user that the
-            // audio probably won't play, for now we'll just assume it's mp3 (the default mime).
-        }
-
-        return mimeType;
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -100,6 +89,7 @@ abstract class Stream implements AudioManager.OnAudioFocusChangeListener, AudioP
         if (getAudioPlayer() == null) return;
 
         try {
+            mIsPaused.set(false);
             getAudioPlayer().getPlayerControl().start();
         } catch (IllegalStateException e) {
             // Call release() to stop progress observer, update button state, etc.
@@ -111,6 +101,7 @@ abstract class Stream implements AudioManager.OnAudioFocusChangeListener, AudioP
         if (getAudioPlayer() == null) return;
 
         try {
+            mIsPaused.set(true);
             getAudioPlayer().getPlayerControl().pause();
         } catch (IllegalStateException e) {
             // Call release() to stop progress observer, update button state, etc.
@@ -120,25 +111,25 @@ abstract class Stream implements AudioManager.OnAudioFocusChangeListener, AudioP
 
     void stop() {
         getAudioManager().abandonAudioFocus(this);
+        mIsPaused.set(false);
         if (getAudioPlayer() == null) return;
         release();
     }
 
     void release() {
+        getAudioManager().abandonAudioFocus(this);
+        mIsPaused.set(false);
         if (getAudioPlayer() == null) return;
         getAudioPlayer().release();
     }
 
     void seekTo(final long pos) {
-        getAudioManager().abandonAudioFocus(this);
-
         try {
             getAudioPlayer().seekTo(pos);
         } catch (IllegalStateException e) {
             release();
         }
     }
-
 
     // State listeners
     void onPlayerIdle() {
@@ -191,11 +182,11 @@ abstract class Stream implements AudioManager.OnAudioFocusChangeListener, AudioP
         return mAudioManager;
     }
 
-    protected synchronized void setAudioFocusState(final AudioFocusState state) {
+    private synchronized void setAudioFocusState(final AudioFocusState state) {
         mAudioFocusState = state;
     }
 
-    protected synchronized AudioFocusState getAudioFocusState() {
+    private synchronized AudioFocusState getAudioFocusState() {
         return mAudioFocusState;
     }
 
@@ -245,12 +236,16 @@ abstract class Stream implements AudioManager.OnAudioFocusChangeListener, AudioP
             case ExoPlayer.STATE_READY:
                 Log.d("ExoPlayer State", "READY");
 
-                if (playWhenReady) {
-                    Log.d("ExoPlayer State", "(playing)");
+                if (isPlaying()) {
+                    Log.d("ExoPlayer State", "READY (playing)");
                     onPlayerPlaying();
-                } else {
-                    Log.d("ExoPlayer State", "(paused)");
+                    break;
+                }
+
+                if (isPaused()) {
+                    Log.d("ExoPlayer State", "READY (paused)");
                     onPlayerPaused();
+                    break;
                 }
 
                 break;
@@ -277,7 +272,27 @@ abstract class Stream implements AudioManager.OnAudioFocusChangeListener, AudioP
     }
 
     long getDuration() {
-        return getAudioPlayer() == null ? 0 : getAudioPlayer().getDuration();
+        return getAudioPlayer() == null ? -1 : getAudioPlayer().getPlayerControl().getDuration();
+    }
+
+    boolean isIdle() {
+        return getAudioPlayer() == null ||
+                getAudioPlayer().getPlaybackState() == ExoPlayer.STATE_IDLE;
+    }
+
+    boolean isPreparing() {
+        return getAudioPlayer() != null &&
+                getAudioPlayer().getPlaybackState() == ExoPlayer.STATE_PREPARING;
+    }
+
+    boolean isBuffering() {
+        return getAudioPlayer() != null &&
+                getAudioPlayer().getPlaybackState() == ExoPlayer.STATE_BUFFERING;
+    }
+
+    boolean isReady() {
+        return getAudioPlayer() != null &&
+                getAudioPlayer().getPlaybackState() == ExoPlayer.STATE_READY;
     }
 
     boolean isPlaying() {
@@ -287,17 +302,19 @@ abstract class Stream implements AudioManager.OnAudioFocusChangeListener, AudioP
     }
 
     boolean isPaused() {
-        return getAudioPlayer() != null &&
+        return mIsPaused.get() &&
+                getAudioPlayer() != null &&
                 getAudioPlayer().getPlaybackState() == ExoPlayer.STATE_READY &&
                 !getAudioPlayer().getPlayerControl().isPlaying();
     }
 
-    boolean isIdle() {
-        return getAudioPlayer() == null || getAudioPlayer().getPlaybackState() == ExoPlayer.STATE_IDLE;
+    boolean isEnded() {
+        return getAudioPlayer() != null &&
+                getAudioPlayer().getPlaybackState() == ExoPlayer.STATE_ENDED;
     }
 
     long getCurrentPosition() {
-        return getAudioPlayer() == null ? 0 : getAudioPlayer().getCurrentPosition();
+        return getAudioPlayer() == null ? -1 : getAudioPlayer().getCurrentPosition();
     }
 
     protected void prepare() {

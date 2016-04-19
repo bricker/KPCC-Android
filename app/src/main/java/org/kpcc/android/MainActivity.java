@@ -30,7 +30,6 @@ public class MainActivity extends AppCompatActivity {
 
         if (Navigation.getInstance().navigationItems.isEmpty()) {
             Navigation.getInstance().addItem(R.string.kpcc_live, R.drawable.menu_antenna, LiveFragment.STACK_TAG,
-                    AnalyticsManager.EVENT_MENU_SELECTION_LIVE_STREAM,
                     new Navigation.NavigationItemSelectedCallback() {
                         @Override
                         public void perform(FragmentManager fm, boolean addToBackStack) {
@@ -48,7 +47,6 @@ public class MainActivity extends AppCompatActivity {
             );
 
             Navigation.getInstance().addItem(R.string.programs, R.drawable.menu_microphone, ProgramsFragment.STACK_TAG,
-                    AnalyticsManager.EVENT_MENU_SELECTION_PROGRAMS,
                     new Navigation.NavigationItemSelectedCallback() {
                         @Override
                         public void perform(FragmentManager fm, boolean addToBackStack) {
@@ -66,7 +64,6 @@ public class MainActivity extends AppCompatActivity {
             );
 
             Navigation.getInstance().addItem(R.string.headlines, R.drawable.menu_glasses, HeadlinesFragment.STACK_TAG,
-                    AnalyticsManager.EVENT_MENU_SELECTION_HEADLINES,
                     new Navigation.NavigationItemSelectedCallback() {
                         @Override
                         public void perform(FragmentManager fm, boolean addToBackStack) {
@@ -84,7 +81,6 @@ public class MainActivity extends AppCompatActivity {
             );
 
             Navigation.getInstance().addItem(R.string.wake_sleep, R.drawable.menu_clock, AlarmFragment.STACK_TAG,
-                    AnalyticsManager.EVENT_MENU_SELECTION_WAKE_SLEEP,
                     new Navigation.NavigationItemSelectedCallback() {
                         @Override
                         public void perform(FragmentManager fm, boolean addToBackStack) {
@@ -102,7 +98,6 @@ public class MainActivity extends AppCompatActivity {
             );
 
             Navigation.getInstance().addItem(R.string.donate, R.drawable.menu_heart_plus, null,
-                    AnalyticsManager.EVENT_MENU_SELECTION_DONATE,
                     new Navigation.NavigationItemSelectedCallback() {
                         @Override
                         public void perform(FragmentManager fm, boolean addToBackStack) {
@@ -117,7 +112,6 @@ public class MainActivity extends AppCompatActivity {
             );
 
             Navigation.getInstance().addItem(R.string.feedback, R.drawable.menu_feedback, FeedbackFragment.STACK_TAG,
-                    AnalyticsManager.EVENT_MENU_SELECTION_FEEDBACK,
                     new Navigation.NavigationItemSelectedCallback() {
                         @Override
                         public void perform(FragmentManager fm, boolean addToBackStack) {
@@ -135,7 +129,6 @@ public class MainActivity extends AppCompatActivity {
             );
 
             Navigation.getInstance().addItem(R.string.settings, R.drawable.menu_settings, SettingsFragment.STACK_TAG,
-                    AnalyticsManager.EVENT_MENU_SELECTION_SETTINGS,
                     new Navigation.NavigationItemSelectedCallback() {
                         @Override
                         public void perform(FragmentManager fm, boolean addToBackStack) {

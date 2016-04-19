@@ -73,12 +73,10 @@ public class BaseAlarmManager {
             }
 
             DataManager.getInstance().setAlarmDate(alarmMillis);
-            AnalyticsManager.getInstance().logEvent(AnalyticsManager.EVENT_ALARM_ARMED);
         }
 
         public void cancel() {
             reset();
-            AnalyticsManager.getInstance().logEvent(AnalyticsManager.EVENT_ALARM_CANCELED);
         }
 
         public void reset() {
@@ -142,13 +140,11 @@ public class BaseAlarmManager {
             }
 
             DataManager.getInstance().setTimerMillis(endMillis);
-            AnalyticsManager.getInstance().logEvent(AnalyticsManager.EVENT_SLEEP_TIMER_ARMED);
         }
 
 
         public void cancel() {
             reset();
-            AnalyticsManager.getInstance().logEvent(AnalyticsManager.EVENT_SLEEP_TIMER_CANCELED);
         }
 
         public void reset() {

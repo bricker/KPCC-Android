@@ -26,7 +26,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class NavigationDrawerFragment extends Fragment {
     private static final String STATE_SELECTED_POSITION = "selected_navigation_drawer_position";
     private final AtomicBoolean mDoFragmentTransaction = new AtomicBoolean(false);
-    private AnalyticsManager mAnalyticsManager;
     private ActionBarDrawerToggle mDrawerToggle;
     private DrawerLayout mDrawerLayout;
     private ListView mDrawerListView;
@@ -38,8 +37,6 @@ public class NavigationDrawerFragment extends Fragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setRetainInstance(true);
-
-        mAnalyticsManager = AnalyticsManager.getInstance();
 
         if (savedInstanceState != null) {
             mCurrentSelectedPosition = savedInstanceState.getInt(STATE_SELECTED_POSITION);
@@ -96,7 +93,7 @@ public class NavigationDrawerFragment extends Fragment {
         return mDrawerListView;
     }
 
-    boolean isDrawerOpen() {
+    private boolean isDrawerOpen() {
         return mDrawerLayout != null && mDrawerLayout.isDrawerOpen(mFragmentContainerView);
     }
 
@@ -140,11 +137,10 @@ public class NavigationDrawerFragment extends Fragment {
                     // This was placed here because the drawer was stuttering when it was closed
                     // because of the fragment transaction taking over the UI thread.
 
-                    updateFragment(true, true);
+                    updateFragment(true);
                 }
 
                 mWrapperAlpha = null;
-                mAnalyticsManager.logEvent(AnalyticsManager.EVENT_MENU_CLOSED);
             }
 
             @Override
@@ -154,7 +150,6 @@ public class NavigationDrawerFragment extends Fragment {
                     return;
                 }
 
-                mAnalyticsManager.logEvent(AnalyticsManager.EVENT_MENU_OPENED);
             }
         };
 
@@ -187,7 +182,7 @@ public class NavigationDrawerFragment extends Fragment {
 
             mDrawerLayout.closeDrawer(mFragmentContainerView);
         } else {
-            updateFragment(false, false);
+            updateFragment(false);
         }
     }
 
@@ -237,7 +232,7 @@ public class NavigationDrawerFragment extends Fragment {
         return ((AppCompatActivity) getActivity()).getSupportActionBar();
     }
 
-    private void updateFragment(boolean logEvent, boolean addToBackStack) {
+    private void updateFragment(boolean addToBackStack) {
         // update the main content by replacing fragments
         getCurrentItem().performCallback(getActivity(), addToBackStack);
     }

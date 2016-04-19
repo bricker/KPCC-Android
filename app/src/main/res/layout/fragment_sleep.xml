@@ -82,7 +82,8 @@
             android:layout_height="25dp"
             android:src="@drawable/ic_stopwatch"
             android:layout_gravity="center_vertical"
-            android:layout_marginLeft="50dp"/>
+            android:layout_marginLeft="50dp"
+            android:contentDescription="@string/start_sleep_timer"/>
 
         <Button
             android:id="@+id/set_button"

@@ -6,7 +6,7 @@ import android.preference.PreferenceManager;
 
 import java.util.Date;
 
-public class DataManager {
+class DataManager {
     private final static String PREF_FALLBACK_AD_ID = "fallback_ad_id";
     private final static String PREF_USER_PLAYED_LIVESTREAM = "live_stream_played";
     private final static String PREF_LIVESTREAM_PLAY_NOW = "live_stream_play_now";

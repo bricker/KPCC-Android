@@ -52,7 +52,6 @@ import android.view.Surface;
 
 import java.io.IOException;
 import java.util.Collections;
-import java.util.Date;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -602,17 +601,17 @@ public class AudioPlayer implements ExoPlayer.Listener, ChunkSampleSource.EventL
     }
 
     private void pushSurface(boolean blockForSurfacePush) {
-        if (videoRenderer == null) {
-            return;
-        }
-
-        if (blockForSurfacePush) {
-            player.blockingSendMessage(
-                    videoRenderer, MediaCodecVideoTrackRenderer.MSG_SET_SURFACE, surface);
-        } else {
-            player.sendMessage(
-                    videoRenderer, MediaCodecVideoTrackRenderer.MSG_SET_SURFACE, surface);
-        }
+//        if (videoRenderer == null) {
+//            return;
+//        }
+//
+//        if (blockForSurfacePush) {
+//            player.blockingSendMessage(
+//                    videoRenderer, MediaCodecVideoTrackRenderer.MSG_SET_SURFACE, surface);
+//        } else {
+//            player.sendMessage(
+//                    videoRenderer, MediaCodecVideoTrackRenderer.MSG_SET_SURFACE, surface);
+//        }
     }
 
 }

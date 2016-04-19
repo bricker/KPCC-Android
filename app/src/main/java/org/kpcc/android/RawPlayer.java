@@ -1,14 +1,13 @@
 package org.kpcc.android;
 
 import android.content.Context;
+import android.media.AudioManager;
 import android.net.Uri;
-
-import com.google.android.exoplayer.ExoPlayer;
 
 /**
  * Created by rickb014 on 4/3/16.
  */
-public class RawPlayer extends Stream implements AudioPlayer.Listener {
+class RawPlayer extends Stream implements AudioPlayer.Listener {
     ////////////////////////////////////////////////////////////////////////////////////////////////
     // Constructors
     ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -27,4 +26,10 @@ public class RawPlayer extends Stream implements AudioPlayer.Listener {
     ////////////////////////////////////////////////////////////////////////////////////////////////
     // Implementations
     ////////////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    boolean requestAudioFocus() {
+        int result = getAudioManager().requestAudioFocus(this, AudioManager.STREAM_NOTIFICATION, AudioManager.AUDIOFOCUS_GAIN_TRANSIENT);
+        return result == AudioManager.AUDIOFOCUS_REQUEST_GRANTED;
+    }
 }

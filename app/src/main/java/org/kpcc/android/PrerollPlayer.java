@@ -3,8 +3,6 @@ package org.kpcc.android;
 import android.content.Context;
 import android.net.Uri;
 
-import com.google.android.exoplayer.ExoPlayer;
-
 /**
  * Created by rickb014 on 4/3/16.
  */
@@ -91,7 +89,7 @@ class PrerollPlayer extends Stream implements AudioPlayer.Listener {
         }
     }
 
-    LivePlayer.PrerollCompleteCallback getPrerollCompleteCallback() {
+    private LivePlayer.PrerollCompleteCallback getPrerollCompleteCallback() {
         return mPrerollCompleteCallback;
     }
 

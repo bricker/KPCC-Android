@@ -3,8 +3,6 @@ package org.kpcc.android;
 import android.content.Context;
 import android.net.Uri;
 
-import com.google.android.exoplayer.ExoPlayer;
-
 /**
  * Created by rickb014 on 4/3/16.
  */
@@ -18,7 +16,7 @@ class OnDemandPlayer extends Stream implements AudioPlayer.Listener {
     ////////////////////////////////////////////////////////////////////////////////////////////////
     // Constructors
     ////////////////////////////////////////////////////////////////////////////////////////////////
-    OnDemandPlayer(final Context context, final String audioUrl, final String programSlug, final int durationSeconds) {
+    OnDemandPlayer(final Context context, final String audioUrl, final String programSlug) {
         super(context);
 
         AudioPlayer.RendererBuilder builder = new ExtractorRendererBuilder(context, USER_AGENT,
@@ -39,10 +37,6 @@ class OnDemandPlayer extends Stream implements AudioPlayer.Listener {
 
     public String getAudioUrl() {
         return mAudioUrl;
-    }
-
-    public int getDurationSeconds() {
-        return (int)(getDuration() / 1000);
     }
 
     public String getProgramSlug() {

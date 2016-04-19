@@ -38,8 +38,6 @@
     <string name="minute">minute</string>
     <string name="minutes">minutes</string>
     <string name="hourShort">h</string>
-    <string name="hour">hour</string>
-    <string name="hours">hours</string>
 
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>

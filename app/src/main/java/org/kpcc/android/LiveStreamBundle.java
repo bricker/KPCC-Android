@@ -39,8 +39,6 @@ class LiveStreamBundle {
     }
 
     public void playWithPrerollAttempt() {
-        mLivePlayer.getAudioEventListener().onPreparing();
-
         // If they just installed the app (less than 10 minutes ago), and have never played the live
         // stream, don't play preroll.
         // Otherwise do the normal preroll flow.
@@ -50,10 +48,12 @@ class LiveStreamBundle {
         boolean installedRecently = KPCCApplication.INSTALLATION_TIME > (now - PrerollManager.INSTALL_GRACE);
         boolean heardPrerollRecently = PrerollManager.getInstance().getLastPlay() > (now - PrerollManager.PREROLL_THRESHOLD);
 
-        if (!AppConfiguration.getInstance().isDebug && ((!hasPlayedLiveStream && installedRecently) || heardPrerollRecently)) {
+        if ((!hasPlayedLiveStream && installedRecently) || heardPrerollRecently) {
             // Skipping Preroll
             mLivePlayer.prepareAndStart();
         } else {
+            mPrerollPlayer.getAudioEventListener().onPreparing();
+
             // Normal preroll flow (preroll still may not play, based on preroll response)
             PrerollManager.getInstance().getPrerollData(mContext, new PrerollManager.PrerollCallbackListener() {
                 @Override
@@ -64,6 +64,8 @@ class LiveStreamBundle {
                         mPrerollPlayer.setupPreroll(prerollData.getAudioUrl());
                         mPrerollPlayer.getAudioEventListener().onPrerollData(prerollData);
                         mPrerollPlayer.prepareAndStart();
+                        PrerollManager.getInstance().setLastPlayToNow();
+                        mLivePlayer.prepare();
                     }
                 }
             });

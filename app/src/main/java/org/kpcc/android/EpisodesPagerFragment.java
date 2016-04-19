@@ -92,24 +92,6 @@ public class EpisodesPagerFragment extends Fragment {
                     return;
                 }
 
-                EpisodeFragment fragment = mAdapter.getRegisteredFragment(mPrevPos);
-
-                if (fragment != null && fragment.episodeWasSkipped()) {
-                    JSONObject params = new JSONObject();
-
-                    try {
-                        params.put(AnalyticsManager.PARAM_PROGRAM_PUBLISHED_AT, fragment.episode.getAirDate());
-                        params.put(AnalyticsManager.PARAM_PROGRAM_TITLE, fragment.program.title);
-                        params.put(AnalyticsManager.PARAM_EPISODE_TITLE, fragment.episode.getTitle());
-                        params.put(AnalyticsManager.PARAM_PROGRAM_LENGTH, fragment.episode.getAudio().getDurationSeconds());
-                        params.put(AnalyticsManager.PARAM_PLAYED_DURATION, fragment.getCurrentPlayerPositionSeconds());
-                    } catch (JSONException e) {
-                        // Nothing to do. No data will be sent with this event.
-                    }
-
-                    AnalyticsManager.getInstance().logEvent(AnalyticsManager.EVENT_ON_DEMAND_SKIPPED, params);
-                }
-
                 mPrevPos = position;
             }
 

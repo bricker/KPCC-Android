@@ -12,7 +12,7 @@ import com.android.volley.VolleyError;
 import com.android.volley.toolbox.ImageLoader;
 import com.android.volley.toolbox.NetworkImageView;
 
-public class NetworkImageManager {
+class NetworkImageManager {
     private final static NetworkImageManager instance = new NetworkImageManager();
     private static final String PROGRAM_TILE_URL = "http://media.scpr.org/iphone/program-images/program_tile_%s@2x.jpg";
     private final ImageLoader mImageLoader;

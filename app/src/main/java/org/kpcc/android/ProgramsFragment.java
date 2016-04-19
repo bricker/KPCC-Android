@@ -96,16 +96,6 @@ public class ProgramsFragment extends Fragment
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
         Program program = ProgramsManager.instance.ALL_PROGRAMS.get(position);
 
-        JSONObject params = new JSONObject();
-
-        try {
-            params.put(AnalyticsManager.PARAM_PROGRAM_TITLE, program.title);
-        } catch (JSONException e) {
-            // No params
-        }
-
-        AnalyticsManager.getInstance().logEvent(AnalyticsManager.EVENT_PROGRAM_SELECTED, params);
-
         FragmentManager fragmentManager = getActivity().getSupportFragmentManager();
         fragmentManager.beginTransaction()
                 .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN)

@@ -2,7 +2,7 @@ package org.kpcc.android;
 
 import android.content.Context;
 
-import java.util.concurrent.atomic.AtomicBoolean;
+import com.google.android.exoplayer.TimeRange;
 
 /**
  * Created by rickb014 on 4/3/16.
@@ -17,7 +17,7 @@ public class LivePlayer extends Stream {
                     String.valueOf(BuildConfig.VERSION_CODE)
             );
 
-    final static int JUMP_INTERVAL_SEC = 30;
+    private final static int JUMP_INTERVAL_SEC = 30;
     final static int JUMP_INTERVAL_MS = JUMP_INTERVAL_SEC*1000;
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -25,7 +25,6 @@ public class LivePlayer extends Stream {
     ////////////////////////////////////////////////////////////////////////////////////////////////
     final private PrerollCompleteCallback mPrerollCompleteCallback;
     private long mPausedAt = 0;
-    private long mLiveOffsetMs = 0;
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
     // Constructors
@@ -88,7 +87,17 @@ public class LivePlayer extends Stream {
     @Override
     void seekTo(long pos) {
         super.seekTo(pos);
-        setLiveOffsetMs(getDuration() - pos);
+    }
+
+    @Override
+    boolean canSeekBackward() {
+        return getCurrentPosition() > getLowerBoundMs() + JUMP_INTERVAL_MS;
+    }
+
+    @Override
+    boolean canSeekForward() {
+        return getAudioPlayer() != null &&
+                getCurrentPosition() < getUpperBoundMs() - LivePlayer.JUMP_INTERVAL_MS;
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -96,7 +105,34 @@ public class LivePlayer extends Stream {
     ////////////////////////////////////////////////////////////////////////////////////////////////
     void seekToLive() {
         seekTo(0);
-        setLiveOffsetMs(0);
+    }
+
+    void skipBackward() {
+        if (canSeekBackward()) {
+            seekTo(getCurrentPosition() - JUMP_INTERVAL_MS);
+        }
+    }
+
+    void skipForward() {
+        if (canSeekForward()) {
+            seekTo(getCurrentPosition() + JUMP_INTERVAL_MS);
+        }
+    }
+
+    private long getLowerBoundMs() {
+        TimeRange range = getAvailableRange();
+        if (range == null) return -1;
+        return range.getCurrentBoundsMs(null)[0];
+    }
+
+    long getUpperBoundMs() {
+        TimeRange range = getAvailableRange();
+        if (range == null) return -1;
+        return range.getCurrentBoundsMs(null)[1];
+    }
+
+    long relativeMsBehindLive() {
+        return getUpperBoundMs() - getCurrentPosition();
     }
 
     void pauseTemporary() {
@@ -116,38 +152,12 @@ public class LivePlayer extends Stream {
         setIsTemporarilyPaused(false);
     }
 
-    void skipBackward() {
-        if (canSeekBackward()) {
-            seekTo(getCurrentPosition() - JUMP_INTERVAL_MS);
-            decreaseLiveOffsetMs(JUMP_INTERVAL_MS);
-        }
+    long getPlaybackTimestamp() {
+        return System.currentTimeMillis() - relativeMsBehindLive();
     }
 
-    void skipForward() {
-        if (canSeekForward()) {
-            seekTo(getCurrentPosition() + JUMP_INTERVAL_MS);
-            increaseLiveOffsetMs(JUMP_INTERVAL_MS);
-        }
-    }
-
-    long getAudioTimestamp() {
-        return System.currentTimeMillis() - getLiveOffsetMs();
-    }
-
-    synchronized void decreaseLiveOffsetMs(int ms) {
-        mLiveOffsetMs -= ms;
-    }
-
-    synchronized void increaseLiveOffsetMs(int ms) {
-        mLiveOffsetMs += ms;
-    }
-
-    synchronized void setLiveOffsetMs(long ms) {
-        mLiveOffsetMs = ms;
-    }
-
-    long getLiveOffsetMs() {
-        return mLiveOffsetMs;
+    private TimeRange getAvailableRange() {
+        return getAudioPlayer() == null ? null : getAudioPlayer().getPlayerControl().getAvailableRange();
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////

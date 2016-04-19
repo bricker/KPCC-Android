@@ -23,6 +23,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.kpcc.api.ScheduleOccurrence;
 
+import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -32,9 +33,9 @@ public class LiveFragment extends Fragment {
     // Static Variables
     ////////////////////////////////////////////////////////////////////////////////////////////////
     public static final String STACK_TAG = "LiveFragment";
-    public static final String ASSET_AUDIO_REWIND_MP3 = "asset:///audio/rewind.mp3";
+    private static final String ASSET_AUDIO_REWIND_MP3 = "asset:///audio/rewind.mp3";
     public static final int LIVE_SEEKBAR_REFRESH_INTERVAL = 1000;
-    private static String PLAY_START_KEY = "liveStreamPlayStart";
+    private static final String PLAY_START_KEY = "liveStreamPlayStart";
     private static final String LIVESTREAM_LISTENER_KEY = "livestream";
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -57,10 +58,8 @@ public class LiveFragment extends Fragment {
     private Request mRequest;
     private TextView mTimerRemaining;
     private LinearLayout mTimerRemainingWrapper;
-    private final AtomicBoolean didInitAudio = new AtomicBoolean(false);
     private ScheduleOccurrence mCurrentSchedule = null;
-    private AtomicBoolean mScheduleUpdaterMutex = new AtomicBoolean(false);
-    private int lastProgress = 0;
+    private final AtomicBoolean mScheduleUpdaterMutex = new AtomicBoolean(false);
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
     // Implementations
@@ -201,7 +200,7 @@ public class LiveFragment extends Fragment {
                     return;
                 }
 
-                long programStartPositionInHLSWindow = mLiveSeekViewManager.getProgramStartWindowPosition(livePlayer.getDuration());
+                long programStartPositionInHLSWindow = mLiveSeekViewManager.getProgramStartWindowPositionMs(livePlayer.getUpperBoundMs());
                 livePlayer.seekTo(programStartPositionInHLSWindow + progress);
             }
 
@@ -249,15 +248,18 @@ public class LiveFragment extends Fragment {
         mLiveSeekViewManager.getGoLiveBtn().setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                final LivePlayer livePlayer = getLivePlayer();
-                if (livePlayer == null) return;
-
                 playRewindBeat(new Stream.AudioEventListener() {
                     @Override
                     public void onPlay() {
+                        LivePlayer livePlayer = getLivePlayer();
+                        if (livePlayer == null) return;
+
+                        // These must happen in this order so the states don't override each other.
+                        mLiveStatusUpdater.pause();
                         livePlayer.pause();
-                        livePlayer.seekToLive();
                         mAudioButtonManager.toggleLoading();
+                        mAudioButtonManager.lock();
+                        livePlayer.seekToLive();
                     }
 
                     @Override
@@ -265,7 +267,15 @@ public class LiveFragment extends Fragment {
                         LivePlayer livePlayer = getLivePlayer();
                         if (livePlayer == null) return;
 
+                        mAudioButtonManager.unlock();
                         livePlayer.play();
+                        mLiveStatusUpdater.resume();
+                    }
+
+                    @Override
+                    void onError() {
+                        mAudioButtonManager.unlock();
+                        mLiveStatusUpdater.resume();
                     }
                 });
             }
@@ -274,16 +284,19 @@ public class LiveFragment extends Fragment {
         mLiveSeekViewManager.getProgramStartBtn().setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                final LivePlayer livePlayer = getLivePlayer();
-                if (livePlayer == null) return;
-
                 playRewindBeat(new Stream.AudioEventListener() {
                     @Override
                     public void onPlay() {
+                        LivePlayer livePlayer = getLivePlayer();
+                        if (livePlayer == null) return;
+                        // These must happen in this order so the states don't override each other.
+                        mLiveStatusUpdater.pause();
                         livePlayer.pause();
-                        long programStartPositionInHLSWindow = mLiveSeekViewManager.getProgramStartWindowPosition(livePlayer.getDuration());
-                        livePlayer.seekTo(programStartPositionInHLSWindow);
                         mAudioButtonManager.toggleLoading();
+                        mAudioButtonManager.lock();
+
+                        long programStartPositionInHLSWindow = mLiveSeekViewManager.getProgramStartWindowPositionMs(livePlayer.getUpperBoundMs());
+                        livePlayer.seekTo(programStartPositionInHLSWindow);
                     }
 
                     @Override
@@ -291,7 +304,14 @@ public class LiveFragment extends Fragment {
                         LivePlayer livePlayer = getLivePlayer();
                         if (livePlayer == null) return;
 
+                        mAudioButtonManager.unlock();
                         livePlayer.play();
+                        mLiveStatusUpdater.resume();
+                    }
+
+                    @Override
+                    void onError() {
+                        mAudioButtonManager.unlock();
                     }
                 });
             }
@@ -391,9 +411,7 @@ public class LiveFragment extends Fragment {
      */
     private void playRewindBeat(Stream.AudioEventListener eventListener) {
         RawPlayer rewindAudio = new RawPlayer(getActivity(), ASSET_AUDIO_REWIND_MP3);
-
         rewindAudio.setAudioEventListener(eventListener);
-
         rewindAudio.prepareAndStart();
     }
 
@@ -409,7 +427,7 @@ public class LiveFragment extends Fragment {
         if (livePlayer == null) {
             uts = System.currentTimeMillis();
         } else {
-            uts = livePlayer.getAudioTimestamp();
+            uts = livePlayer.getPlaybackTimestamp();
         }
 
         mRequest = ScheduleOccurrence.Client.getAtTimestamp(uts / 1000, new ScheduleResponseHandler(), new ScheduleErrorHandler());
@@ -422,9 +440,6 @@ public class LiveFragment extends Fragment {
      * 2. The fragment is re-initialized when the player was already playing (eg. a user comes back to the app after previously leaving).
      */
     private synchronized void initAudio() {
-        if (didInitAudio.get()) return;
-        didInitAudio.set(true);
-
         if (!StreamManager.ConnectivityManager.getInstance().getStreamIsBound()) {
             resetLiveState();
             return;
@@ -439,15 +454,17 @@ public class LiveFragment extends Fragment {
 
         Context context = getActivity();
 
-        if (currentPlayer != null && !currentPlayer.isIdle()) {
-            if (currentPreroll != null) {
-                streamBundle = new LiveStreamBundle(context, currentPlayer, currentPreroll);
+        if (streamBundle == null) {
+            if (currentPlayer != null && !currentPlayer.isIdle()) {
+                if (currentPreroll != null) {
+                    streamBundle = new LiveStreamBundle(context, currentPlayer, currentPreroll);
+                } else {
+                    streamBundle = new LiveStreamBundle(context, currentPlayer);
+                }
             } else {
-                streamBundle = new LiveStreamBundle(context, currentPlayer);
+                // Nothing is playing, build a brand new bundle.
+                streamBundle = new LiveStreamBundle(context);
             }
-        } else {
-            // Nothing is playing, build a brand new bundle.
-            streamBundle = new LiveStreamBundle(context);
         }
 
         LivePlayer livePlayer = getLivePlayer();
@@ -461,7 +478,9 @@ public class LiveFragment extends Fragment {
         if (prerollPlayer != null) {
             PrerollPlayerAudioEventListener ls = new PrerollPlayerAudioEventListener();
             prerollPlayer.setAudioEventListener(ls);
-            if (prerollPlayer.isPlaying()) ls.onPlay();
+            if (prerollPlayer.isPlaying()) {
+                ls.onPlay();
+            }
         }
     }
 
@@ -550,11 +569,11 @@ public class LiveFragment extends Fragment {
 
             mLiveSeekViewManager.setSecondaryProgressFromSchedule();
 
-            long currentToLiveDiffMs = livePlayer.getLiveOffsetMs();
-            long minBehindLive = TimeUnit.MILLISECONDS.toMinutes(currentToLiveDiffMs);
+            long relativeMsBehindLive = livePlayer.relativeMsBehindLive();
+            long minBehindLive = TimeUnit.MILLISECONDS.toMinutes(relativeMsBehindLive);
 
             if (minBehindLive >= 2) {
-                long hoursBehindLive = TimeUnit.MILLISECONDS.toHours(currentToLiveDiffMs);
+                long hoursBehindLive = TimeUnit.MILLISECONDS.toHours(relativeMsBehindLive);
 
                 String val;
                 if (hoursBehindLive > 0) {
@@ -588,6 +607,9 @@ public class LiveFragment extends Fragment {
 
                 mLiveSeekViewManager.showProgramStartBtn();
             }
+
+            mLiveSeekViewManager.toggleBackwardBtn(livePlayer.canSeekBackward());
+            mLiveSeekViewManager.toggleForwardBtn(livePlayer.canSeekForward());
         }
     }
 
@@ -601,8 +623,8 @@ public class LiveFragment extends Fragment {
             mTimerRemaining.setText(
                     String.format("%s:%s:%s",
                             String.valueOf(hours),
-                            String.format("%02d", mins),
-                            String.format("%02d", secs)
+                            String.format(Locale.ENGLISH, "%02d", mins),
+                            String.format(Locale.ENGLISH, "%02d", secs)
                     )
             );
         }
@@ -682,7 +704,11 @@ public class LiveFragment extends Fragment {
     private class LivePlayerAudioEventListener extends Stream.AudioEventListener {
         @Override
         public void onPreparing() {
-            mAudioButtonManager.toggleLoading();
+            // This may happen while preroll is playing so we shouldn't update audio button state in that case.
+            PrerollPlayer prerollPlayer = getPrerollPlayer();
+            if (prerollPlayer == null || prerollPlayer.isIdle()) {
+                mAudioButtonManager.toggleLoading();
+            }
         }
 
         @Override
@@ -699,16 +725,15 @@ public class LiveFragment extends Fragment {
 
             mLiveSeekBarUpdater.start();
             if (mLiveStatusUpdater != null) mLiveStatusUpdater.start();
-
-            if (livePlayer != null) {
-                // Set the progress. This is for when the user has left the fragment and come back.
-                mLiveSeekViewManager.setSeekProgressFromOffset(livePlayer.getLiveOffsetMs(), livePlayer.getDuration());
-            }
         }
 
         @Override
-        public void onProgress(int _) { /* implements interface but doesn't actually use the progress value */
+        public void onProgress(int currentPosition) {
             mLiveSeekViewManager.incrementProgress();
+            LivePlayer livePlayer = getLivePlayer();
+            if (livePlayer == null) return;
+
+            mLiveSeekViewManager.setSeekProgressFromPlayerPosition(livePlayer.getUpperBoundMs(), currentPosition);
         }
 
         @Override

@@ -111,7 +111,7 @@ public class Episode extends Entity implements Comparable<Episode> {
         return mTitle;
     }
 
-    public void setTitle(String title) {
+    private void setTitle(String title) {
         mTitle = title;
     }
 
@@ -119,7 +119,7 @@ public class Episode extends Entity implements Comparable<Episode> {
         return mAirDate;
     }
 
-    public void setAirDate(Date airDate) {
+    private void setAirDate(Date airDate) {
         mAirDate = airDate;
     }
 
@@ -127,7 +127,7 @@ public class Episode extends Entity implements Comparable<Episode> {
         return mFormattedAirDate;
     }
 
-    public void setFormattedAirDate(String formattedAirDate) {
+    private void setFormattedAirDate(String formattedAirDate) {
         mFormattedAirDate = formattedAirDate;
     }
 
@@ -135,7 +135,7 @@ public class Episode extends Entity implements Comparable<Episode> {
         return mPublicUrl;
     }
 
-    public void setPublicUrl(String publicUrl) {
+    private void setPublicUrl(String publicUrl) {
         mPublicUrl = publicUrl;
     }
 
@@ -143,15 +143,15 @@ public class Episode extends Entity implements Comparable<Episode> {
         return mAudio;
     }
 
-    public void setAudio(Audio audio) {
+    private void setAudio(Audio audio) {
         mAudio = audio;
     }
 
-    String getRawAirDate() {
+    private String getRawAirDate() {
         return mRawAirDate;
     }
 
-    void setRawAirDate(String rawAirDate) {
+    private void setRawAirDate(String rawAirDate) {
         mRawAirDate = rawAirDate;
     }
 }

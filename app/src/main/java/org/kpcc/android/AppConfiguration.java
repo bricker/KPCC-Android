@@ -9,7 +9,7 @@ import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 
 
-public class AppConfiguration {
+class AppConfiguration {
     private static AppConfiguration instance = null;
     final boolean isDebug;
     private final Properties props;

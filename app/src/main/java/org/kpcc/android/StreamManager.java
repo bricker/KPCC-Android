@@ -5,25 +5,11 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
-import android.media.AudioManager;
-import android.net.ConnectivityManager;
-import android.net.Uri;
 import android.os.Binder;
 import android.os.IBinder;
-import android.util.Log;
-import android.webkit.MimeTypeMap;
-
-import com.google.android.exoplayer.ExoPlayer;
-import com.google.android.exoplayer.extractor.Extractor;
-import com.google.android.exoplayer.extractor.mp3.Mp3Extractor;
-import com.google.android.exoplayer.extractor.mp4.Mp4Extractor;
-import com.google.android.exoplayer.util.MimeTypes;
-
-import org.kpcc.api.ScheduleOccurrence;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class StreamManager extends Service {
@@ -105,7 +91,7 @@ public class StreamManager extends Service {
 
         private StreamManager mStreamManager;
         private final Context mContext;
-        private AtomicBoolean mStreamIsBound = new AtomicBoolean(false);
+        private final AtomicBoolean mStreamIsBound = new AtomicBoolean(false);
         private final Map<String, OnStreamBindListener> mStreamBindListeners = new HashMap<>();
 
         public static void setupInstance(Context context) {
