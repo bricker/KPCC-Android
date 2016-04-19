@@ -100,31 +100,37 @@ class LiveSeekViewManager {
 
     synchronized void skipBackward(boolean canSkipBackward) {
         mSeekBar.setProgress(mSeekBar.getProgress() - LivePlayer.JUMP_INTERVAL_MS);
-        mForwardBtn.setAlpha(1.0f);
-        mForwardBtn.setEnabled(true);
         showGoLiveBtn();
-        toggleBackwardBtn(canSkipBackward);
     }
 
     synchronized void skipForward(boolean canSkipForward) {
         mSeekBar.setProgress(mSeekBar.getProgress() + LivePlayer.JUMP_INTERVAL_MS);
-        mRewindBtn.setAlpha(1.0f);
-        mRewindBtn.setEnabled(true);
-        toggleForwardBtn(canSkipForward);
     }
 
-    synchronized void toggleBackwardBtn(boolean canSkipBackward) {
-        if (!canSkipBackward) {
-            mRewindBtn.setAlpha(0.4f);
-            mRewindBtn.setEnabled(false);
+    void toggleBackwardBtn(boolean canSkipBackward) {
+        if (canSkipBackward) {
+            enableJumpBtn(mRewindBtn);
+        } else {
+            disableJumpBtn(mRewindBtn);
         }
     }
 
-    synchronized void toggleForwardBtn(boolean canSkipForward) {
-        if (!canSkipForward) {
-            mForwardBtn.setAlpha(0.4f);
-            mForwardBtn.setEnabled(false);
+    void toggleForwardBtn(boolean canSkipForward) {
+        if (canSkipForward) {
+            enableJumpBtn(mForwardBtn);
+        } else {
+            disableJumpBtn(mForwardBtn);
         }
+    }
+
+    synchronized void enableJumpBtn(View btn) {
+        btn.setAlpha(1.0f);
+        btn.setEnabled(true);
+    }
+
+    synchronized void disableJumpBtn(ImageButton btn) {
+        btn.setAlpha(0.4f);
+        btn.setEnabled(false);
     }
 
     synchronized void enableSeekBar() {
