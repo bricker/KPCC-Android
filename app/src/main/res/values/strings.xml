@@ -10,6 +10,10 @@
     <string name="donate">Donate</string>
     <string name="settings">Settings</string>
 
+    <string name="up_next_program">Up Next: %s</string>
+    <string name="live_program">Live: %s</string>
+    <string name="now_playing_program">Now Playing: %s</string>
+
     <string name="sleep_timer">Sleep Timer</string>
     <string name="alarm_clock">Alarm Clock</string>
     <string name="set_alarm_time">Set Alarm Clock</string>

@@ -137,7 +137,7 @@ class LiveSeekViewManager {
     }
 
     private synchronized void hideSeekBar() {
-        mSeekBar.setVisibility(View.GONE);
+        mSeekBar.setVisibility(View.INVISIBLE);
         disableSeekBar();
     }
 

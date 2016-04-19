@@ -1,10 +1,16 @@
 package org.kpcc.android;
 
+import android.app.Notification;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
+import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.NotificationBuilderWithBuilderAccessor;
+import android.support.v4.app.NotificationCompat;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -37,6 +43,7 @@ public class LiveFragment extends Fragment {
     public static final int LIVE_SEEKBAR_REFRESH_INTERVAL = 1000;
     private static final String PLAY_START_KEY = "liveStreamPlayStart";
     private static final String LIVESTREAM_LISTENER_KEY = "livestream";
+    public static final int NOTIFICATION_ID = 1;
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
     // Member Variables
@@ -60,6 +67,7 @@ public class LiveFragment extends Fragment {
     private LinearLayout mTimerRemainingWrapper;
     private ScheduleOccurrence mCurrentSchedule = null;
     private final AtomicBoolean mScheduleUpdaterMutex = new AtomicBoolean(false);
+    private NotificationCompat.Builder mNotificationBuilder;
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
     // Implementations
@@ -538,6 +546,57 @@ public class LiveFragment extends Fragment {
         return activity.getNavigationDrawerFragment();
     }
 
+    private void buildNotification() {
+        MainActivity activity = (MainActivity)getActivity();
+        if (activity != null) {
+            PendingIntent pi = PendingIntent.getActivity(activity.getApplicationContext(), 0,
+                    new Intent(activity.getApplicationContext(), MainActivity.class),
+                    PendingIntent.FLAG_UPDATE_CURRENT);
+
+            mNotificationBuilder = new NotificationCompat.Builder(activity.getApplicationContext())
+                    .setSmallIcon(R.drawable.menu_antenna)
+                    .setContentTitle(getString(R.string.kpcc_live))
+                    .setContentIntent(pi)
+                    .setOngoing(true);
+
+            updateNotificationWithCurrentScheduleData();
+        }
+    }
+
+    private void updateNotificationWithCurrentScheduleData() {
+        if (mNotificationBuilder == null) return;
+
+        String programName;
+        ScheduleOccurrence schedule = getCurrentSchedule();
+
+        if (schedule == null) {
+            programName = getString(R.string.kpcc_live);
+        } else {
+            programName = schedule.getTitle();
+        }
+
+        mNotificationBuilder.
+                setTicker(String.format(Locale.ENGLISH, getString(R.string.now_playing_program), programName)).
+                setContentText(programName);
+    }
+
+    private void cancelNotification() {
+        MainActivity activity = (MainActivity)getActivity();
+        if (activity != null) {
+            NotificationManager notificationManager = (NotificationManager) activity.getSystemService(Service.NOTIFICATION_SERVICE);
+            notificationManager.cancel(NOTIFICATION_ID);
+        }
+    }
+
+    private void sendNotification() {
+        MainActivity activity = (MainActivity)getActivity();
+        if (activity != null) {
+            mNotificationBuilder.setWhen(System.currentTimeMillis());
+            NotificationManager notificationManager = (NotificationManager) activity.getSystemService(Service.NOTIFICATION_SERVICE);
+            notificationManager.notify(NOTIFICATION_ID, mNotificationBuilder.build());
+        }
+    }
+
     /**
      *
      * @param schedule
@@ -668,11 +727,18 @@ public class LiveFragment extends Fragment {
 
                 // Don't make a network request for the image if it's the same program.
                 ScheduleOccurrence previousSchedule = getCurrentSchedule();
-                if (previousSchedule == null || !previousSchedule.getProgramSlug().equals(schedule.getProgramSlug())) {
+                boolean didChangeProgram = previousSchedule == null || !previousSchedule.getProgramSlug().equals(schedule.getProgramSlug());
+                setCurrentSchedule(schedule);
+
+                if (didChangeProgram) {
                     NetworkImageManager.getInstance().setBitmap(getActivity(), mBackground, schedule.getProgramSlug());
+
+                    if (mNotificationBuilder != null) {
+                        updateNotificationWithCurrentScheduleData();
+                        sendNotification();
+                    }
                 }
 
-                setCurrentSchedule(schedule);
                 String title = schedule.getTitle();
                 mTitle.setTextSize(Math.min(Math.max(55 - title.length(), 20), 50));
                 mTitle.setText(title);
@@ -725,6 +791,9 @@ public class LiveFragment extends Fragment {
 
             mLiveSeekBarUpdater.start();
             if (mLiveStatusUpdater != null) mLiveStatusUpdater.start();
+
+            buildNotification();
+            sendNotification();
         }
 
         @Override
@@ -744,6 +813,7 @@ public class LiveFragment extends Fragment {
             if (livePlayer != null) livePlayer.setPausedAt(System.currentTimeMillis());
 
             if (mLiveSeekBarUpdater != null) mLiveSeekBarUpdater.release();
+            cancelNotification();
         }
 
         @Override
@@ -754,6 +824,7 @@ public class LiveFragment extends Fragment {
             if (livePlayer != null) livePlayer.setPausedAt(System.currentTimeMillis());
 
             if (mLiveSeekBarUpdater != null) mLiveSeekBarUpdater.release();
+            cancelNotification();
         }
 
         @Override
@@ -767,6 +838,7 @@ public class LiveFragment extends Fragment {
             mAudioButtonManager.toggleStopped();
             mAudioButtonManager.showError(R.string.audio_error);
             if (mLiveSeekBarUpdater != null) mLiveSeekBarUpdater.release();
+            cancelNotification();
         }
     }
 
