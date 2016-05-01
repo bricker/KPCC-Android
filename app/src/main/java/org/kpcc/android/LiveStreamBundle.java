@@ -48,7 +48,9 @@ class LiveStreamBundle {
         boolean installedRecently = KPCCApplication.INSTALLATION_TIME > (now - PrerollManager.INSTALL_GRACE);
         boolean heardPrerollRecently = PrerollManager.getInstance().getLastPlay() > (now - PrerollManager.PREROLL_THRESHOLD);
 
-        if ((!hasPlayedLiveStream && installedRecently) || heardPrerollRecently) {
+        if ((AppConfiguration.getInstance().isDebug && !AppConfiguration.getInstance().getConfigBool("preroll.enabled")) ||
+                (!hasPlayedLiveStream && installedRecently) ||
+                heardPrerollRecently) {
             // Skipping Preroll
             mLivePlayer.prepareAndStart();
         } else {
