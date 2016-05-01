@@ -17,12 +17,10 @@ package org.kpcc.android;
 
 import com.google.android.exoplayer.MediaCodecAudioTrackRenderer;
 import com.google.android.exoplayer.MediaCodecSelector;
-import com.google.android.exoplayer.MediaCodecVideoTrackRenderer;
 import com.google.android.exoplayer.TrackRenderer;
 import com.google.android.exoplayer.audio.AudioCapabilities;
 import com.google.android.exoplayer.extractor.Extractor;
 import com.google.android.exoplayer.extractor.ExtractorSampleSource;
-import com.google.android.exoplayer.text.TextTrackRenderer;
 import com.google.android.exoplayer.upstream.Allocator;
 import com.google.android.exoplayer.upstream.DataSource;
 import com.google.android.exoplayer.upstream.DefaultAllocator;
@@ -31,7 +29,6 @@ import com.google.android.exoplayer.upstream.DefaultUriDataSource;
 
 import android.content.Context;
 import android.media.AudioManager;
-import android.media.MediaCodec;
 import android.net.Uri;
 import android.os.Handler;
 
@@ -41,7 +38,7 @@ import android.os.Handler;
 public class ExtractorRendererBuilder implements AudioPlayer.RendererBuilder {
 
     private static final int BUFFER_SEGMENT_SIZE = 64 * 1024;
-    private static final int BUFFER_SEGMENT_COUNT = 256;
+    private static final int BUFFER_SEGMENTS = 256;
 
     private final Context context;
     private final String userAgent;
@@ -62,21 +59,14 @@ public class ExtractorRendererBuilder implements AudioPlayer.RendererBuilder {
         DefaultBandwidthMeter bandwidthMeter = new DefaultBandwidthMeter(mainHandler, null);
         DataSource dataSource = new DefaultUriDataSource(context, bandwidthMeter, userAgent);
         ExtractorSampleSource sampleSource = new ExtractorSampleSource(uri, dataSource, allocator,
-                BUFFER_SEGMENT_COUNT * BUFFER_SEGMENT_SIZE, mainHandler, player, 0);
-        MediaCodecVideoTrackRenderer videoRenderer = new MediaCodecVideoTrackRenderer(context,
-                sampleSource, MediaCodecSelector.DEFAULT, MediaCodec.VIDEO_SCALING_MODE_SCALE_TO_FIT, 5000,
-                mainHandler, player, 50);
+                BUFFER_SEGMENTS * BUFFER_SEGMENT_SIZE, mainHandler, player, 0);
         MediaCodecAudioTrackRenderer audioRenderer = new MediaCodecAudioTrackRenderer(sampleSource,
                 MediaCodecSelector.DEFAULT, null, true, mainHandler, player,
                 AudioCapabilities.getCapabilities(context), AudioManager.STREAM_MUSIC);
-        TrackRenderer textRenderer = new TextTrackRenderer(sampleSource, player,
-                mainHandler.getLooper());
 
         // Invoke the callback.
         TrackRenderer[] renderers = new TrackRenderer[AudioPlayer.RENDERER_COUNT];
-        renderers[AudioPlayer.TYPE_VIDEO] = videoRenderer;
         renderers[AudioPlayer.TYPE_AUDIO] = audioRenderer;
-        renderers[AudioPlayer.TYPE_TEXT] = textRenderer;
         player.onRenderers(renderers, bandwidthMeter);
     }
 

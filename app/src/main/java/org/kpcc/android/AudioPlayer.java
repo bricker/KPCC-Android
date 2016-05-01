@@ -63,10 +63,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 public class AudioPlayer implements ExoPlayer.Listener, ChunkSampleSource.EventListener,
         HlsSampleSource.EventListener, ExtractorSampleSource.EventListener,
         SingleSampleSource.EventListener, DefaultBandwidthMeter.EventListener,
-        MediaCodecVideoTrackRenderer.EventListener, MediaCodecAudioTrackRenderer.EventListener,
-        StreamingDrmSessionManager.EventListener, DashChunkSource.EventListener, TextRenderer,
-        MetadataRenderer<List<Id3Frame>>, DebugTextViewHelper.Provider,
-        HlsChunkSource.EventListener {
+        MediaCodecAudioTrackRenderer.EventListener, HlsChunkSource.EventListener {
 
     /**
      * Builds renderers for the player.
@@ -113,14 +110,12 @@ public class AudioPlayer implements ExoPlayer.Listener, ChunkSampleSource.EventL
         void onDecoderInitializationError(DecoderInitializationException e);
         void onCryptoError(CryptoException e);
         void onLoadError(int sourceId, IOException e);
-        void onDrmSessionManagerError(Exception e);
     }
 
     /**
      * A listener for debugging information.
      */
     public interface InfoListener {
-        void onVideoFormatEnabled(Format format, int trigger, long mediaTimeMs);
         void onAudioFormatEnabled(Format format, int trigger, long mediaTimeMs);
         void onDroppedFrames(int count, long elapsed);
         void onBandwidthSample(int elapsedMs, long bytes, long bitrateEstimate);
@@ -131,13 +126,6 @@ public class AudioPlayer implements ExoPlayer.Listener, ChunkSampleSource.EventL
         void onDecoderInitialized(String decoderName, long elapsedRealtimeMs,
                                   long initializationDurationMs);
         void onAvailableRangeChanged(int sourceId, TimeRange availableRange);
-    }
-
-    /**
-     * A listener for receiving notifications of timed text.
-     */
-    public interface CaptionListener {
-        void onCues(List<Cue> cues);
     }
 
     /**
@@ -156,11 +144,8 @@ public class AudioPlayer implements ExoPlayer.Listener, ChunkSampleSource.EventL
     public static final int TRACK_DISABLED = ExoPlayer.TRACK_DISABLED;
     public static final int TRACK_DEFAULT = ExoPlayer.TRACK_DEFAULT;
 
-    public static final int RENDERER_COUNT = 4;
-    public static final int TYPE_VIDEO = 0;
-    public static final int TYPE_AUDIO = 1;
-    public static final int TYPE_TEXT = 2;
-    public static final int TYPE_METADATA = 3;
+    public static final int RENDERER_COUNT = 1;
+    public static final int TYPE_AUDIO = 0;
 
     private static final int RENDERER_BUILDING_STATE_IDLE = 1;
     private static final int RENDERER_BUILDING_STATE_BUILDING = 2;
@@ -171,23 +156,14 @@ public class AudioPlayer implements ExoPlayer.Listener, ChunkSampleSource.EventL
     private final PlayerControl playerControl;
     private final Handler mainHandler;
     private final CopyOnWriteArrayList<Listener> listeners;
+    private CodecCounters codecCounters;
+    private BandwidthMeter bandwidthMeter;
 
     private int rendererBuildingState;
     private int lastReportedPlaybackState;
     private boolean lastReportedPlayWhenReady;
 
-    private Surface surface;
-    private TrackRenderer videoRenderer;
     private TrackRenderer audioRenderer;
-    private CodecCounters codecCounters;
-    private Format videoFormat;
-    private int videoTrackToRestore;
-
-    private BandwidthMeter bandwidthMeter;
-    private boolean backgrounded;
-
-    private CaptionListener captionListener;
-    private Id3MetadataListener id3MetadataListener;
     private InternalErrorListener internalErrorListener;
     private InfoListener infoListener;
 
@@ -200,13 +176,8 @@ public class AudioPlayer implements ExoPlayer.Listener, ChunkSampleSource.EventL
         listeners = new CopyOnWriteArrayList<>();
         lastReportedPlaybackState = STATE_IDLE;
         rendererBuildingState = RENDERER_BUILDING_STATE_IDLE;
-        // Disable text initially.
-        player.setSelectedTrack(TYPE_TEXT, TRACK_DISABLED);
     }
 
-    public void getRenderers() {
-
-    }
     public PlayerControl getPlayerControl() {
         return playerControl;
     }
@@ -227,30 +198,8 @@ public class AudioPlayer implements ExoPlayer.Listener, ChunkSampleSource.EventL
         infoListener = listener;
     }
 
-    public void setCaptionListener(CaptionListener listener) {
-        captionListener = listener;
-    }
-
-    public void setMetadataListener(Id3MetadataListener listener) {
-        id3MetadataListener = listener;
-    }
-
-    public void setSurface(Surface surface) {
-        this.surface = surface;
-        pushSurface(false);
-    }
-
-    public Surface getSurface() {
-        return surface;
-    }
-
     public void setVolume(float vol) {
         player.sendMessage(audioRenderer, MediaCodecAudioTrackRenderer.MSG_SET_VOLUME, vol);
-    }
-
-    public void blockingClearSurface() {
-        surface = null;
-        pushSurface(true);
     }
 
     public int getTrackCount(int type) {
@@ -267,27 +216,6 @@ public class AudioPlayer implements ExoPlayer.Listener, ChunkSampleSource.EventL
 
     public void setSelectedTrack(int type, int index) {
         player.setSelectedTrack(type, index);
-        if (type == TYPE_TEXT && index < 0 && captionListener != null) {
-            captionListener.onCues(Collections.<Cue>emptyList());
-        }
-    }
-
-    public boolean getBackgrounded() {
-        return backgrounded;
-    }
-
-    public void setBackgrounded(boolean backgrounded) {
-        if (this.backgrounded == backgrounded) {
-            return;
-        }
-        this.backgrounded = backgrounded;
-        if (backgrounded) {
-            videoTrackToRestore = getSelectedTrack(TYPE_VIDEO);
-            setSelectedTrack(TYPE_VIDEO, TRACK_DISABLED);
-            blockingClearSurface();
-        } else {
-            setSelectedTrack(TYPE_VIDEO, videoTrackToRestore);
-        }
     }
 
     public void prepare() {
@@ -295,8 +223,6 @@ public class AudioPlayer implements ExoPlayer.Listener, ChunkSampleSource.EventL
             player.stop();
         }
         rendererBuilder.cancel();
-        videoFormat = null;
-        videoRenderer = null;
         rendererBuildingState = RENDERER_BUILDING_STATE_BUILDING;
         maybeReportPlayerState();
         rendererBuilder.buildRenderers(this);
@@ -317,14 +243,10 @@ public class AudioPlayer implements ExoPlayer.Listener, ChunkSampleSource.EventL
             }
         }
         // Complete preparation.
-        this.videoRenderer = renderers[TYPE_VIDEO];
         this.audioRenderer = renderers[TYPE_AUDIO];
-        this.codecCounters = videoRenderer instanceof MediaCodecTrackRenderer
-                ? ((MediaCodecTrackRenderer) videoRenderer).codecCounters
-                : renderers[TYPE_AUDIO] instanceof MediaCodecTrackRenderer
+        this.codecCounters = renderers[TYPE_AUDIO] instanceof MediaCodecTrackRenderer
                 ? ((MediaCodecTrackRenderer) renderers[TYPE_AUDIO]).codecCounters : null;
         this.bandwidthMeter = bandwidthMeter;
-        pushSurface(false);
         player.prepare(renderers);
         rendererBuildingState = RENDERER_BUILDING_STATE_BUILT;
     }
@@ -356,7 +278,6 @@ public class AudioPlayer implements ExoPlayer.Listener, ChunkSampleSource.EventL
     public void release() {
         rendererBuilder.cancel();
         rendererBuildingState = RENDERER_BUILDING_STATE_IDLE;
-        surface = null;
         player.release();
     }
 
@@ -373,22 +294,6 @@ public class AudioPlayer implements ExoPlayer.Listener, ChunkSampleSource.EventL
         return playerState;
     }
 
-    @Override
-    public Format getFormat() {
-        return videoFormat;
-    }
-
-    @Override
-    public BandwidthMeter getBandwidthMeter() {
-        return bandwidthMeter;
-    }
-
-    @Override
-    public CodecCounters getCodecCounters() {
-        return codecCounters;
-    }
-
-    @Override
     public long getCurrentPosition() {
         return player.getCurrentPosition();
     }
@@ -427,18 +332,6 @@ public class AudioPlayer implements ExoPlayer.Listener, ChunkSampleSource.EventL
     }
 
     @Override
-    public void onVideoSizeChanged(int width, int height, int unappliedRotationDegrees,
-                                   float pixelWidthHeightRatio) {
-    }
-
-    @Override
-    public void onDroppedFrames(int count, long elapsed) {
-        if (infoListener != null) {
-            infoListener.onDroppedFrames(count, elapsed);
-        }
-    }
-
-    @Override
     public void onBandwidthSample(int elapsedMs, long bytes, long bitrateEstimate) {
         if (infoListener != null) {
             infoListener.onBandwidthSample(elapsedMs, bytes, bitrateEstimate);
@@ -451,23 +344,8 @@ public class AudioPlayer implements ExoPlayer.Listener, ChunkSampleSource.EventL
         if (infoListener == null) {
             return;
         }
-        if (sourceId == TYPE_VIDEO) {
-            videoFormat = format;
-            infoListener.onVideoFormatEnabled(format, trigger, mediaTimeMs);
-        } else if (sourceId == TYPE_AUDIO) {
+        if (sourceId == TYPE_AUDIO) {
             infoListener.onAudioFormatEnabled(format, trigger, mediaTimeMs);
-        }
-    }
-
-    @Override
-    public void onDrmKeysLoaded() {
-        // Do nothing.
-    }
-
-    @Override
-    public void onDrmSessionManagerError(Exception e) {
-        if (internalErrorListener != null) {
-            internalErrorListener.onDrmSessionManagerError(e);
         }
     }
 
@@ -522,20 +400,6 @@ public class AudioPlayer implements ExoPlayer.Listener, ChunkSampleSource.EventL
     }
 
     @Override
-    public void onCues(List<Cue> cues) {
-        if (captionListener != null && getSelectedTrack(TYPE_TEXT) != TRACK_DISABLED) {
-            captionListener.onCues(cues);
-        }
-    }
-
-    @Override
-    public void onMetadata(List<Id3Frame> id3Frames) {
-        if (id3MetadataListener != null && getSelectedTrack(TYPE_METADATA) != TRACK_DISABLED) {
-            id3MetadataListener.onId3Metadata(id3Frames);
-        }
-    }
-
-    @Override
     public void onAvailableRangeChanged(int sourceId, TimeRange availableRange) {
         if (infoListener != null) {
             infoListener.onAvailableRangeChanged(sourceId, availableRange);
@@ -546,17 +410,7 @@ public class AudioPlayer implements ExoPlayer.Listener, ChunkSampleSource.EventL
     }
 
     @Override
-    public void onChunkLoaded(HlsMediaPlaylist.Segment segment) {
-        // Nothing at the moment
-    }
-
-    @Override
     public void onPlayWhenReadyCommitted() {
-        // Do nothing.
-    }
-
-    @Override
-    public void onDrawnToSurface(Surface surface) {
         // Do nothing.
     }
 
@@ -599,19 +453,4 @@ public class AudioPlayer implements ExoPlayer.Listener, ChunkSampleSource.EventL
             lastReportedPlaybackState = playbackState;
         }
     }
-
-    private void pushSurface(boolean blockForSurfacePush) {
-//        if (videoRenderer == null) {
-//            return;
-//        }
-//
-//        if (blockForSurfacePush) {
-//            player.blockingSendMessage(
-//                    videoRenderer, MediaCodecVideoTrackRenderer.MSG_SET_SURFACE, surface);
-//        } else {
-//            player.sendMessage(
-//                    videoRenderer, MediaCodecVideoTrackRenderer.MSG_SET_SURFACE, surface);
-//        }
-    }
-
 }
