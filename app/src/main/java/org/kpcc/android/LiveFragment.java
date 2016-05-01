@@ -853,6 +853,7 @@ public class LiveFragment extends Fragment {
             mTitle.setVisibility(View.INVISIBLE);
             mTimerRemainingWrapper.setVisibility(View.GONE);
             mLiveSeekViewManager.hideForPreroll();
+            disableNavigationDrawer();
 
             if (prerollData.getAssetUrl() == null) return;
             NetworkImageManager.getInstance().setPrerollImage(mAdView, prerollData.getAssetUrl());
@@ -883,7 +884,6 @@ public class LiveFragment extends Fragment {
         @Override
         public void onPreparing() {
             mAudioButtonManager.toggleLoading();
-            disableNavigationDrawer();
         }
 
         @Override
