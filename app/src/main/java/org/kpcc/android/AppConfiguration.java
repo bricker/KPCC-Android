@@ -34,7 +34,7 @@ class AppConfiguration {
             // Nothing we can really do.
         }
 
-        isDebug = Boolean.parseBoolean(props.getProperty("debug"));
+        isDebug = BuildConfig.DEBUG && Boolean.parseBoolean(props.getProperty("debug"));
     }
 
     static void setupInstance(final Context context) {
@@ -49,12 +49,16 @@ class AppConfiguration {
 
     String getConfig(final String config) {
         String mconfig = config;
-        if (BuildConfig.DEBUG && isDebug) { mconfig = "debug." + config; }
+        if (isDebug) { mconfig = "debug." + config; }
 
         String prop = props.getProperty(mconfig);
         if (prop == null) { prop = props.getProperty(config); }
 
         return prop;
+    }
+
+    boolean getConfigBool(final String config) {
+        return Boolean.parseBoolean(getConfig(config));
     }
 
     String getSecret(final String config) {
