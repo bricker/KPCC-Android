@@ -13,7 +13,6 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 
 import org.json.JSONException;
-import org.json.JSONObject;
 import org.kpcc.api.Episode;
 
 import java.util.ArrayList;

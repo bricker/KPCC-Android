@@ -15,6 +15,10 @@
  */
 package org.kpcc.android;
 
+import android.content.Context;
+import android.media.AudioManager;
+import android.os.Handler;
+
 import com.google.android.exoplayer.DefaultLoadControl;
 import com.google.android.exoplayer.LoadControl;
 import com.google.android.exoplayer.MediaCodecAudioTrackRenderer;
@@ -34,10 +38,6 @@ import com.google.android.exoplayer.upstream.DefaultUriDataSource;
 import com.google.android.exoplayer.util.ManifestFetcher;
 import com.google.android.exoplayer.util.ManifestFetcher.ManifestCallback;
 
-import android.content.Context;
-import android.media.AudioManager;
-import android.os.Handler;
-
 import java.io.IOException;
 
 /**
@@ -46,7 +46,7 @@ import java.io.IOException;
 public class HlsRendererBuilder implements AudioPlayer.RendererBuilder {
 
     private static final int BUFFER_SEGMENT_SIZE = 64 * 1024;
-    private static final int BUFFER_SEGMENTS = 64;
+    private static final int BUFFER_SEGMENTS = 254;
 
     private final Context context;
     private final String userAgent;

@@ -15,6 +15,11 @@
  */
 package org.kpcc.android;
 
+import android.content.Context;
+import android.media.AudioManager;
+import android.net.Uri;
+import android.os.Handler;
+
 import com.google.android.exoplayer.MediaCodecAudioTrackRenderer;
 import com.google.android.exoplayer.MediaCodecSelector;
 import com.google.android.exoplayer.TrackRenderer;
@@ -27,18 +32,13 @@ import com.google.android.exoplayer.upstream.DefaultAllocator;
 import com.google.android.exoplayer.upstream.DefaultBandwidthMeter;
 import com.google.android.exoplayer.upstream.DefaultUriDataSource;
 
-import android.content.Context;
-import android.media.AudioManager;
-import android.net.Uri;
-import android.os.Handler;
-
 /**
  * A {@link AudioPlayer.RendererBuilder} for streams that can be read using an {@link Extractor}.
  */
 public class ExtractorRendererBuilder implements AudioPlayer.RendererBuilder {
 
     private static final int BUFFER_SEGMENT_SIZE = 64 * 1024;
-    private static final int BUFFER_SEGMENTS = 256;
+    private static final int BUFFER_SEGMENTS = 254;
 
     private final Context context;
     private final String userAgent;

@@ -3,10 +3,8 @@ package org.kpcc.android;
 import android.content.Context;
 import android.media.AudioManager;
 import android.util.Log;
-import android.webkit.MimeTypeMap;
 
 import com.google.android.exoplayer.ExoPlayer;
-import com.google.android.exoplayer.util.MimeTypes;
 
 import java.util.Locale;
 import java.util.concurrent.TimeUnit;
