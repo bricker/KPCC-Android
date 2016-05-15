@@ -73,4 +73,13 @@
 
     <string name="pref_title_push_notifications">Push Notifications</string>
     <string name="pref_desc_push_notifications">Receive alerts when breaking news events are happening.</string>
+
+    <!--KPCC Plus-->
+    <string name="kpccplus">KPCC Plus</string>
+    <string name="kpccplus_token_header">Are you a KPCC Member?</string>
+    <string name="kpccplus_token_text">Enter your pledge drive token to gain access to the pledge-free stream.</string>
+    <string name="kpccplus_token_placeholder">Enter your pledge token</string>
+    <string name="kpccplus_success">Success!</string>
+    <string name="kpccplus_unlock">You\'ve unlocked your access to the KPCC pledge-free stream. Enjoy!</string>
+    <string name="kpccplus_close">Close and start listening</string>
 </resources>

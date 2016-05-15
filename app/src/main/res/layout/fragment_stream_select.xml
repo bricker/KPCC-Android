@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <ImageView
+        android:id="@+id/background"
+        style="@style/generic_background_image"
+        android:alpha="0.4"
+        tools:ignore="ContentDescription"/>
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:id="@+id/content_wrapper">
+
+        <ListView
+            style="@style/list_view"
+            android:id="@+id/list_programs" />
+
+        <include layout="@layout/generic_load_error" android:visibility="gone" />
+        <include layout="@layout/progress_spinner" />
+
+    </FrameLayout>
+</FrameLayout>
