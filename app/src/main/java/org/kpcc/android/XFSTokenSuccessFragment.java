@@ -15,7 +15,9 @@ import android.widget.Button;
  */
 public class XFSTokenSuccessFragment extends Fragment {
     public static String STACK_TAG = "XFSTokenSuccessFragment";
-    private Button mCloseButton;
+    public static XFSTokenSuccessFragment newInstance() {
+        return new XFSTokenSuccessFragment();
+    }
 
     public XFSTokenSuccessFragment() {
         // Required empty public constructor
@@ -26,14 +28,22 @@ public class XFSTokenSuccessFragment extends Fragment {
                              Bundle savedInstanceState) {
 
         View view = inflater.inflate(R.layout.fragment_xfstoken_success, container, false);
-        mCloseButton = (Button) view.findViewById(R.id.tokenSuccessCloseBtn);
+        Button closeButton = (Button) view.findViewById(R.id.tokenSuccessCloseBtn);
 
-        mCloseButton.setOnClickListener(new View.OnClickListener() {
+        closeButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 Intent activityIntent = new Intent(getActivity(), MainActivity.class);
-                activityIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                DataManager.getInstance().setStreamPreference(LivePlayer.STREAM_XFS.getKey());
+                DataManager.getInstance().setIsXfsValidated(true);
                 DataManager.getInstance().setPlayNow(true);
+
+                // Release the currently playing stream, so we can restart it with the new URL.
+                LivePlayer livePlayer = StreamManager.ConnectivityManager.getInstance().getStreamManager().getCurrentLivePlayer();
+                if (livePlayer != null) {
+                    StreamManager.ConnectivityManager.getInstance().getStreamManager().getCurrentLivePlayer().release();
+                }
+
                 startActivity(activityIntent);
             }
         });

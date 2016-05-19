@@ -46,23 +46,6 @@ public class MainActivity extends AppCompatActivity {
                     }
             );
 
-            Navigation.getInstance().addItem(R.string.kpccplus, R.drawable.menu_antenna, XFSTokenFragment.STACK_TAG,
-                    new Navigation.NavigationItemSelectedCallback() {
-                        @Override
-                        public void perform(FragmentManager fm, boolean addToBackStack) {
-                            FragmentTransaction trans = fm.beginTransaction();
-                            trans.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
-                            trans.replace(R.id.container, new XFSTokenFragment(), XFSTokenFragment.STACK_TAG);
-
-                            if (addToBackStack) {
-                                trans.addToBackStack(XFSTokenFragment.STACK_TAG);
-                            }
-
-                            trans.commit();
-                        }
-                    }
-            );
-
             Navigation.getInstance().addItem(R.string.programs, R.drawable.menu_microphone, ProgramsFragment.STACK_TAG,
                     new Navigation.NavigationItemSelectedCallback() {
                         @Override

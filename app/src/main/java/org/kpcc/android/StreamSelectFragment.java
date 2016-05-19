@@ -1,6 +1,7 @@
 package org.kpcc.android;
 
 import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
@@ -15,14 +16,8 @@ import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
 
-import org.kpcc.api.Program;
-
 public class StreamSelectFragment extends Fragment implements AdapterView.OnItemClickListener {
     public final static String STACK_TAG = "StreamSelectFragment";
-
-    private ListAdapter mAdapter;
-    private View mView;
-    private ListView mListView;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -34,14 +29,11 @@ public class StreamSelectFragment extends Fragment implements AdapterView.OnItem
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
 
-        MainActivity activity = (MainActivity) getActivity();
-        activity.setTitle(R.string.programs);
+        View view = inflater.inflate(R.layout.fragment_stream_select, container, false);
+        ListView listView = (ListView) view.findViewById(R.id.list_streams);
 
-        mView = inflater.inflate(R.layout.fragment_programs, container, false);
-        mListView = (ListView) mView.findViewById(R.id.list_programs);
-
-        mAdapter = (new ArrayAdapter<Program>(getActivity(),
-                R.layout.list_item_program, ProgramsManager.instance.ALL_PROGRAMS) {
+        ListAdapter adapter = (new ArrayAdapter<LivePlayer.StreamOption>(getActivity(),
+                R.layout.list_item_stream, LivePlayer.STREAM_OPTIONS) {
             @Override
             public View getView(int position, View convertView, ViewGroup parent) {
                 MainActivity activity = (MainActivity) getActivity();
@@ -49,69 +41,65 @@ public class StreamSelectFragment extends Fragment implements AdapterView.OnItem
 
                 if (view == null) {
                     LayoutInflater inflater = (LayoutInflater) activity.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-                    view = inflater.inflate(R.layout.list_item_program, null);
+                    view = inflater.inflate(R.layout.list_item_stream, null);
                 }
 
-                Program program = ProgramsManager.instance.ALL_PROGRAMS.get(position);
-                TextView title = (TextView) view.findViewById(R.id.program_title);
-                ImageView avatar = (ImageView) view.findViewById(R.id.program_avatar);
-                ImageView arrow = (ImageView) view.findViewById(R.id.arrow);
-                ImageView audio_icon = (ImageView) view.findViewById(R.id.audio_icon);
-                TextView letter = (TextView) view.findViewById(R.id.program_letter);
+                LivePlayer.StreamOption stream = LivePlayer.STREAM_OPTIONS[position];
+                TextView title = (TextView) view.findViewById(R.id.stream_title);
+                title.setText(stream.getId());
 
-                if (StreamManager.ConnectivityManager.getInstance().getStreamIsBound()) {
-                    OnDemandPlayer currentPlayer = StreamManager.ConnectivityManager.getInstance().getStreamManager().getCurrentOnDemandPlayer();
-                    if (currentPlayer != null && currentPlayer.getProgramSlug().equals(program.slug)) {
-                        arrow.setVisibility(View.GONE);
-                        audio_icon.setVisibility(View.VISIBLE);
-                    } else {
-                        arrow.setVisibility(View.VISIBLE);
-                        audio_icon.setVisibility(View.GONE);
-                    }
-                }
+                String streamPref = DataManager.getInstance().getStreamPreference();
+                toggleStreamPreferenceUI(streamPref, stream, view);
 
-                title.setText(program.title);
-
-                String underscoreSlug = program.slug.replace("-", "_");
-                int resId = getResources().getIdentifier(
-                        "program_avatar_" + underscoreSlug,
-                        "drawable",
-                        activity.getApplicationContext().getPackageName());
-
-                if (resId == 0) {
-                    avatar.setImageResource(R.drawable.avatar_placeholder_bg);
-                    letter.setText(String.valueOf(program.normalizedTitle.charAt(0)));
-                    letter.setVisibility(View.VISIBLE);
-                } else {
-                    letter.setVisibility(View.GONE);
-                    avatar.setImageResource(resId);
-                }
                 return view;
             }
         });
 
-        mListView.setAdapter(mAdapter);
-        mListView.setOnItemClickListener(this);
+        listView.setAdapter(adapter);
+        listView.setOnItemClickListener(this);
 
-        return mView;
-    }
-
-    @Override
-    public void onPause() {
-        super.onPause();
+        return view;
     }
 
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-        Program program = ProgramsManager.instance.ALL_PROGRAMS.get(position);
+        LivePlayer.StreamOption stream = LivePlayer.STREAM_OPTIONS[position];
+        String streamPref = DataManager.getInstance().getStreamPreference();
 
-        FragmentManager fragmentManager = getActivity().getSupportFragmentManager();
-        fragmentManager.beginTransaction()
-                .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN)
-                .replace(R.id.container,
-                        EpisodesFragment.newInstance(program.slug),
-                        EpisodesFragment.STACK_TAG)
-                .addToBackStack(EpisodesFragment.STACK_TAG)
-                .commit();
+        if (stream.equals(LivePlayer.STREAM_XFS) && !DataManager.getInstance().getIsXfsValidated()) {
+            FragmentManager fragmentManager = getActivity().getSupportFragmentManager();
+            fragmentManager.beginTransaction()
+                    .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN)
+                    .replace(R.id.container,
+                            new XFSTokenFragment(),
+                            XFSTokenFragment.STACK_TAG)
+                    .addToBackStack(StreamSelectFragment.STACK_TAG)
+                    .commit();
+        } else {
+            Intent activityIntent = new Intent(getActivity(), MainActivity.class);
+            if (!stream.getKey().equals(streamPref)) {
+                // Release the currently playing stream, so we can restart it with the new URL.
+                LivePlayer livePlayer = StreamManager.ConnectivityManager.getInstance().getStreamManager().getCurrentLivePlayer();
+                if (livePlayer != null) {
+                    StreamManager.ConnectivityManager.getInstance().getStreamManager().getCurrentLivePlayer().release();
+                }
+            }
+
+            DataManager.getInstance().setStreamPreference(stream.getKey());
+            DataManager.getInstance().setPlayNow(true);
+            startActivity(activityIntent);
+        }
+    }
+
+    private void toggleStreamPreferenceUI(String streamPref, LivePlayer.StreamOption stream, View view) {
+        ImageView icon = (ImageView) view.findViewById(R.id.live_icon);
+
+        if (streamPref.equals(stream.getKey())) {
+            icon.setVisibility(View.VISIBLE);
+            view.setAlpha(1.0f);
+        } else {
+            icon.setVisibility(View.GONE);
+            view.setAlpha(0.4f);
+        }
     }
 }

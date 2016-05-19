@@ -1,6 +1,5 @@
 <FrameLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
@@ -86,7 +85,14 @@
                 android:background="@color/kpcc_blue"
                 android:text="@string/feedback_submit"/>
 
-        </LinearLayout>
+            <ProgressBar
+                android:id="@+id/spinner"
+                style="@style/Widget.AppCompat.ProgressBar"
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:layout_gravity="center"
+                android:visibility="gone" />
 
+        </LinearLayout>
     </FrameLayout>
 </FrameLayout>

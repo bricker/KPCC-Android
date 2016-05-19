@@ -11,14 +11,63 @@ public class LivePlayer extends Stream {
     ////////////////////////////////////////////////////////////////////////////////////////////////
     // Static Variables
     ////////////////////////////////////////////////////////////////////////////////////////////////
-    final static private String HLS_URL =
-            String.format(AppConfiguration.getInstance().getConfig("livestream.url"),
-                    BuildConfig.VERSION_NAME,
-                    String.valueOf(BuildConfig.VERSION_CODE)
-            );
+    public static class StreamOption {
+        private String key;
+        private int id;
+
+        public StreamOption(String key, int id) {
+            this.key = key;
+            this.id = id;
+        }
+
+        public String getKey() {
+            return key;
+        }
+
+        public void setKey(String key) {
+            this.key = key;
+        }
+
+        public int getId() {
+            return id;
+        }
+
+        public void setId(int id) {
+            this.id = id;
+        }
+    }
+
+    public static final StreamOption STREAM_STANDARD = new StreamOption("standard", R.string.kpcc_live);
+    public static final StreamOption STREAM_XFS = new StreamOption("xfs", R.string.kpcc_pfs);
+    public static final StreamOption[] STREAM_OPTIONS = {STREAM_STANDARD, STREAM_XFS};
 
     private final static int JUMP_INTERVAL_SEC = 30;
     final static int JUMP_INTERVAL_MS = JUMP_INTERVAL_SEC*1000;
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    // Static Functions
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    public static String getStreamUrl() {
+        String baseUrl = "";
+        if (isXfs()) {
+            baseUrl = XFSManager.getInstance().getPfsUrl();
+        }
+
+        if (baseUrl == null || baseUrl.isEmpty()) {
+            baseUrl = AppConfiguration.getInstance().getConfig("livestreamUrl");
+        }
+
+        return String.format(baseUrl + "?ua=KPCCAndroid-%s-%s",
+                BuildConfig.VERSION_NAME,
+                String.valueOf(BuildConfig.VERSION_CODE)
+        );
+    }
+
+    public static boolean isXfs() {
+        XFSManager xfsManager = XFSManager.getInstance();
+        String streamPref = DataManager.getInstance().getStreamPreference();
+        return xfsManager.isDriveActive() && streamPref.equals(LivePlayer.STREAM_XFS.getKey());
+    }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
     // Member Variables
@@ -32,7 +81,7 @@ public class LivePlayer extends Stream {
     LivePlayer(final Context context) {
         super(context);
 
-        AudioPlayer.RendererBuilder builder = new HlsRendererBuilder(context, USER_AGENT, HLS_URL);
+        AudioPlayer.RendererBuilder builder = new HlsRendererBuilder(context, USER_AGENT, LivePlayer.getStreamUrl());
         setAudioPlayer(new AudioPlayer(builder));
         getAudioPlayer().setPlayWhenReady(false);
 

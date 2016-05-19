@@ -41,6 +41,7 @@ public class KPCCApplication extends Application {
 
         // Parse must be initialized first.
         AppNotificationManager.setupInstance(this);
+        XFSManager.setupInstance(this);
 
         super.onCreate();
         Fabric.with(this, new Crashlytics());

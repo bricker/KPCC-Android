@@ -7,56 +7,20 @@
     android:minHeight="65dp"
     android:orientation="horizontal">
 
-    <FrameLayout
-        android:id="@+id/program_avatar_wrapper"
+    <ImageView
+        android:id="@+id/live_icon"
         android:layout_width="35dp"
         android:layout_height="35dp"
         android:layout_marginRight="12dp"
-        android:layout_gravity="center_vertical">
-        <ImageView
-            android:id="@+id/program_avatar"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:contentDescription="@null" />
-
-        <TextView
-            android:id="@+id/program_letter"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:textAllCaps="true"
-            android:textSize="25sp"
-            android:textColor="@android:color/white"
-            android:gravity="center"
-            android:visibility="gone" />
-    </FrameLayout>
+        android:layout_gravity="center_vertical"
+        android:contentDescription="@null"
+        android:src="@drawable/menu_antenna"/>
 
     <TextView
-        android:id="@+id/program_title"
+        android:id="@+id/stream_title"
         android:layout_width="0dp"
         android:layout_height="match_parent"
         android:gravity="center_vertical"
         android:layout_weight="1"
         style="@style/text_list_item" />
-
-    <FrameLayout
-        android:layout_width="40dp"
-        android:layout_height="20dp"
-        android:layout_gravity="center_vertical|end"
-        android:gravity="start" >
-
-        <ImageView
-            android:id="@+id/arrow"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:contentDescription="@null"
-            android:src="@drawable/ic_chevron_right" />
-
-        <ImageView
-            android:id="@+id/audio_icon"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:contentDescription="@null"
-            android:src="@drawable/seek_thumb"
-            android:visibility="gone" />
-    </FrameLayout>
 </LinearLayout>

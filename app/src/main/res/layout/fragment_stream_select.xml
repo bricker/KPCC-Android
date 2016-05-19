@@ -18,10 +18,7 @@
 
         <ListView
             style="@style/list_view"
-            android:id="@+id/list_programs" />
-
-        <include layout="@layout/generic_load_error" android:visibility="gone" />
-        <include layout="@layout/progress_spinner" />
+            android:id="@+id/list_streams" />
 
     </FrameLayout>
 </FrameLayout>
