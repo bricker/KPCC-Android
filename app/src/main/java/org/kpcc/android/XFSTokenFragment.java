@@ -45,7 +45,6 @@ public class XFSTokenFragment extends Fragment {
         mTokenInput = (EditText) view.findViewById(R.id.tokenInputField);
         mSpinner = view.findViewById(R.id.spinner);
 
-        mTokenInput.setText("57afdkQS2O5");
         mSubmitButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(final View v) {

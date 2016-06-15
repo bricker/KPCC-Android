@@ -58,12 +58,12 @@ public class XFSManager {
     private String driveEndString;
     private String pfsUrl;
     private String driveHash;
+    private boolean settingsLoaded = false;
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
     // Constructors
     ////////////////////////////////////////////////////////////////////////////////////////////////
     private XFSManager(Context context) {
-        loadSettings();
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -97,7 +97,12 @@ public class XFSManager {
     ////////////////////////////////////////////////////////////////////////////////////////////////
     // Member Functions
     ////////////////////////////////////////////////////////////////////////////////////////////////
-    public void loadSettings() {
+    public void loadSettings(final XFSSettingsLoadCallback cb) {
+        if (settingsLoaded) {
+            cb.onSettingsLoaded();
+            return;
+        }
+
         ParseQuery<ParseObject> query = ParseQuery.getQuery(KEY_SETTINGS);
         query.findInBackground(new FindCallback<ParseObject>() {
             public void done(List<ParseObject> settings, ParseException e) {
@@ -128,6 +133,9 @@ public class XFSManager {
                 }
 
                 driveHash = Base64.encodeToString((driveStartString + driveEndString + pfsUrl).getBytes(), Base64.DEFAULT);
+
+                settingsLoaded = true;
+                cb.onSettingsLoaded();
             }
 
         });
@@ -146,5 +154,10 @@ public class XFSManager {
 
     private boolean isXfsTestMode() {
         return AppConfiguration.getInstance().getConfigBool("xfsTestMode");
+    }
+
+    static class XFSSettingsLoadCallback {
+        void onSettingsLoaded() {
+        }
     }
 }

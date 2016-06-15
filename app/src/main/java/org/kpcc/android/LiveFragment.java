@@ -423,15 +423,20 @@ public class LiveFragment extends Fragment {
     }
 
     @Override
-    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+    public void onCreateOptionsMenu(final Menu menu, MenuInflater inflater) {
         inflater.inflate(R.menu.action_items, menu);
 
-        MenuItem item = menu.findItem(R.id.action_streamselect);
-        if (XFSManager.getInstance().isDriveActive()) {
-            item.setVisible(true);
-        } else {
-            item.setVisible(false);
-        }
+        XFSManager.getInstance().loadSettings(new XFSManager.XFSSettingsLoadCallback() {
+            @Override
+            void onSettingsLoaded() {
+                MenuItem item = menu.findItem(R.id.action_streamselect);
+                if (XFSManager.getInstance().isDriveActive()) {
+                    item.setVisible(true);
+                } else {
+                    item.setVisible(false);
+                }
+            }
+        });
     }
 
     @Override
