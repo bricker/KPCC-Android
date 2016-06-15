@@ -82,6 +82,8 @@
                 android:id="@+id/live_seek_bar"
                 android:layout_width="match_parent"
                 android:layout_height="15dp"
+                android:minHeight="15dp"
+                android:maxHeight="15dp"
                 android:layout_marginBottom="20dp"
                 android:layout_below="@id/stream_data"
                 style="@style/AppTheme.ProgressBarHorizontal"

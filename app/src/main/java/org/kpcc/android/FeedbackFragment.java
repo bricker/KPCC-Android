@@ -296,7 +296,7 @@ public class FeedbackFragment extends Fragment {
     }
 
     private String getInputVal(EditText view) {
-        return view.getText().toString();
+            return view.getText().toString();
     }
 
     private class BaseTextWatcher implements TextWatcher {

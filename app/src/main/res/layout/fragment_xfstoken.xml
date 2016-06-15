@@ -1,0 +1,98 @@
+<FrameLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@android:color/white">
+
+    <FrameLayout
+        android:id="@+id/content_wrapper"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_gravity="bottom"
+        android:orientation="vertical">
+
+        <LinearLayout
+            android:id="@+id/tokenInput"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            style="@style/static_content_wrapper"
+            android:paddingTop="25dp">
+            <TextView
+                android:textSize="25sp"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:id="@+id/tokenHeader"
+                android:layout_gravity="top"
+                android:gravity="center"
+                android:visibility="visible"
+                android:text="@string/kpccplus_token_header"
+                android:textColor="@color/kpcc_orange"
+                android:paddingBottom="40dp"
+                style="@style/kpcc_font_family"/>
+
+            <TextView
+                android:textSize="20sp"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:id="@+id/tokenDesc"
+                android:gravity="center"
+                android:visibility="visible"
+                android:text="@string/kpccplus_token_text"
+                android:textColor="@color/light_gray"
+                style="@style/kpcc_font_family"
+                android:paddingBottom="15dp"/>
+
+            <include
+                layout="@layout/horizontal_rule"
+                android:layout_width="match_parent"
+                android:layout_height="1dp"/>
+
+            <LinearLayout
+                android:id="@+id/tokenInputFieldWrapper"
+                android:layout_width="match_parent"
+                android:layout_height="35dp"
+                android:orientation="horizontal"
+                style="@style/static_content_wrapper">
+
+                <ImageView
+                    android:layout_width="25dp"
+                    android:layout_height="25dp"
+                    android:src="@drawable/ic_lock"
+                    android:layout_gravity="center_vertical"
+                    android:contentDescription="@string/kpccplus_token_placeholder"/>
+
+                <EditText
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:layout_gravity="center_vertical"
+                        android:inputType="textNoSuggestions"
+                        android:id="@+id/tokenInputField"
+                        android:hint="@string/kpccplus_token_placeholder"
+                        android:background="@android:color/transparent"/>
+            </LinearLayout>
+
+            <include
+                layout="@layout/horizontal_rule"
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginBottom="20dp" />
+
+            <Button
+                android:id="@+id/tokenSubmitBtn"
+                style="@style/active_btn"
+                android:background="@color/kpcc_blue"
+                android:text="@string/feedback_submit"/>
+
+            <ProgressBar
+                android:id="@+id/spinner"
+                style="@style/Widget.AppCompat.ProgressBar"
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:layout_gravity="center"
+                android:visibility="gone" />
+
+        </LinearLayout>
+    </FrameLayout>
+</FrameLayout>

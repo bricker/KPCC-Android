@@ -79,6 +79,10 @@
         <item name="fontPath">fonts/FreigSanProMed.otf</item>
     </style>
 
+    <style name="kpcc_font_family">
+        <item name="fontPath">fonts/FreigSanProMed.otf</item>
+    </style>
+
     <style name="text_header_large">
         <item name="android:textSize">30sp</item>
     </style>

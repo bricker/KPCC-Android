@@ -1,0 +1,56 @@
+<FrameLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@android:color/white">
+
+    <FrameLayout
+        android:id="@+id/content_wrapper"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_gravity="bottom"
+        android:orientation="vertical">
+
+        <LinearLayout
+            android:id="@+id/tokenSuccessWrapper"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            style="@style/static_content_wrapper"
+            android:paddingTop="25dp">
+            <TextView
+                android:textSize="40sp"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:id="@+id/tokenSuccessHeader"
+                android:layout_gravity="top"
+                android:gravity="center"
+                android:visibility="visible"
+                android:text="@string/kpccplus_success"
+                android:textColor="@color/kpcc_orange"
+                android:paddingBottom="10dp"
+                style="@style/kpcc_font_family"/>
+
+            <TextView
+                android:textSize="20sp"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:id="@+id/tokenSuccessDesc"
+                android:gravity="center"
+                android:visibility="visible"
+                android:text="@string/kpccplus_unlock"
+                android:textColor="@color/light_gray"
+                style="@style/kpcc_font_family"
+                android:paddingBottom="50dp"/>
+
+            <Button
+                android:id="@+id/tokenSuccessCloseBtn"
+                style="@style/active_btn"
+                android:background="@color/kpcc_blue"
+                android:text="@string/kpccplus_close"/>
+
+        </LinearLayout>
+    </FrameLayout>
+</FrameLayout>

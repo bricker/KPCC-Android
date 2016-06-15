@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="kpcc_orange">#FF8C26</color>
+    <color name="kpcc_orange">#ff8c26</color>
     <color name="kpcc_orange_secondary">#40FF8C26</color>
+    <color name="kpcc_blue">#FF31ABD4</color>
     <color name="horizontal_rule">#66666666</color>
     <color name="light_gray">#aaaaaa</color>
     <color name="transparent_dark_gray">#66333333</color>

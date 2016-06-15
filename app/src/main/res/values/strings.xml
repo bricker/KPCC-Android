@@ -3,12 +3,16 @@
     <string name="app_name">KPCC Radio</string>
 
     <string name="kpcc_live">KPCC Live</string>
+    <string name="kpcc_pfs">KPCC Pledge-Free Stream</string>
     <string name="programs">Programs</string>
     <string name="headlines">Headlines</string>
     <string name="wake_sleep">Wake / Sleep</string>
     <string name="feedback">Feedback</string>
     <string name="donate">Donate</string>
     <string name="settings">Settings</string>
+
+    <string name="contact_us">Contact Us</string>
+    <string name="ok">OK</string>
 
     <string name="up_next_program">Up Next: %s</string>
     <string name="live_program">Live: %s</string>
@@ -59,7 +63,6 @@
     <string name="feedback_validation_message">All Fields are Required</string>
     <string name="feedback_success_message">Thank you for your feedback!</string>
 
-
     <string name="live">Live</string>
     <string name="up_next">Up Next</string>
 
@@ -73,4 +76,16 @@
 
     <string name="pref_title_push_notifications">Push Notifications</string>
     <string name="pref_desc_push_notifications">Receive alerts when breaking news events are happening.</string>
+
+    <!--KPCC Plus-->
+    <string name="kpccplus">KPCC Plus</string>
+    <string name="kpccplus_token_header">Are you a KPCC Member?</string>
+    <string name="kpccplus_token_text">Enter your pledge drive token to gain access to the pledge-free stream.</string>
+    <string name="kpccplus_token_placeholder">Enter your pledge token</string>
+    <string name="kpccplus_success">Success!</string>
+    <string name="kpccplus_unlock">You\'ve unlocked your access to the KPCC pledge-free stream. Enjoy!</string>
+    <string name="kpccplus_close">Close and start listening</string>
+    <string name="kpccplus_failure_dialog_message">Uh-oh! We can\'t seem to find a match! The token you entered wasn\'t found in our system. Please try again or get in touch with our membership help desk.</string>
+    <string name="kpccplus_failure_email_subject">My Pledge Token isn\'t working on the Android app.</string>
+    <string name="kpccplus_failure_email_body">Hello, I ran into some trouble entering my pledge token into the Android app.\n\nThe token I entered was: %s\n\nThank you!</string>
 </resources>

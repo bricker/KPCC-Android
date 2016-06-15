@@ -12,6 +12,8 @@ class DataManager {
     private final static String PREF_LIVESTREAM_PLAY_NOW = "live_stream_play_now";
     private final static String PREF_ALARM_DATE = "alarm_date";
     private final static String PREF_TIMER_MILLIS = "timer_date";
+    private final static String PREF_STREAM_PREFIX = "stream";
+    private final static String PREF_XFS_VALIDATED_PREFIX = "xfs_validated";
 
     private static DataManager instance;
     private final SharedPreferences mPrefs;
@@ -50,6 +52,26 @@ class DataManager {
 
     public void setPlayNow(boolean playNow) {
         mPrefs.edit().putBoolean(PREF_LIVESTREAM_PLAY_NOW, playNow).apply();
+    }
+
+    public String getStreamPreference() {
+        String keyHash = XFSManager.getInstance().getDriveHash();
+        return mPrefs.getString(PREF_STREAM_PREFIX + keyHash, LivePlayer.STREAM_STANDARD.getKey());
+    }
+
+    public void setStreamPreference(String stream) {
+        String keyHash = XFSManager.getInstance().getDriveHash();
+        mPrefs.edit().putString(PREF_STREAM_PREFIX + keyHash, stream).apply();
+    }
+
+    public boolean getIsXfsValidated() {
+        String keyHash = XFSManager.getInstance().getDriveHash();
+        return mPrefs.getBoolean(PREF_XFS_VALIDATED_PREFIX + keyHash, false);
+    }
+
+    public void setIsXfsValidated(boolean validated) {
+        String keyHash = XFSManager.getInstance().getDriveHash();
+        mPrefs.edit().putBoolean(PREF_XFS_VALIDATED_PREFIX + keyHash, validated).apply();
     }
 
     public Date getAlarmDate() {

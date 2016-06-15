@@ -8,8 +8,13 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentTransaction;
 import android.support.v4.app.NotificationCompat;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
@@ -78,6 +83,7 @@ public class LiveFragment extends Fragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setRetainInstance(true);
+        setHasOptionsMenu(true);
     }
 
     /**
@@ -92,7 +98,14 @@ public class LiveFragment extends Fragment {
                              Bundle savedInstanceState) {
 
         MainActivity activity = (MainActivity) getActivity();
-        activity.setTitle(R.string.kpcc_live);
+
+        if (activity != null) {
+            if (LivePlayer.isXfs()) {
+                activity.setTitle(R.string.kpcc_pfs);
+            } else {
+                activity.setTitle(R.string.kpcc_live);
+            }
+        }
 
         View view = inflater.inflate(R.layout.fragment_live, container, false);
 
@@ -407,6 +420,39 @@ public class LiveFragment extends Fragment {
         AppConnectivityManager.getInstance().removeOnNetworkConnectivityListener(LiveFragment.STACK_TAG);
 
         super.onPause();
+    }
+
+    @Override
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+        inflater.inflate(R.menu.action_items, menu);
+
+        MenuItem item = menu.findItem(R.id.action_streamselect);
+        if (XFSManager.getInstance().isDriveActive()) {
+            item.setVisible(true);
+        } else {
+            item.setVisible(false);
+        }
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.action_streamselect:
+                FragmentManager fm = getActivity().getSupportFragmentManager();
+                fm.beginTransaction()
+                        .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN)
+                        .replace(R.id.container, new StreamSelectFragment(), StreamSelectFragment.STACK_TAG)
+                        .addToBackStack(LiveFragment.STACK_TAG)
+                        .commit();
+
+                return true;
+
+            default:
+                // If we got here, the user's action was not recognized.
+                // Invoke the superclass to handle it.
+                return super.onOptionsItemSelected(item);
+
+        }
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
