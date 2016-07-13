@@ -12,7 +12,7 @@ import android.widget.FrameLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
-public class SleepFragment extends Fragment {
+public class SleepFragment extends StreamBindFragment {
 
     private FrameLayout mSetButtonWrapper;
     private Button mCancelButton;
@@ -95,15 +95,13 @@ public class SleepFragment extends Fragment {
                 BaseAlarmManager.SleepManager.getInstance().set(relativeMillis);
                 showCurrentTimerData();
 
+                OnDemandPlayer stream = getOnDemandPlayer();
                 // Go to the live stream if an episode isn't already playing.
-                if (StreamManager.ConnectivityManager.getInstance().getStreamManager() != null) {
-                    OnDemandPlayer currentEpisodePlayer = StreamManager.ConnectivityManager.getInstance().getStreamManager().getCurrentOnDemandPlayer();
-                    if (currentEpisodePlayer == null || !currentEpisodePlayer.isPlaying()) {
-                        Intent activityIntent = new Intent(getActivity(), MainActivity.class);
-                        activityIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                        DataManager.getInstance().setPlayNow(true);
-                        startActivity(activityIntent);
-                    }
+                if (stream == null || !stream.isPlaying()) {
+                    Intent activityIntent = new Intent(getActivity(), MainActivity.class);
+                    activityIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    DataManager.getInstance().setPlayNow(true);
+                    startActivity(activityIntent);
                 }
             }
         });

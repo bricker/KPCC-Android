@@ -37,7 +37,7 @@
             </intent-filter>
         </activity>
 
-        <service android:name="org.kpcc.android.StreamManager" />
+        <service android:name="org.kpcc.android.Stream" />
         <service android:name="com.parse.PushService" />
 
         <receiver

@@ -16,7 +16,7 @@ import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
 
-public class StreamSelectFragment extends Fragment implements AdapterView.OnItemClickListener {
+public class StreamSelectFragment extends StreamBindFragment implements AdapterView.OnItemClickListener {
     public final static String STACK_TAG = "StreamSelectFragment";
 
     @Override
@@ -63,10 +63,10 @@ public class StreamSelectFragment extends Fragment implements AdapterView.OnItem
 
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-        LivePlayer.StreamOption stream = LivePlayer.STREAM_OPTIONS[position];
+        LivePlayer.StreamOption streamName = LivePlayer.STREAM_OPTIONS[position];
         String streamPref = DataManager.getInstance().getStreamPreference();
 
-        if (stream.equals(LivePlayer.STREAM_XFS) && !DataManager.getInstance().getIsXfsValidated()) {
+        if (streamName.equals(LivePlayer.STREAM_XFS) && !DataManager.getInstance().getIsXfsValidated()) {
             FragmentManager fragmentManager = getActivity().getSupportFragmentManager();
             fragmentManager.beginTransaction()
                     .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN)
@@ -77,15 +77,15 @@ public class StreamSelectFragment extends Fragment implements AdapterView.OnItem
                     .commit();
         } else {
             Intent activityIntent = new Intent(getActivity(), MainActivity.class);
-            if (!stream.getKey().equals(streamPref)) {
+            if (!streamName.getKey().equals(streamPref)) {
                 // Release the currently playing stream, so we can restart it with the new URL.
-                LivePlayer livePlayer = StreamManager.ConnectivityManager.getInstance().getStreamManager().getCurrentLivePlayer();
-                if (livePlayer != null) {
-                    StreamManager.ConnectivityManager.getInstance().getStreamManager().getCurrentLivePlayer().release();
+                LivePlayer stream = getLivePlayer();
+                if (stream != null) {
+                    stream.release();
                 }
             }
 
-            DataManager.getInstance().setStreamPreference(stream.getKey());
+            DataManager.getInstance().setStreamPreference(streamName.getKey());
             DataManager.getInstance().setPlayNow(true);
             startActivity(activityIntent);
         }

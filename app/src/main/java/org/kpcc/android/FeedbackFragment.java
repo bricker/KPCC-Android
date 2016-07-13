@@ -1,6 +1,7 @@
 package org.kpcc.android;
 
 import android.app.Activity;
+import android.content.Context;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.text.Editable;
@@ -69,10 +70,10 @@ public class FeedbackFragment extends Fragment {
         mErrorMessage = (TextView) view.findViewById(R.id.errorMessage);
         mProgressBar = (ProgressBar) view.findViewById(R.id.progress_circular);
 
-        AppConnectivityManager.getInstance().addOnNetworkConnectivityListener(FeedbackFragment.STACK_TAG,
+        AppConnectivityManager.getInstance().addOnNetworkConnectivityListener(getActivity(), FeedbackFragment.STACK_TAG,
                 new AppConnectivityManager.NetworkConnectivityListener() {
             @Override
-            public void onConnect() {
+            public void onConnect(Context context) {
                 if (mErrorMessage == null) {
                     return;
                 }
@@ -82,7 +83,7 @@ public class FeedbackFragment extends Fragment {
             }
 
             @Override
-            public void onDisconnect() {
+            public void onDisconnect(Context context) {
                 if (mErrorMessage == null) {
                     return;
                 }

@@ -1,6 +1,7 @@
 package org.kpcc.android;
 
 import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
@@ -20,7 +21,7 @@ import com.android.volley.Request;
 
 import org.kpcc.api.Program;
 
-public class ProgramsFragment extends Fragment
+public class ProgramsFragment extends StreamBindFragment
         implements AdapterView.OnItemClickListener, ProgramsManager.OnProgramsResponseListener {
     public final static String STACK_TAG = "ProgramsFragment";
 
@@ -39,9 +40,9 @@ public class ProgramsFragment extends Fragment
         super.onCreate(savedInstanceState);
         setRetainInstance(true);
 
-        AppConnectivityManager.getInstance().addOnNetworkConnectivityListener(ProgramsFragment.STACK_TAG, new AppConnectivityManager.NetworkConnectivityListener() {
+        AppConnectivityManager.getInstance().addOnNetworkConnectivityListener(getActivity(), ProgramsFragment.STACK_TAG, new AppConnectivityManager.NetworkConnectivityListener() {
             @Override
-            public void onConnect() {
+            public void onConnect(Context context) {
                 if (mProgressBar != null) {
                     mErrorView.setVisibility(View.GONE);
                     mProgressBar.setVisibility(View.VISIBLE);
@@ -51,10 +52,13 @@ public class ProgramsFragment extends Fragment
             }
 
             @Override
-            public void onDisconnect() {
+            public void onDisconnect(Context context) {
                 showError(R.string.network_error);
             }
         }, true);
+
+        getActivity().bindService(new Intent(getActivity(), StreamService.class), mStreamConnection, Context.BIND_AUTO_CREATE);
+
     }
 
     @Override
@@ -125,15 +129,13 @@ public class ProgramsFragment extends Fragment
                 ImageView audio_icon = (ImageView) view.findViewById(R.id.audio_icon);
                 TextView letter = (TextView) view.findViewById(R.id.program_letter);
 
-                if (StreamManager.ConnectivityManager.getInstance().getStreamIsBound()) {
-                    OnDemandPlayer currentPlayer = StreamManager.ConnectivityManager.getInstance().getStreamManager().getCurrentOnDemandPlayer();
-                    if (currentPlayer != null && currentPlayer.getProgramSlug().equals(program.slug)) {
-                        arrow.setVisibility(View.GONE);
-                        audio_icon.setVisibility(View.VISIBLE);
-                    } else {
-                        arrow.setVisibility(View.VISIBLE);
-                        audio_icon.setVisibility(View.GONE);
-                    }
+                OnDemandPlayer stream = getOnDemandPlayer();
+                if (stream != null && stream.getProgramSlug().equals(program.slug)) {
+                    arrow.setVisibility(View.GONE);
+                    audio_icon.setVisibility(View.VISIBLE);
+                } else {
+                    arrow.setVisibility(View.VISIBLE);
+                    audio_icon.setVisibility(View.GONE);
                 }
 
                 title.setText(program.title);

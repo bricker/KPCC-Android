@@ -1,7 +1,15 @@
 package org.kpcc.android;
 
+import android.app.Notification;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
+import android.app.Service;
 import android.content.Context;
+import android.content.Intent;
 import android.media.AudioManager;
+import android.os.Binder;
+import android.os.IBinder;
+import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 
 import com.google.android.exoplayer.ExoPlayer;
@@ -29,18 +37,20 @@ abstract class Stream implements AudioManager.OnAudioFocusChangeListener, AudioP
     ////////////////////////////////////////////////////////////////////////////////////////////////
     static final String USER_AGENT = "KPCCAndroid";
     private static final float DUCK_VOLUME = 0.25f;
+    public static final int NOTIFICATION_ID = 1;
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
     // Member Variables
     ////////////////////////////////////////////////////////////////////////////////////////////////
     private AudioPlayer mAudioPlayer;
-    private final Context mContext;
     private AudioEventListener mAudioEventListener;
-    private final StreamManager mStreamManager;
-    private final AudioManager mAudioManager;
+    private AudioManager mAudioManager;
     private AudioFocusState mAudioFocusState;
     private boolean mIsTemporarilyPaused;
     private final AtomicBoolean mIsPaused = new AtomicBoolean(false); // ExoPlayer doesn't have a proper "paused" state so we keep track of it here.
+    private long mPausedAt = 0;
+
+    private NotificationCompat.Builder mNotificationBuilder;
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
     // Static Functions
@@ -56,10 +66,18 @@ abstract class Stream implements AudioManager.OnAudioFocusChangeListener, AudioP
     ////////////////////////////////////////////////////////////////////////////////////////////////
     // Constructors
     ////////////////////////////////////////////////////////////////////////////////////////////////
-    Stream(final Context context) {
-        mContext = context;
-        mStreamManager = StreamManager.ConnectivityManager.getInstance().getStreamManager();
-        mAudioManager = (AudioManager) mContext.getSystemService(Context.AUDIO_SERVICE);
+    Stream(Context context) {
+        setAudioManager((AudioManager) context.getSystemService(Context.AUDIO_SERVICE));
+        PendingIntent pi = PendingIntent.getActivity(context, 0, new Intent(context, MainActivity.class), 0);
+
+        // Base notification builder - these are the same for every stream type.
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(context)
+                .setContentIntent(pi)
+                .setSmallIcon(R.drawable.menu_antenna)
+                .setTicker(context.getString(R.string.now_playing))
+                .setOngoing(true);
+
+        setNotificationBuilder(builder);
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -100,6 +118,7 @@ abstract class Stream implements AudioManager.OnAudioFocusChangeListener, AudioP
 
         try {
             mIsPaused.set(true);
+            setPausedAt(System.currentTimeMillis());
             getAudioPlayer().getPlayerControl().pause();
         } catch (IllegalStateException e) {
             // Call release() to stop progress observer, update button state, etc.
@@ -110,6 +129,7 @@ abstract class Stream implements AudioManager.OnAudioFocusChangeListener, AudioP
     void stop() {
         getAudioManager().abandonAudioFocus(this);
         mIsPaused.set(false);
+        setPausedAt(System.currentTimeMillis());
         if (getAudioPlayer() == null) return;
         release();
     }
@@ -152,16 +172,20 @@ abstract class Stream implements AudioManager.OnAudioFocusChangeListener, AudioP
     ////////////////////////////////////////////////////////////////////////////////////////////////
     // Getters / Setters
     ////////////////////////////////////////////////////////////////////////////////////////////////
-    protected Context getContext() {
-        return mContext;
-    }
-
     protected AudioPlayer getAudioPlayer() {
         return mAudioPlayer;
     }
 
     protected void setAudioPlayer(final AudioPlayer audioPlayer) {
         mAudioPlayer = audioPlayer;
+    }
+
+    synchronized long getPausedAt() {
+        return mPausedAt;
+    }
+
+    synchronized void setPausedAt(long pausedAt) {
+        mPausedAt = pausedAt;
     }
 
     protected AudioEventListener getAudioEventListener() {
@@ -172,8 +196,8 @@ abstract class Stream implements AudioManager.OnAudioFocusChangeListener, AudioP
         mAudioEventListener = audioEventListener;
     }
 
-    protected StreamManager getStreamManager() {
-        return mStreamManager;
+    protected void setAudioManager(AudioManager am) {
+        mAudioManager = am;
     }
 
     protected AudioManager getAudioManager() {
@@ -191,6 +215,11 @@ abstract class Stream implements AudioManager.OnAudioFocusChangeListener, AudioP
     protected void setIsTemporarilyPaused(boolean isTemporarilyPaused) { mIsTemporarilyPaused = isTemporarilyPaused; }
 
     protected boolean isTemporarilyPaused() { return mIsTemporarilyPaused; }
+
+    protected void setNotificationBuilder(NotificationCompat.Builder builder) { mNotificationBuilder = builder; }
+    NotificationCompat.Builder getNotificationBuilder() {
+        return mNotificationBuilder;
+    }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
     // Implementations
@@ -264,6 +293,17 @@ abstract class Stream implements AudioManager.OnAudioFocusChangeListener, AudioP
     ////////////////////////////////////////////////////////////////////////////////////////////////
     // Member Functions
     ////////////////////////////////////////////////////////////////////////////////////////////////
+    void updateNotification(String title, String text) {
+        getNotificationBuilder()
+                .setContentTitle(title)
+                .setContentText(text);
+    }
+
+    void sendNotification(Context context) {
+        NotificationManager nm = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+        nm.notify(Stream.NOTIFICATION_ID, getNotificationBuilder().build());
+    }
+
     boolean requestAudioFocus() {
         int result = getAudioManager().requestAudioFocus(this, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN);
         return result == AudioManager.AUDIOFOCUS_REQUEST_GRANTED;
@@ -309,6 +349,23 @@ abstract class Stream implements AudioManager.OnAudioFocusChangeListener, AudioP
     boolean isEnded() {
         return getAudioPlayer() != null &&
                 getAudioPlayer().getPlaybackState() == ExoPlayer.STATE_ENDED;
+    }
+
+    void pauseTemporary() {
+        pause();
+        setIsTemporarilyPaused(true);
+    }
+
+    void playIfTemporarilyPaused() {
+        if (isPaused() && isTemporarilyPaused()) {
+            try {
+                play();
+            } catch (IllegalStateException e) {
+                prepareAndStart();
+            }
+        }
+
+        setIsTemporarilyPaused(false);
     }
 
     long getCurrentPosition() {

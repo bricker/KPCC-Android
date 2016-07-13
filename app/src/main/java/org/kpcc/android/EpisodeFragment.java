@@ -1,5 +1,6 @@
 package org.kpcc.android;
 
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -21,7 +22,7 @@ import org.kpcc.api.Program;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 
-public class EpisodeFragment extends Fragment {
+public class EpisodeFragment extends StreamBindFragment {
     ////////////////////////////////////////////////////////////////////////////////////////////////
     // Static Variables
     ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -36,7 +37,7 @@ public class EpisodeFragment extends Fragment {
     public final AtomicBoolean pagerVisible = new AtomicBoolean(false);
     public Episode episode;
     public Program program;
-    private OnDemandPlayer mPlayer;
+//    private OnDemandPlayer mPlayer;
     private SeekBar mSeekBar;
     private TextView mCurrentTime;
     private AudioButtonManager mAudioButtonManager;
@@ -115,10 +116,10 @@ public class EpisodeFragment extends Fragment {
         }
 
         ImageView mShareButton = (ImageView) view.findViewById(R.id.share_btn);
-        TextView programTitle = (TextView) view.findViewById(R.id.program_title);
-        TextView episodeTitle = (TextView) view.findViewById(R.id.episode_title);
-        TextView date = (TextView) view.findViewById(R.id.air_date);
-        TextView totalTime = (TextView) view.findViewById(R.id.audio_total_time);
+        final TextView programTitle = (TextView) view.findViewById(R.id.program_title);
+        final TextView episodeTitle = (TextView) view.findViewById(R.id.episode_title);
+        final TextView date = (TextView) view.findViewById(R.id.air_date);
+        final TextView totalTime = (TextView) view.findViewById(R.id.audio_total_time);
 
         mShareButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -140,27 +141,6 @@ public class EpisodeFragment extends Fragment {
         mSeekBar.setMax(episode.getAudio().getDurationSeconds() * 1000);
         mSeekBar.setEnabled(false);
 
-        mSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-            @Override
-            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                if (!fromUser) {
-                    return;
-                }
-
-                if (mPlayer != null) {
-                    mPlayer.seekTo(progress);
-                }
-            }
-
-            @Override
-            public void onStartTrackingTouch(SeekBar seekBar) {
-            }
-
-            @Override
-            public void onStopTrackingTouch(SeekBar seekBar) {
-            }
-        });
-
         programTitle.setText(program.title);
         date.setText(episode.getFormattedAirDate());
         totalTime.setText(Stream.getTimeFormat(episode.getAudio().getDurationSeconds()));
@@ -180,23 +160,9 @@ public class EpisodeFragment extends Fragment {
 
         mAudioButtonManager = new AudioButtonManager(view);
 
-        mAudioButtonManager.getPlayButton().setOnClickListener(new View.OnClickListener() {
+        AppConnectivityManager.getInstance().addOnNetworkConnectivityListener(getActivity(), episode.getPublicUrl(), new AppConnectivityManager.NetworkConnectivityListener() {
             @Override
-            public void onClick(View v) {
-                mPlayer.prepareAndStart();
-            }
-        });
-
-        mAudioButtonManager.getPauseButton().setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                mPlayer.pause();
-            }
-        });
-
-        AppConnectivityManager.getInstance().addOnNetworkConnectivityListener(episode.getPublicUrl(), new AppConnectivityManager.NetworkConnectivityListener() {
-            @Override
-            public void onConnect() {
+            public void onConnect(Context context) {
                 if (mAudioButtonManager == null) {
                     return;
                 }
@@ -207,7 +173,7 @@ public class EpisodeFragment extends Fragment {
             }
 
             @Override
-            public void onDisconnect() {
+            public void onDisconnect(Context context) {
                 if (mAudioButtonManager == null) {
                     return;
                 }
@@ -215,6 +181,42 @@ public class EpisodeFragment extends Fragment {
                 mAudioButtonManager.showError(R.string.network_error);
             }
         }, true);
+
+        final OnDemandPlayer stream = getOnDemandPlayer();
+        mSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                if (!fromUser) {
+                    return;
+                }
+
+                if (stream != null) {
+                    stream.seekTo(progress);
+                }
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+            }
+        });
+
+        mAudioButtonManager.getPlayButton().setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                stream.prepareAndStart();
+            }
+        });
+
+        mAudioButtonManager.getPauseButton().setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                stream.pause();
+            }
+        });
 
         return view;
     }
@@ -234,27 +236,26 @@ public class EpisodeFragment extends Fragment {
         // We have to load all of this stuff here because the pager doesn't invoke onCreateView
         // when a view becomes visible, but we need to make new audio players and reset the
         // listeners.
-        MainActivity activity = (MainActivity) getActivity();
         boolean alreadyPlaying = false;
 
-        OnDemandPlayer currentPlayer = StreamManager.ConnectivityManager.getInstance().getStreamManager().getCurrentOnDemandPlayer();
-        if (currentPlayer != null && currentPlayer.getAudioUrl().equals(episode.getAudio().getUrl())) {
-            mPlayer = currentPlayer;
+
+        OnDemandPlayer stream = getOnDemandPlayer();
+        if (stream != null && stream.getAudioUrl().equals(episode.getAudio().getUrl())) {
             mSeekBar.setEnabled(true);
 
-            if (currentPlayer.isPlaying()) {
+            if (stream.isPlaying()) {
                 alreadyPlaying = true;
                 mAudioButtonManager.togglePlayingForPause();
             }
 
             // Audio should be released when next one starts, based on Audio Focus rules.
         } else {
-            mPlayer = new OnDemandPlayer(activity, episode.getAudio().getUrl(),
-                    program.slug);
+            stream = new OnDemandPlayer(getActivity(), episode.getAudio().getUrl(), program.slug);
+            mStreamConnection.getStreamService().setCurrentStream(stream);
         }
 
 
-        mPlayer.setAudioEventListener(new Stream.AudioEventListener() {
+        stream.setAudioEventListener(new Stream.AudioEventListener() {
             @Override
             public void onPreparing() {
                 mAudioButtonManager.toggleLoading();
@@ -288,7 +289,8 @@ public class EpisodeFragment extends Fragment {
 
             @Override
             public void onCompletion() {
-                if (!StreamManager.ConnectivityManager.getInstance().getStreamIsBound() || !isVisible()) {
+                OnDemandPlayer stream = getOnDemandPlayer();
+                if (stream == null || !isVisible()) {
                     return;
                 }
 
@@ -337,8 +339,8 @@ public class EpisodeFragment extends Fragment {
             return;
         }
 
-        mPeriodicBackgroundUpdater = new PeriodicBackgroundUpdater(new PeriodicBackgroundUpdater.ProgressBarRunner(mPlayer), 100);
-        if (mPlayer.isPlaying()) { mPeriodicBackgroundUpdater.start(); }
+        mPeriodicBackgroundUpdater = new PeriodicBackgroundUpdater(new PeriodicBackgroundUpdater.ProgressBarRunner(stream), 100);
+        if (stream.isPlaying()) { mPeriodicBackgroundUpdater.start(); }
 
         // No audio will play if:
         // 1. Stream isn't ready
@@ -346,7 +348,7 @@ public class EpisodeFragment extends Fragment {
         // 3. The view isn't visible.
         // ViewPager calls the 'onCreateView' method for surrounding views, so we can't
         // play the audio automatically in this method.
-        if (!StreamManager.ConnectivityManager.getInstance().getStreamIsBound() || episode.getAudio() == null) {
+        if (episode.getAudio() == null) {
             mAudioButtonManager.toggleStopped();
             mAudioButtonManager.showError(R.string.audio_error);
             return;
@@ -381,29 +383,20 @@ public class EpisodeFragment extends Fragment {
     // Member Functions
     ////////////////////////////////////////////////////////////////////////////////////////////////
     boolean episodeWasSkipped() {
-        if (streamNotAvailable()) {
-            return false;
-        }
+        OnDemandPlayer stream = getOnDemandPlayer();
+        if (stream == null) return false;
 
         try {
             long current = getCurrentPlayerPositionSeconds();
-            return current < (mPlayer.getDuration() / 4);
+            return current < (stream.getDuration() / 4);
         } catch (IllegalStateException e) {
             return false;
         }
     }
 
     long getCurrentPlayerPositionSeconds() throws IllegalStateException {
-        if (streamNotAvailable()) {
-            return 0;
-        }
-
-        return mPlayer.getCurrentPosition() / 1000;
-    }
-
-    private boolean streamNotAvailable() {
-        return mPlayer == null ||
-                !StreamManager.ConnectivityManager.getInstance().getStreamIsBound() ||
-                StreamManager.ConnectivityManager.getInstance().getStreamManager().getCurrentOnDemandPlayer() == null;
+        OnDemandPlayer stream = getOnDemandPlayer();
+        if (stream == null) return 0;
+        return stream.getCurrentPosition() / 1000;
     }
 }

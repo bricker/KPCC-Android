@@ -7,26 +7,25 @@ import android.net.Uri;
 /**
  * Created by rickb014 on 4/3/16.
  */
-class RawPlayer extends Stream implements AudioPlayer.Listener {
+class RawPlayer extends Stream {
     ////////////////////////////////////////////////////////////////////////////////////////////////
     // Constructors
     ////////////////////////////////////////////////////////////////////////////////////////////////
-    RawPlayer(final Context context, final String assetPath) {
+    RawPlayer(Context context, final String assetPath) {
         super(context);
 
-        AudioPlayer.RendererBuilder builder = new ExtractorRendererBuilder(context, USER_AGENT,
-                Uri.parse(assetPath));
+        AudioPlayer.RendererBuilder builder = new ExtractorRendererBuilder(context, USER_AGENT, Uri.parse(assetPath));
 
-        setAudioPlayer(new AudioPlayer(builder));
-        getAudioPlayer().setPlayWhenReady(false);
+        AudioPlayer player = new AudioPlayer(builder);
+        player.setPlayWhenReady(false);
+        player.addListener(this);
 
-        getAudioPlayer().addListener(this);
+        setAudioPlayer(player);
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
     // Implementations
     ////////////////////////////////////////////////////////////////////////////////////////////////
-
     @Override
     boolean requestAudioFocus() {
         int result = getAudioManager().requestAudioFocus(this, AudioManager.STREAM_NOTIFICATION, AudioManager.AUDIOFOCUS_GAIN_TRANSIENT);

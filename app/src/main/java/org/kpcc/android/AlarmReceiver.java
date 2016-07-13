@@ -3,6 +3,8 @@ package org.kpcc.android;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.os.Binder;
+import android.os.IBinder;
 
 public class AlarmReceiver {
     public static class AlarmClock extends BroadcastReceiver {
@@ -20,11 +22,13 @@ public class AlarmReceiver {
     public static class SleepTimer extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
-            if (StreamManager.ConnectivityManager.getInstance().getStreamIsBound()) {
-                StreamManager.ConnectivityManager.getInstance().getStreamManager().pauseAllActiveStreams();
+            Intent streamIntent = new Intent(context, StreamService.class);
+            IBinder binder = peekService(context, streamIntent);
+            if (binder != null) {
+                StreamService service = ((StreamService.LocalBinder) binder).getService();
+                service.getCurrentStream().stop();
             }
 
-            // TODO: What is the above fails? Should we retry?
             BaseAlarmManager.SleepManager.getInstance().reset();
         }
     }

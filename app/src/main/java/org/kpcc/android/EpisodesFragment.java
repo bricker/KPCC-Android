@@ -31,7 +31,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 
-public class EpisodesFragment extends Fragment
+public class EpisodesFragment extends StreamBindFragment
         implements AdapterView.OnItemClickListener {
 
     public final static String STACK_TAG = "EpisodesFragment";
@@ -87,9 +87,9 @@ public class EpisodesFragment extends Fragment
         mErrorView = (LinearLayout)mView.findViewById(R.id.generic_load_error);
         mErrorText = (TextView)mErrorView.findViewById(R.id.error_text);
 
-        AppConnectivityManager.getInstance().addOnNetworkConnectivityListener(EpisodesFragment.STACK_TAG, new AppConnectivityManager.NetworkConnectivityListener() {
+        AppConnectivityManager.getInstance().addOnNetworkConnectivityListener(getActivity(), EpisodesFragment.STACK_TAG, new AppConnectivityManager.NetworkConnectivityListener() {
             @Override
-            public void onConnect() {
+            public void onConnect(Context context) {
                 if (mProgressBar != null) {
                     mErrorView.setVisibility(View.GONE);
                     mProgressBar.setVisibility(View.VISIBLE);
@@ -99,7 +99,7 @@ public class EpisodesFragment extends Fragment
             }
 
             @Override
-            public void onDisconnect() {
+            public void onDisconnect(Context context) {
                 showError(R.string.network_error);
             }
         }, true);
@@ -213,17 +213,17 @@ public class EpisodesFragment extends Fragment
                     convertView = inflater.inflate(R.layout.list_item_episode, null);
                 }
 
-                Episode episode = mEpisodes.get(position);
+                final Episode episode = mEpisodes.get(position);
                 TextView title = (TextView) convertView.findViewById(R.id.episode_title);
                 TextView date = (TextView) convertView.findViewById(R.id.air_date);
-                ImageView audio_icon = (ImageView) convertView.findViewById(R.id.audio_icon);
+                final ImageView audio_icon = (ImageView) convertView.findViewById(R.id.audio_icon);
 
                 title.setText(episode.getTitle());
                 date.setText(episode.getFormattedAirDate());
 
-                if (StreamManager.ConnectivityManager.getInstance().getStreamIsBound()) {
-                    OnDemandPlayer currentPlayer = StreamManager.ConnectivityManager.getInstance().getStreamManager().getCurrentOnDemandPlayer();
-                    if (currentPlayer != null && currentPlayer.getAudioUrl().equals(episode.getAudio().getUrl())) {
+                OnDemandPlayer stream = getOnDemandPlayer();
+                if (stream != null) {
+                    if (stream.getAudioUrl().equals(episode.getAudio().getUrl())) {
                         audio_icon.setVisibility(View.VISIBLE);
                     } else {
                         audio_icon.setVisibility(View.GONE);

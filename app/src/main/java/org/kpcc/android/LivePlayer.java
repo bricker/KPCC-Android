@@ -1,6 +1,8 @@
 package org.kpcc.android;
 
+import android.app.Service;
 import android.content.Context;
+import android.os.IBinder;
 
 import com.google.android.exoplayer.TimeRange;
 
@@ -8,9 +10,6 @@ import com.google.android.exoplayer.TimeRange;
  * Created by rickb014 on 4/3/16.
  */
 public class LivePlayer extends Stream {
-    ////////////////////////////////////////////////////////////////////////////////////////////////
-    // Static Variables
-    ////////////////////////////////////////////////////////////////////////////////////////////////
     public static class StreamOption {
         private String key;
         private int id;
@@ -37,6 +36,9 @@ public class LivePlayer extends Stream {
         }
     }
 
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    // Static Variables
+    ////////////////////////////////////////////////////////////////////////////////////////////////
     public static final StreamOption STREAM_STANDARD = new StreamOption("standard", R.string.kpcc_live);
     public static final StreamOption STREAM_XFS = new StreamOption("xfs", R.string.kpcc_pfs);
     public static final StreamOption[] STREAM_OPTIONS = {STREAM_STANDARD, STREAM_XFS};
@@ -72,64 +74,31 @@ public class LivePlayer extends Stream {
     ////////////////////////////////////////////////////////////////////////////////////////////////
     // Member Variables
     ////////////////////////////////////////////////////////////////////////////////////////////////
-    final private PrerollCompleteCallback mPrerollCompleteCallback;
-    private long mPausedAt = 0;
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
     // Constructors
     ////////////////////////////////////////////////////////////////////////////////////////////////
-    LivePlayer(final Context context) {
+    LivePlayer(Context context) {
         super(context);
 
-        AudioPlayer.RendererBuilder builder = new HlsRendererBuilder(context, USER_AGENT, LivePlayer.getStreamUrl());
-        setAudioPlayer(new AudioPlayer(builder));
-        getAudioPlayer().setPlayWhenReady(false);
+        AudioPlayer.RendererBuilder builder = new HlsRendererBuilder(context, Stream.USER_AGENT, LivePlayer.getStreamUrl());
 
-        getAudioPlayer().addListener(this);
-        mPrerollCompleteCallback = new PrerollCompleteCallback();
+        AudioPlayer player = new AudioPlayer(builder);
+        player.setPlayWhenReady(false);
+        player.addListener(this);
 
-        if (getStreamManager() != null) {
-            getStreamManager().setCurrentLivePlayer(this);
-        }
+        setAudioPlayer(player);
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
     // Getters / Setters
     ////////////////////////////////////////////////////////////////////////////////////////////////
 
-    PrerollCompleteCallback getPrerollCompleteCallback() {
-        return mPrerollCompleteCallback;
-    }
-
-    synchronized long getPausedAt() {
-        return mPausedAt;
-    }
-
-    synchronized void setPausedAt(long pausedAt) {
-        mPausedAt = pausedAt;
-    }
-
     ////////////////////////////////////////////////////////////////////////////////////////////////
     // Implementations
     ////////////////////////////////////////////////////////////////////////////////////////////////
-    @Override
-    void pause() {
-        super.pause();
-        setPausedAt(System.currentTimeMillis());
-    }
-
-    @Override
-    void stop() {
-        super.stop();
-        setPausedAt(System.currentTimeMillis());
-    }
-
     @Override // Stream
     void release() {
-        if (getStreamManager() != null && getStreamManager().getCurrentLivePlayer() == this) {
-            getStreamManager().setCurrentLivePlayer(null);
-        }
-
         super.release();
     }
 
@@ -184,23 +153,6 @@ public class LivePlayer extends Stream {
         return getUpperBoundMs() - getCurrentPosition();
     }
 
-    void pauseTemporary() {
-        pause();
-        setIsTemporarilyPaused(true);
-    }
-
-    void playIfTemporarilyPaused() {
-        if (isPaused() && isTemporarilyPaused()) {
-            try {
-                play();
-            } catch (IllegalStateException e) {
-                prepareAndStart();
-            }
-        }
-
-        setIsTemporarilyPaused(false);
-    }
-
     long getPlaybackTimestamp() {
         return System.currentTimeMillis() - relativeMsBehindLive();
     }
@@ -208,14 +160,4 @@ public class LivePlayer extends Stream {
     private TimeRange getAvailableRange() {
         return getAudioPlayer() == null ? null : getAudioPlayer().getPlayerControl().getAvailableRange();
     }
-
-    ////////////////////////////////////////////////////////////////////////////////////////////////
-    // Classes
-    ////////////////////////////////////////////////////////////////////////////////////////////////
-    protected class PrerollCompleteCallback {
-        protected void onPrerollComplete() {
-            prepareAndStart();
-        }
-    }
-
 }

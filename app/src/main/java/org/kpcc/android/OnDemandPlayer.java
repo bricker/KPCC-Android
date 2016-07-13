@@ -10,33 +10,41 @@ class OnDemandPlayer extends Stream implements AudioPlayer.Listener {
     ////////////////////////////////////////////////////////////////////////////////////////////////
     // Member Variables
     ////////////////////////////////////////////////////////////////////////////////////////////////
-    private final String mAudioUrl;
-    private final String mProgramSlug;
+    private String mAudioUrl;
+    private String mProgramSlug;
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
     // Constructors
     ////////////////////////////////////////////////////////////////////////////////////////////////
-    OnDemandPlayer(final Context context, final String audioUrl, final String programSlug) {
+    OnDemandPlayer(Context context, final String audioUrl, final String programSlug) {
         super(context);
 
-        AudioPlayer.RendererBuilder builder = new ExtractorRendererBuilder(context, USER_AGENT,
+        AudioPlayer.RendererBuilder builder = new ExtractorRendererBuilder(context, Stream.USER_AGENT,
                 Uri.parse(audioUrl));
 
-        setAudioPlayer(new AudioPlayer(builder));
+        AudioPlayer player = new AudioPlayer(builder);
         // Don't play right away - this initialization occurs while other audio is still playing.
-        getAudioPlayer().setPlayWhenReady(false);
-        getAudioPlayer().addListener(this);
+        player.setPlayWhenReady(false);
+        player.addListener(this);
 
-        mAudioUrl = audioUrl;
-        mProgramSlug = programSlug;
+        setAudioPlayer(player);
+        setAudioUrl(audioUrl);
+        setProgramSlug(programSlug);
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
     // Getters / Setters
     ////////////////////////////////////////////////////////////////////////////////////////////////
+    public void setAudioUrl(String audioUrl) {
+        mAudioUrl = audioUrl;
+    }
 
     public String getAudioUrl() {
         return mAudioUrl;
+    }
+
+    public void setProgramSlug(String programSlug) {
+        mProgramSlug = programSlug;
     }
 
     public String getProgramSlug() {
@@ -48,21 +56,11 @@ class OnDemandPlayer extends Stream implements AudioPlayer.Listener {
     ////////////////////////////////////////////////////////////////////////////////////////////////
     @Override // Stream
     public void release() {
-        if (getStreamManager() != null && getStreamManager().getCurrentOnDemandPlayer() == this) {
-            getStreamManager().setCurrentOnDemandPlayer(null);
-        }
-
         super.release();
     }
 
     @Override // Stream
     public void prepareAndStart() {
-        // We have to set this here, not on initialization, because these players get
-        // initialized while the previous episode is still playing.
-        if (getStreamManager() != null) {
-            getStreamManager().setCurrentOnDemandPlayer(this);
-        }
-
         super.prepareAndStart();
     }
 }

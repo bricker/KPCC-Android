@@ -10,14 +10,13 @@ class PrerollPlayer extends Stream implements AudioPlayer.Listener {
     ////////////////////////////////////////////////////////////////////////////////////////////////
     // Member Variables
     ////////////////////////////////////////////////////////////////////////////////////////////////
-    private LivePlayer.PrerollCompleteCallback mPrerollCompleteCallback;
+    private PrerollCompleteCallback mPrerollCompleteCallback;
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
     // Constructors
     ////////////////////////////////////////////////////////////////////////////////////////////////
-    PrerollPlayer(final Context context, final LivePlayer.PrerollCompleteCallback prerollCompleteCallback) {
+    PrerollPlayer(Context context) {
         super(context);
-        mPrerollCompleteCallback = prerollCompleteCallback;
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -30,10 +29,6 @@ class PrerollPlayer extends Stream implements AudioPlayer.Listener {
 
     @Override // Stream
     public void release() {
-        if (getStreamManager() != null && getStreamManager().getCurrentPrerollPlayer() == this) {
-            getStreamManager().setCurrentPrerollPlayer(null);
-        }
-
         super.release();
     }
 
@@ -75,25 +70,28 @@ class PrerollPlayer extends Stream implements AudioPlayer.Listener {
     ////////////////////////////////////////////////////////////////////////////////////////////////
     // We want to be able to rely on the preroll player existing, but we don't know if it will
     // actually be playing anything, so this method acts as sort of a "deferred constructor".
-    void setupPreroll(final String audioUrl) {
-        AudioPlayer.RendererBuilder builder = new ExtractorRendererBuilder(getContext(), USER_AGENT,
+    void setupPreroll(Context context, final String audioUrl) {
+        AudioPlayer.RendererBuilder builder = new ExtractorRendererBuilder(context, USER_AGENT,
                 Uri.parse(audioUrl));
 
         setAudioPlayer(new AudioPlayer(builder));
         getAudioPlayer().setPlayWhenReady(false);
 
         getAudioPlayer().addListener(this);
-
-        if (getStreamManager() != null) {
-            getStreamManager().setCurrentPrerollPlayer(this);
-        }
     }
 
-    private LivePlayer.PrerollCompleteCallback getPrerollCompleteCallback() {
+    private PrerollCompleteCallback getPrerollCompleteCallback() {
         return mPrerollCompleteCallback;
     }
 
-    void setOnPrerollCompleteCallback(final LivePlayer.PrerollCompleteCallback prerollCompleteCallback) {
+    void setOnPrerollCompleteCallback(final PrerollCompleteCallback prerollCompleteCallback) {
         mPrerollCompleteCallback = prerollCompleteCallback;
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    // Classes
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    static abstract class PrerollCompleteCallback {
+        abstract void onPrerollComplete();
     }
 }
