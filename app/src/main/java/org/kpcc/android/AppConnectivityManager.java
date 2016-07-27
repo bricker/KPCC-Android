@@ -53,7 +53,7 @@ public class AppConnectivityManager {
     ////////////////////////////////////////////////////////////////////////////////////////////////
     boolean isConnectedToNetwork() {
         NetworkInfo activeNetwork = mConnectivityManager.getActiveNetworkInfo();
-        return activeNetwork != null && activeNetwork.isConnectedOrConnecting();
+        return activeNetwork != null && activeNetwork.isConnected();
     }
 
     void addOnNetworkConnectivityListener(Context context, String tag, NetworkConnectivityListener listener, boolean doNow) {

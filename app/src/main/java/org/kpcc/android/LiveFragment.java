@@ -128,8 +128,10 @@ public class LiveFragment extends StreamBindFragment {
         // was available and simultaneously streaming dozens (or more) streams at once. I think.
         // It's hard to tell for sure but this is what I guess was happening.
         // So, we're being more proactive about managing streams on network connectivity changes.
-        AppConnectivityManager.getInstance().addOnNetworkConnectivityListener(getActivity(), LIVESTREAM_LISTENER_KEY, new LiveStreamConnectivityListener(), false);
-        getActivity().bindService(new Intent(getActivity(), StreamService.class), mStreamConnection, Context.BIND_AUTO_CREATE);
+        if (activity != null) {
+            AppConnectivityManager.getInstance().addOnNetworkConnectivityListener(getActivity(), LIVESTREAM_LISTENER_KEY, new LiveStreamConnectivityListener(), false);
+            mStreamConnection.bindStreamService(activity, StreamService.class);
+        }
 
         mAudioButtonManager.getPlayButton().setOnClickListener(new View.OnClickListener() {
             @Override
@@ -171,9 +173,12 @@ public class LiveFragment extends StreamBindFragment {
                                 (!hasPlayedLiveStream && installedRecently) ||
                                 heardPrerollRecently) {
                             // Skipping Preroll
-                            service.setCurrentStream(livePlayer);
-                            service.startForeground(Stream.NOTIFICATION_ID, mNotificationBuilder.build());
-                            stream.prepareAndStart();
+                            StreamService service = mStreamConnection.getStreamService();
+                            if (service != null) {
+                                service.setCurrentStream(livePlayer);
+                                service.startForeground(Stream.NOTIFICATION_ID, mNotificationBuilder.build());
+                                stream.prepareAndStart();
+                            }
                         } else {
                             prerollPlayer.getAudioEventListener().onPreparing();
 
