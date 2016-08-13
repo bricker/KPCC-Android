@@ -27,6 +27,7 @@ import com.android.volley.Request;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.NetworkImageView;
+import com.google.android.gms.analytics.Tracker;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -71,6 +72,7 @@ public class LiveFragment extends Fragment {
     private ScheduleOccurrence mCurrentSchedule = null;
     private final AtomicBoolean mScheduleUpdaterMutex = new AtomicBoolean(false);
     private NotificationCompat.Builder mNotificationBuilder;
+    private Tracker mTracker;
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
     // Implementations
@@ -132,6 +134,9 @@ public class LiveFragment extends Fragment {
         mAudioButtonManager.getPlayButton().setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                AnalyticsManager.getInstance().sendAction(AnalyticsManager.CATEGORY_LIVE_STREAM, AnalyticsManager.ACTION_LIVE_STREAM_PLAY,
+                        AnalyticsManager.buildLabel(AnalyticsManager.LABEL_LIVE_STREAM_PLAY, "0", "test-status", "test-program-title", "KPCC Live"));
+
                 if (!StreamManager.ConnectivityManager.getInstance().getStreamIsBound() || !AppConnectivityManager.getInstance().isConnectedToNetwork()) {
                     // The Error message should already be showing for connectivity problems.
                     // Just do nothing.

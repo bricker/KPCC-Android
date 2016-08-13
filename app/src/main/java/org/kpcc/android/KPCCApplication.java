@@ -6,6 +6,8 @@ import android.preference.PreferenceManager;
 
 import com.crashlytics.android.Crashlytics;
 import com.flurry.android.FlurryAgent;
+import com.google.android.gms.analytics.GoogleAnalytics;
+import com.google.android.gms.analytics.Tracker;
 import com.parse.Parse;
 import com.parse.ParseInstallation;
 
@@ -29,6 +31,7 @@ public class KPCCApplication extends Application {
         DataManager.setupInstance(this);
         HttpRequest.Manager.setupInstance(this);
         BaseAlarmManager.setupInstance(this);
+        AnalyticsManager.setupInstance(this);
 
         Parse.initialize(this,
                 AppConfiguration.getInstance().getSecret("parse.applicationId"),
