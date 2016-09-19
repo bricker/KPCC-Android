@@ -47,7 +47,7 @@ public class LivePlayer extends Stream {
     ////////////////////////////////////////////////////////////////////////////////////////////////
     // Static Functions
     ////////////////////////////////////////////////////////////////////////////////////////////////
-    public static String getStreamUrl() {
+    private static String getStreamUrl() {
         String baseUrl = "";
         if (isXfs()) {
             baseUrl = XFSManager.getInstance().getPfsUrl();
@@ -95,16 +95,6 @@ public class LivePlayer extends Stream {
     ////////////////////////////////////////////////////////////////////////////////////////////////
     // Implementations
     ////////////////////////////////////////////////////////////////////////////////////////////////
-    @Override // Stream
-    void release() {
-        super.release();
-    }
-
-    @Override
-    void seekTo(long pos) {
-        super.seekTo(pos);
-    }
-
     @Override
     boolean canSeekBackward() {
         return getCurrentPosition() > getLowerBoundMs() + JUMP_INTERVAL_MS;

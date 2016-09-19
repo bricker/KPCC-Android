@@ -35,7 +35,7 @@ class OnDemandPlayer extends Stream implements AudioPlayer.Listener {
     ////////////////////////////////////////////////////////////////////////////////////////////////
     // Getters / Setters
     ////////////////////////////////////////////////////////////////////////////////////////////////
-    public void setAudioUrl(String audioUrl) {
+    private void setAudioUrl(String audioUrl) {
         mAudioUrl = audioUrl;
     }
 
@@ -43,7 +43,7 @@ class OnDemandPlayer extends Stream implements AudioPlayer.Listener {
         return mAudioUrl;
     }
 
-    public void setProgramSlug(String programSlug) {
+    private void setProgramSlug(String programSlug) {
         mProgramSlug = programSlug;
     }
 

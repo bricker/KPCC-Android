@@ -22,7 +22,6 @@ import com.android.volley.Request;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.NetworkImageView;
-import com.google.android.gms.analytics.Tracker;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -64,7 +63,6 @@ public class LiveFragment extends StreamBindFragment {
     private LinearLayout mTimerRemainingWrapper;
     private ScheduleOccurrence mCurrentSchedule = null;
     private final AtomicBoolean mScheduleUpdaterMutex = new AtomicBoolean(false);
-    private Tracker mTracker;
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
     // Implementations
@@ -138,6 +136,11 @@ public class LiveFragment extends StreamBindFragment {
 
                 initAudio();
 
+                StreamService service = getStreamService();
+                if (service != null) {
+                    service.startForeground(Stream.NOTIFICATION_ID, getNotificationBuilder().build());
+                }
+
                 LivePlayer stream = getLivePlayer();
 
                 if (stream != null && stream.isPaused() && stream.getPausedAt() > (System.currentTimeMillis() - 1000 * 60 * 60 * 8)) {
@@ -169,10 +172,8 @@ public class LiveFragment extends StreamBindFragment {
 
                         // Skipping Preroll
                         setCurrentStream(livePlayer, STACK_TAG);
-                        StreamService service = getStreamService();
-                        if (service != null) {
-                            service.startForeground(Stream.NOTIFICATION_ID, getNotificationBuilder().build());
-                            LivePlayer p = getLivePlayer();
+                        LivePlayer p = getLivePlayer();
+                        if (p != null) {
                             p.prepareAndStart();
                             analyticsLogPlayEvent(p);
                         }
@@ -232,7 +233,6 @@ public class LiveFragment extends StreamBindFragment {
                     stream.pause();
                     analyticsLogPauseEvent(stream);
                 }
-                cancelNotification();
             }
         });
 
@@ -667,11 +667,6 @@ public class LiveFragment extends StreamBindFragment {
         });
     }
 
-    private void resetLiveState() {
-        mAudioButtonManager.reset();
-        mLiveSeekViewManager.reset();
-    }
-
     /**
      *
      */
@@ -947,7 +942,8 @@ public class LiveFragment extends StreamBindFragment {
             }
 
             if (mLiveSeekBarUpdater != null) mLiveSeekBarUpdater.release();
-            cancelNotification();
+
+            stopService();
         }
 
         @Override
@@ -960,7 +956,7 @@ public class LiveFragment extends StreamBindFragment {
             }
 
             if (mLiveSeekBarUpdater != null) mLiveSeekBarUpdater.release();
-            cancelNotification();
+            stopService();
         }
 
         @Override
@@ -974,7 +970,7 @@ public class LiveFragment extends StreamBindFragment {
             mAudioButtonManager.toggleStopped();
             mAudioButtonManager.showError(R.string.audio_error);
             if (mLiveSeekBarUpdater != null) mLiveSeekBarUpdater.release();
-            cancelNotification();
+            stopService();
         }
     }
 

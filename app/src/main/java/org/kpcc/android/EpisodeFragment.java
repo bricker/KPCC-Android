@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.FragmentManager;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -37,17 +38,17 @@ public class EpisodeFragment extends StreamBindFragment {
     ////////////////////////////////////////////////////////////////////////////////////////////////
     public final AtomicBoolean pagerVisible = new AtomicBoolean(false);
 
-    public Episode episode;
-    public Program program;
+    private Episode episode;
+    private Program program;
     private SeekBar mSeekBar;
     private TextView mCurrentTime;
     private AudioButtonManager mAudioButtonManager;
     // Unrecoverable error. Just show an error message if this is true.
     private boolean mDidError = false;
     private PeriodicBackgroundUpdater mPeriodicBackgroundUpdater;
-    private AtomicBoolean mDidReach75 = new AtomicBoolean(false);
-    private AtomicBoolean mDidReach50 = new AtomicBoolean(false);
-    private AtomicBoolean mDidReach25 = new AtomicBoolean(false);
+    private final AtomicBoolean mDidReach75 = new AtomicBoolean(false);
+    private final AtomicBoolean mDidReach50 = new AtomicBoolean(false);
+    private final AtomicBoolean mDidReach25 = new AtomicBoolean(false);
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
     // Constructors
@@ -237,7 +238,6 @@ public class EpisodeFragment extends StreamBindFragment {
                     stream.pause();
                     analyticsLogPauseEvent(stream);
                 }
-                cancelNotification();
             }
         });
 
@@ -305,7 +305,7 @@ public class EpisodeFragment extends StreamBindFragment {
                     mPeriodicBackgroundUpdater.release();
                 }
 
-                cancelNotification();
+                stopService();
             }
 
             @Override
@@ -315,7 +315,7 @@ public class EpisodeFragment extends StreamBindFragment {
                     mPeriodicBackgroundUpdater.release();
                 }
 
-                cancelNotification();
+                stopService();
             }
 
             @Override
@@ -378,6 +378,7 @@ public class EpisodeFragment extends StreamBindFragment {
             public void onError() {
                 mAudioButtonManager.toggleStopped();
                 mAudioButtonManager.showError(R.string.audio_error);
+                stopService();
             }
         });
 
@@ -476,7 +477,7 @@ public class EpisodeFragment extends StreamBindFragment {
         }
     }
 
-    long getCurrentPlayerPositionSeconds() throws IllegalStateException {
+    private long getCurrentPlayerPositionSeconds() throws IllegalStateException {
         OnDemandPlayer stream = getOnDemandPlayer();
         if (stream == null) return 0;
         return stream.getCurrentPosition() / 1000;
@@ -511,8 +512,8 @@ public class EpisodeFragment extends StreamBindFragment {
         int currentProgress = (int)(stream.getCurrentPosition() / stream.getDuration() / 1000) * 100;
         int duration = (int)(stream.getDuration() / 1000);
 
-        AnalyticsManager.getInstance().sendAction(AnalyticsManager.CATEGORY_ON_DEMAND, AnalyticsManager.ACTION_ON_DEMAND_PLAY,
-                String.format(Locale.ENGLISH, AnalyticsManager.LABEL_ON_DEMAND_PLAY,
+        AnalyticsManager.getInstance().sendAction(AnalyticsManager.CATEGORY_ON_DEMAND, AnalyticsManager.ACTION_ON_DEMAND_PAUSE,
+                String.format(Locale.ENGLISH, AnalyticsManager.LABEL_ON_DEMAND_PAUSE,
                         String.valueOf(currentProgress), String.valueOf(duration), getEpisodeTitle(), getProgramTitle()));
     }
 
@@ -522,8 +523,8 @@ public class EpisodeFragment extends StreamBindFragment {
     private void analyticsLogCompletedEvent(OnDemandPlayer stream) {
         int duration = (int)(stream.getDuration() / 1000);
 
-        AnalyticsManager.getInstance().sendAction(AnalyticsManager.CATEGORY_ON_DEMAND, AnalyticsManager.ACTION_ON_DEMAND_PLAY,
-                String.format(Locale.ENGLISH, AnalyticsManager.LABEL_ON_DEMAND_PLAY,
+        AnalyticsManager.getInstance().sendAction(AnalyticsManager.CATEGORY_ON_DEMAND, AnalyticsManager.ACTION_ON_DEMAND_COMPLETED,
+                String.format(Locale.ENGLISH, AnalyticsManager.LABEL_ON_DEMAND_COMPLETED,
                         "100", String.valueOf(duration), getEpisodeTitle(), getProgramTitle()));
     }
 

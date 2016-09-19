@@ -18,7 +18,6 @@ public class StreamService extends Service {
     private Stream previousStream;
     private Stream currentStream;
     private Stream nextStream;
-    private NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(this);
 
     private final LocalBinder mBinder = new LocalBinder(){
         @Override

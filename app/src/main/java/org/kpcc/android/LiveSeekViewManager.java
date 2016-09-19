@@ -123,12 +123,12 @@ class LiveSeekViewManager {
         }
     }
 
-    synchronized void enableJumpBtn(View btn) {
+    private synchronized void enableJumpBtn(View btn) {
         btn.setAlpha(1.0f);
         btn.setEnabled(true);
     }
 
-    synchronized void disableJumpBtn(ImageButton btn) {
+    private synchronized void disableJumpBtn(ImageButton btn) {
         btn.setAlpha(0.4f);
         btn.setEnabled(false);
     }

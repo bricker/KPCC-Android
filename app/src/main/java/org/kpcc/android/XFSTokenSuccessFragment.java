@@ -14,7 +14,7 @@ import android.widget.Button;
  * to handle interaction events.
  */
 public class XFSTokenSuccessFragment extends StreamBindFragment {
-    public static String STACK_TAG = "XFSTokenSuccessFragment";
+    public static final String STACK_TAG = "XFSTokenSuccessFragment";
     public static XFSTokenSuccessFragment newInstance() {
         return new XFSTokenSuccessFragment();
     }
@@ -49,15 +49,5 @@ public class XFSTokenSuccessFragment extends StreamBindFragment {
         });
 
         return view;
-    }
-
-    @Override
-    public void onAttach(Context context) {
-        super.onAttach(context);
-    }
-
-    @Override
-    public void onDetach() {
-        super.onDetach();
     }
 }

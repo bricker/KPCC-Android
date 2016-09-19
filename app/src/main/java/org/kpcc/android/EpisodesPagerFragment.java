@@ -78,7 +78,7 @@ public class EpisodesPagerFragment extends Fragment {
         pager = (ViewPager) view.findViewById(R.id.pager);
         pager.setAdapter(mAdapter);
 
-        pager.setOnPageChangeListener(new ViewPager.OnPageChangeListener() {
+        pager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
             @Override
             public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
                 if (mPrevPos == null) {

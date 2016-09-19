@@ -1,6 +1,7 @@
 package org.kpcc.android;
 
 
+import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.text.format.DateFormat;
@@ -44,8 +45,15 @@ public class WakeFragment extends Fragment {
         setButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                int hourOfDay = mTimePicker.getCurrentHour();
-                int minute = mTimePicker.getCurrentMinute();
+                int hourOfDay, minute;
+
+                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
+                    hourOfDay = mTimePicker.getCurrentHour();
+                    minute = mTimePicker.getCurrentMinute();
+                } else {
+                    hourOfDay = mTimePicker.getHour();
+                    minute = mTimePicker.getMinute();
+                }
 
                 BaseAlarmManager.WakeManager.getInstance().set(hourOfDay, minute);
                 showCurrentAlarmData();
@@ -72,8 +80,14 @@ public class WakeFragment extends Fragment {
             int minute = c.get(Calendar.MINUTE);
 
             mTimePicker.setIs24HourView(DateFormat.is24HourFormat(getActivity()));
-            mTimePicker.setCurrentHour(hour);
-            mTimePicker.setCurrentMinute(minute);
+
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
+                mTimePicker.setCurrentHour(hour);
+                mTimePicker.setCurrentMinute(minute);
+            } else {
+                mTimePicker.setHour(hour);
+                mTimePicker.setMinute(minute);
+            }
 
             showTimePickerPrompt();
         }

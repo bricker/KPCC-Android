@@ -126,8 +126,8 @@ public class AudioPlayer implements ExoPlayer.Listener, ChunkSampleSource.EventL
     }
 
     // Constants pulled into this class for convenience.
-    public static final int STATE_IDLE = ExoPlayer.STATE_IDLE;
-    public static final int STATE_PREPARING = ExoPlayer.STATE_PREPARING;
+    private static final int STATE_IDLE = ExoPlayer.STATE_IDLE;
+    private static final int STATE_PREPARING = ExoPlayer.STATE_PREPARING;
     public static final int STATE_BUFFERING = ExoPlayer.STATE_BUFFERING;
     public static final int STATE_READY = ExoPlayer.STATE_READY;
     public static final int STATE_ENDED = ExoPlayer.STATE_ENDED;

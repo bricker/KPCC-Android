@@ -32,7 +32,7 @@ abstract class Stream implements AudioManager.OnAudioFocusChangeListener, AudioP
     ////////////////////////////////////////////////////////////////////////////////////////////////
     static final String USER_AGENT = "KPCCAndroid";
     private static final float DUCK_VOLUME = 0.25f;
-    public static final int NOTIFICATION_ID = 1;
+    public static final int NOTIFICATION_ID = 474;
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
     // Member Variables
@@ -47,8 +47,6 @@ abstract class Stream implements AudioManager.OnAudioFocusChangeListener, AudioP
     private long mSessionStart = -1;
     private long mSessionStop = -1;
     private long mBackgroundStart = -1;
-
-    private NotificationCompat.Builder mNotificationBuilder;
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
     // Static Functions
@@ -66,14 +64,6 @@ abstract class Stream implements AudioManager.OnAudioFocusChangeListener, AudioP
     ////////////////////////////////////////////////////////////////////////////////////////////////
     Stream(Context context) {
         setAudioManager((AudioManager) context.getSystemService(Context.AUDIO_SERVICE));
-        PendingIntent pi = PendingIntent.getActivity(context, 0, new Intent(context, MainActivity.class), 0);
-
-        // Base notification builder - these are the same for every stream type.
-        NotificationCompat.Builder builder = new NotificationCompat.Builder(context)
-                .setContentIntent(pi)
-                .setSmallIcon(R.drawable.menu_antenna)
-                .setTicker(context.getString(R.string.now_playing))
-                .setOngoing(true);
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////

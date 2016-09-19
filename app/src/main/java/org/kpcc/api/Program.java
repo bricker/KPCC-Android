@@ -50,7 +50,7 @@ public class Program extends Entity implements Comparable<Program> {
         return title;
     }
 
-    public void setTitle(String title) {
+    private void setTitle(String title) {
         this.title = title;
     }
 
@@ -58,7 +58,7 @@ public class Program extends Entity implements Comparable<Program> {
         return slug;
     }
 
-    public void setSlug(String slug) {
+    private void setSlug(String slug) {
         this.slug = slug;
     }
 
@@ -66,7 +66,7 @@ public class Program extends Entity implements Comparable<Program> {
         return normalizedTitle;
     }
 
-    public void setNormalizedTitle(String normalizedTitle) {
+    private void setNormalizedTitle(String normalizedTitle) {
         this.normalizedTitle = normalizedTitle;
     }
 }

@@ -177,11 +177,6 @@ public class MainActivity extends AppCompatActivity {
         super.attachBaseContext(CalligraphyContextWrapper.wrap(newBase));
     }
 
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-    }
-
     NavigationDrawerFragment getNavigationDrawerFragment() {
         return mNavigationDrawerFragment;
     }

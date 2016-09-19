@@ -14,7 +14,7 @@ public class StreamBindFragment extends Fragment {
     ////////////////////////////////////////////////////////////////////////////////////////////////
     // Member Variables
     ////////////////////////////////////////////////////////////////////////////////////////////////
-    private StreamServiceConnection mStreamConnection = new StreamServiceConnection();
+    private final StreamServiceConnection mStreamConnection = new StreamServiceConnection();
     private NotificationCompat.Builder mNotificationBuilder;
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -85,12 +85,11 @@ public class StreamBindFragment extends Fragment {
     }
 
     protected StreamService getStreamService() {
-        if (mStreamConnection == null || !mStreamConnection.getStreamIsBound()) return null;
+        if (!mStreamConnection.getStreamIsBound()) return null;
         return mStreamConnection.getStreamService();
     }
 
     protected StreamService getStreamServiceUnsafe() {
-        if (mStreamConnection == null) return null;
         return mStreamConnection.getStreamService();
     }
 
@@ -117,11 +116,10 @@ public class StreamBindFragment extends Fragment {
     protected void buildNotification() {
     }
 
-    protected void cancelNotification() {
-        MainActivity activity = (MainActivity)getActivity();
-        if (activity != null) {
-            NotificationManager notificationManager = (NotificationManager) activity.getSystemService(Service.NOTIFICATION_SERVICE);
-            notificationManager.cancel(Stream.NOTIFICATION_ID);
+    protected void stopService() {
+        StreamService service = getStreamService();
+        if (service != null) {
+            service.stopForeground(true);
         }
     }
 
