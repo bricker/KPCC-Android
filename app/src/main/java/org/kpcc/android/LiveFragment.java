@@ -1,5 +1,6 @@
 package org.kpcc.android;
 
+import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
@@ -11,6 +12,7 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v4.app.NotificationCompat;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -38,7 +40,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 
-public class LiveFragment extends Fragment {
+public class LiveFragment extends StreamBindFragment {
     ////////////////////////////////////////////////////////////////////////////////////////////////
     // Static Variables
     ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -47,7 +49,6 @@ public class LiveFragment extends Fragment {
     public static final int LIVE_SEEKBAR_REFRESH_INTERVAL = 1000;
     private static final String PLAY_START_KEY = "liveStreamPlayStart";
     private static final String LIVESTREAM_LISTENER_KEY = "livestream";
-    public static final int NOTIFICATION_ID = 1;
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
     // Member Variables
@@ -55,7 +56,6 @@ public class LiveFragment extends Fragment {
     private TextView mTitle;
     private TextView mStatus;
     private NetworkImageView mAdView;
-    private LiveStreamBundle streamBundle = null;
     private AudioButtonManager mAudioButtonManager;
     private LiveSeekViewManager mLiveSeekViewManager;
     private ProgressBar mPrerollProgressBar;
@@ -71,7 +71,6 @@ public class LiveFragment extends Fragment {
     private LinearLayout mTimerRemainingWrapper;
     private ScheduleOccurrence mCurrentSchedule = null;
     private final AtomicBoolean mScheduleUpdaterMutex = new AtomicBoolean(false);
-    private NotificationCompat.Builder mNotificationBuilder;
     private Tracker mTracker;
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -129,15 +128,15 @@ public class LiveFragment extends Fragment {
         // was available and simultaneously streaming dozens (or more) streams at once. I think.
         // It's hard to tell for sure but this is what I guess was happening.
         // So, we're being more proactive about managing streams on network connectivity changes.
-        AppConnectivityManager.getInstance().addOnNetworkConnectivityListener(LIVESTREAM_LISTENER_KEY, new LiveStreamConnectivityListener(), false);
+        if (activity != null) {
+            bindStreamService();
+            AppConnectivityManager.getInstance().addOnNetworkConnectivityListener(getActivity(), LIVESTREAM_LISTENER_KEY, new LiveStreamConnectivityListener(), false);
+        }
 
         mAudioButtonManager.getPlayButton().setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                AnalyticsManager.getInstance().sendAction(AnalyticsManager.CATEGORY_LIVE_STREAM, AnalyticsManager.ACTION_LIVE_STREAM_PLAY,
-                        AnalyticsManager.buildLabel(AnalyticsManager.LABEL_LIVE_STREAM_PLAY, "0", "test-status", "test-program-title", "KPCC Live"));
-
-                if (!StreamManager.ConnectivityManager.getInstance().getStreamIsBound() || !AppConnectivityManager.getInstance().isConnectedToNetwork()) {
+                if (!AppConnectivityManager.getInstance().isConnectedToNetwork()) {
                     // The Error message should already be showing for connectivity problems.
                     // Just do nothing.
                     return;
@@ -145,22 +144,86 @@ public class LiveFragment extends Fragment {
 
                 initAudio();
 
-                if (streamBundle == null) {
-                    return; // streamBundle initialization failed for some reason.
-                }
+                LivePlayer stream = getLivePlayer();
 
-                PrerollPlayer prerollPlayer = getPrerollPlayer();
-                LivePlayer livePlayer = getLivePlayer();
+                AnalyticsManager.getInstance().sendAction(AnalyticsManager.CATEGORY_LIVE_STREAM, AnalyticsManager.ACTION_LIVE_STREAM_PLAY,
+                        AnalyticsManager.buildLabel(AnalyticsManager.LABEL_LIVE_STREAM_PLAY, "0", "test-status", "test-program-title", "KPCC Live"));
 
-                if (prerollPlayer != null && prerollPlayer.isPaused()) {
-                    // Preroll was Paused; start it again.
-                    streamBundle.getPrerollPlayer().play();
-                } else if (livePlayer != null && livePlayer.isPaused() && livePlayer.getPausedAt() > (System.currentTimeMillis() - 1000 * 60 * 60 * 8)) {
-                    // Live stream was paused; start it again.
-                    streamBundle.getLivePlayer().play();
+                if (stream != null && stream.isPaused() && stream.getPausedAt() > (System.currentTimeMillis() - 1000 * 60 * 60 * 8)) {
+                    // Stream was paused; start it again.
+                    stream.play();
                 } else {
-                    // Preroll will be handled normally
-                    streamBundle.playWithPrerollAttempt();
+                    // Initialize the lives stream/preroll bundle.
+                    final LivePlayer livePlayer = new LivePlayer(getActivity());
+                    final PrerollPlayer prerollPlayer = new PrerollPlayer(getActivity());
+
+                    livePlayer.setAudioEventListener(new LivePlayerAudioEventListener());
+                    prerollPlayer.setAudioEventListener(new PrerollPlayerAudioEventListener());
+
+                    // If they just installed the app (less than 10 minutes ago), and have never played the live
+                    // stream, don't play preroll.
+                    // Otherwise do the normal preroll flow.
+                    final long now = System.currentTimeMillis();
+
+                    final PrerollManager prerollManager = new PrerollManager();
+                    boolean hasPlayedLiveStream = DataManager.getInstance().getHasPlayedLiveStream();
+                    boolean installedRecently = KPCCApplication.INSTALLATION_TIME > (now - PrerollManager.INSTALL_GRACE);
+                    boolean heardPrerollRecently = prerollManager.getLastPlay() > (now - PrerollManager.PREROLL_THRESHOLD);
+
+                    buildNotification();
+
+                    if (!AppConfiguration.getInstance().getConfigBool("preroll.enabled") ||
+                            (!hasPlayedLiveStream && installedRecently) ||
+                            heardPrerollRecently) {
+
+                        // Skipping Preroll
+                        setCurrentStream(livePlayer, STACK_TAG);
+                        StreamService service = getStreamService();
+                        if (service != null) {
+                            service.startForeground(Stream.NOTIFICATION_ID, getNotificationBuilder().build());
+                            getLivePlayer().prepareAndStart();
+                        }
+                    } else {
+                        prerollPlayer.getAudioEventListener().onPreparing();
+
+                        final MainActivity activity = (MainActivity) getActivity();
+                        if (activity != null) {
+                            // Normal preroll flow (preroll still may not play, based on preroll response)
+                            prerollManager.getPrerollData(activity, new PrerollManager.PrerollCallbackListener() {
+                                @Override
+                                public void onPrerollResponse(final PrerollManager.PrerollData prerollData) {
+                                    if (prerollData == null || prerollData.getAudioUrl() == null) {
+                                        setCurrentStream(livePlayer, STACK_TAG);
+                                        livePlayer.prepareAndStart();
+                                    } else {
+                                        setCurrentStream(prerollPlayer, STACK_TAG);
+                                        StreamService service = getStreamService();
+                                        if (service != null) {
+                                            MainActivity activity = (MainActivity) getActivity();
+                                            prerollPlayer.setupPreroll(activity, prerollData.getAudioUrl());
+                                            prerollPlayer.getAudioEventListener().onPrerollData(prerollData);
+                                            prerollPlayer.prepareAndStart();
+                                            prerollManager.setLastPlayToNow();
+
+                                            livePlayer.prepare();
+                                            prerollPlayer.setOnPrerollCompleteCallback(new PrerollPlayer.PrerollCompleteCallback() {
+                                                @Override
+                                                void onPrerollComplete() {
+                                                    setCurrentStream(livePlayer, STACK_TAG);
+                                                    livePlayer.play();
+                                                }
+                                            });
+                                        }
+                                    }
+                                }
+                            });
+                        }
+                    }
+
+                    if (!hasPlayedLiveStream) {
+                        DataManager.getInstance().setHasPlayedLiveStream(true);
+                    }
+
                     AppConfiguration.getInstance().setDynamicProperty(PLAY_START_KEY, String.valueOf(System.currentTimeMillis()));
                 }
             }
@@ -169,23 +232,9 @@ public class LiveFragment extends Fragment {
         mAudioButtonManager.getPauseButton().setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (!StreamManager.ConnectivityManager.getInstance().getStreamIsBound()) {
-                    return;
-                }
-
-                StreamManager sm = StreamManager.ConnectivityManager.getInstance().getStreamManager();
-                if (sm == null) {
-                    return;
-                }
-
-                PrerollPlayer prerollPlayer = sm.getCurrentPrerollPlayer();
-                LivePlayer livePlayer = sm.getCurrentLivePlayer();
-
-                if (prerollPlayer != null && prerollPlayer.isPlaying()) {
-                    prerollPlayer.pause();
-                } else if (livePlayer != null && livePlayer.isPlaying()) {
-                    livePlayer.pause();
-                }
+                Stream stream = getCurrentStream();
+                if (stream != null) { stream.pause(); }
+                cancelNotification();
             }
         });
 
@@ -206,7 +255,7 @@ public class LiveFragment extends Fragment {
         mLiveSeekViewManager.disableSeekBar();
         mLiveSeekViewManager.getSeekBar().setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
-            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+            public void onProgressChanged(SeekBar seekBar, final int progress, boolean fromUser) {
                 // The jump buttons COULD use this function, but since we know exactly how much they are
                 // jumping it's more comfortable to just update the seekbar and livestream manually in
                 // those cases.
@@ -214,18 +263,18 @@ public class LiveFragment extends Fragment {
                     return;
                 }
 
-                LivePlayer livePlayer = getLivePlayer();
-                if (livePlayer == null) return;
+                LivePlayer stream = getLivePlayer();
+                if (stream == null) return;
 
                 if (progress >= mLiveSeekViewManager.getLiveHeadProgress()) {
                     // Prevent from seeking past live head.
                     mLiveSeekViewManager.setSeekProgressToLiveHead();
-                    livePlayer.seekToLive();
+                    stream.seekToLive();
                     return;
                 }
 
-                long programStartPositionInHLSWindow = mLiveSeekViewManager.getProgramStartWindowPositionMs(livePlayer.getUpperBoundMs());
-                livePlayer.seekTo(programStartPositionInHLSWindow + progress);
+                long programStartPositionInHLSWindow = mLiveSeekViewManager.getProgramStartWindowPositionMs(stream.getUpperBoundMs());
+                stream.seekTo(programStartPositionInHLSWindow + progress);
             }
 
             @Override
@@ -240,11 +289,11 @@ public class LiveFragment extends Fragment {
         mLiveSeekViewManager.getRewindBtn().setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                LivePlayer livePlayer = getLivePlayer();
-                if (livePlayer == null) return;
+                LivePlayer stream = getLivePlayer();
+                if (stream == null) return;
 
-                livePlayer.skipBackward();
-                mLiveSeekViewManager.skipBackward(livePlayer.canSeekBackward());
+                stream.skipBackward();
+                mLiveSeekViewManager.skipBackward(stream.canSeekBackward());
 
                 // This prevents a schedule update unless we pass the seek boundaries for this program.
                 if (mLiveSeekViewManager.hasExceededLowerSeekBound()) {
@@ -256,11 +305,11 @@ public class LiveFragment extends Fragment {
         mLiveSeekViewManager.getForwardBtn().setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                LivePlayer livePlayer = getLivePlayer();
-                if (livePlayer == null) return;
+                LivePlayer stream = getLivePlayer();
+                if (stream == null) return;
 
-                livePlayer.skipForward();
-                mLiveSeekViewManager.skipForward(livePlayer.canSeekForward());
+                stream.skipForward();
+                mLiveSeekViewManager.skipForward(stream.canSeekForward());
 
                 // This prevents a schedule update unless we pass the seek boundaries for this program.
                 if (mLiveSeekViewManager.hasExceededUpperSeekBound()) {
@@ -275,24 +324,24 @@ public class LiveFragment extends Fragment {
                 playRewindBeat(new Stream.AudioEventListener() {
                     @Override
                     public void onPlay() {
-                        LivePlayer livePlayer = getLivePlayer();
-                        if (livePlayer == null) return;
+                        LivePlayer stream = getLivePlayer();
+                        if (stream == null) return;
 
                         // These must happen in this order so the states don't override each other.
                         mLiveStatusUpdater.pause();
-                        livePlayer.pause();
+                        stream.pause();
                         mAudioButtonManager.toggleLoading();
                         mAudioButtonManager.lock();
-                        livePlayer.seekToLive();
+                        stream.seekToLive();
                     }
 
                     @Override
                     public void onCompletion() {
-                        LivePlayer livePlayer = getLivePlayer();
-                        if (livePlayer == null) return;
+                        LivePlayer stream = getLivePlayer();
+                        if (stream == null) return;
 
                         mAudioButtonManager.unlock();
-                        livePlayer.play();
+                        stream.play();
                         mLiveStatusUpdater.resume();
                     }
 
@@ -311,25 +360,26 @@ public class LiveFragment extends Fragment {
                 playRewindBeat(new Stream.AudioEventListener() {
                     @Override
                     public void onPlay() {
-                        LivePlayer livePlayer = getLivePlayer();
-                        if (livePlayer == null) return;
+                        LivePlayer stream = getLivePlayer();
+                        if (stream == null) return;
+
                         // These must happen in this order so the states don't override each other.
                         mLiveStatusUpdater.pause();
-                        livePlayer.pause();
+                        stream.pause();
                         mAudioButtonManager.toggleLoading();
                         mAudioButtonManager.lock();
 
-                        long programStartPositionInHLSWindow = mLiveSeekViewManager.getProgramStartWindowPositionMs(livePlayer.getUpperBoundMs());
-                        livePlayer.seekTo(programStartPositionInHLSWindow);
+                        long programStartPositionInHLSWindow = mLiveSeekViewManager.getProgramStartWindowPositionMs(stream.getUpperBoundMs());
+                        stream.seekTo(programStartPositionInHLSWindow);
                     }
 
                     @Override
                     public void onCompletion() {
-                        LivePlayer livePlayer = getLivePlayer();
-                        if (livePlayer == null) return;
+                        LivePlayer stream = getLivePlayer();
+                        if (stream == null) return;
 
                         mAudioButtonManager.unlock();
-                        livePlayer.play();
+                        stream.play();
                         mLiveStatusUpdater.resume();
                     }
 
@@ -368,7 +418,7 @@ public class LiveFragment extends Fragment {
         // Setup connectivity handlers
         // This will init state immediately if stream is already bound.
         // We're putting it here (in onResume) so it can change for network updates.
-        StreamManager.ConnectivityManager.getInstance().addOnStreamBindListener(LiveFragment.STACK_TAG, new StreamManager.ConnectivityManager.OnStreamBindListener() {
+        getStreamConnection().addOnStreamBindListener(LiveFragment.STACK_TAG, new StreamServiceConnection.OnStreamBindListener() {
             @Override
             public void onBind() {
                 // When returning to this fragment, this will probably be run right away and setup the view state.
@@ -389,9 +439,9 @@ public class LiveFragment extends Fragment {
         // The callbacks below will get run right away whatever the state is. We want to start it
         // no matter what to setup the default state, and then let the callbacks handle the
         // connected state. Calling start() again should be safe and not start a second thread.
-        AppConnectivityManager.getInstance().addOnNetworkConnectivityListener(LiveFragment.STACK_TAG, new AppConnectivityManager.NetworkConnectivityListener() {
+        AppConnectivityManager.getInstance().addOnNetworkConnectivityListener(getActivity(), LiveFragment.STACK_TAG, new AppConnectivityManager.NetworkConnectivityListener() {
             @Override
-            public void onConnect() {
+            public void onConnect(Context context) {
                 // We want this here so the schedule will get updated immediately when connectivity
                 // is back, so we'll just restart it.
                 if (mScheduleUpdater != null) mScheduleUpdater.start();
@@ -399,7 +449,7 @@ public class LiveFragment extends Fragment {
             }
 
             @Override
-            public void onDisconnect() {
+            public void onDisconnect(Context context) {
                 if (mScheduleUpdater != null) mScheduleUpdater.release();
                 setDefaultScheduleValues();
                 mAudioButtonManager.showError(R.string.network_error);
@@ -484,12 +534,13 @@ public class LiveFragment extends Fragment {
         if (mScheduleUpdaterMutex.get()) return;
         mScheduleUpdaterMutex.set(true);
 
+        LivePlayer stream = getLivePlayer();
         long uts;
-        LivePlayer livePlayer = getLivePlayer();
-        if (livePlayer == null) {
+
+        if (stream == null) {
             uts = System.currentTimeMillis();
         } else {
-            uts = livePlayer.getPlaybackTimestamp();
+            uts = stream.getPlaybackTimestamp();
         }
 
         mRequest = ScheduleOccurrence.Client.getAtTimestamp(uts / 1000, new ScheduleResponseHandler(), new ScheduleErrorHandler());
@@ -502,48 +553,25 @@ public class LiveFragment extends Fragment {
      * 2. The fragment is re-initialized when the player was already playing (eg. a user comes back to the app after previously leaving).
      */
     private synchronized void initAudio() {
-        if (!StreamManager.ConnectivityManager.getInstance().getStreamIsBound()) {
-            resetLiveState();
-            return;
-        }
-
-        StreamManager streamManager = StreamManager.ConnectivityManager.getInstance().getStreamManager();
-
-        if (streamManager == null) return; // We have to wait until the stream is available
-
-        LivePlayer currentPlayer = streamManager.getCurrentLivePlayer();
-        PrerollPlayer currentPreroll = streamManager.getCurrentPrerollPlayer();
-
-        Context context = getActivity();
-
-        if (streamBundle == null) {
-            if (currentPlayer != null && !currentPlayer.isIdle()) {
-                if (currentPreroll != null) {
-                    streamBundle = new LiveStreamBundle(context, currentPlayer, currentPreroll);
-                } else {
-                    streamBundle = new LiveStreamBundle(context, currentPlayer);
+        getStreamConnection().addOnStreamBindListener(LiveFragment.STACK_TAG, new StreamServiceConnection.OnStreamBindListener() {
+            @Override
+            public void onBind() {
+                LivePlayer stream = getLivePlayer();
+                if (stream != null) {
+                    LivePlayerAudioEventListener ls = new LivePlayerAudioEventListener();
+                    stream.setAudioEventListener(ls);
+                    if (stream.isPlaying()) ls.onPlay();
                 }
-            } else {
-                // Nothing is playing, build a brand new bundle.
-                streamBundle = new LiveStreamBundle(context);
-            }
-        }
 
-        LivePlayer livePlayer = getLivePlayer();
-        if (livePlayer != null) {
-            LivePlayerAudioEventListener ls = new LivePlayerAudioEventListener();
-            livePlayer.setAudioEventListener(ls);
-            if (livePlayer.isPlaying()) ls.onPlay();
-        }
+                PrerollPlayer preroll = getPrerollPlayer();
+                if (preroll != null) {
+                    PrerollPlayerAudioEventListener ls = new PrerollPlayerAudioEventListener();
+                    preroll.setAudioEventListener(ls);
+                    if (preroll.isPlaying()) ls.onPlay();
+                }
 
-        PrerollPlayer prerollPlayer = getPrerollPlayer();
-        if (prerollPlayer != null) {
-            PrerollPlayerAudioEventListener ls = new PrerollPlayerAudioEventListener();
-            prerollPlayer.setAudioEventListener(ls);
-            if (prerollPlayer.isPlaying()) {
-                ls.onPlay();
             }
-        }
+        });
     }
 
     private void resetLiveState() {
@@ -558,24 +586,6 @@ public class LiveFragment extends Fragment {
         mStatus.setText(R.string.live);
         NetworkImageManager.getInstance().setDefaultBitmap(mBackground);
         mTitle.setText(null);
-    }
-
-    /**
-     *
-     * @return
-     */
-    private LivePlayer getLivePlayer() {
-        if (streamBundle == null) return null;
-        return streamBundle.getLivePlayer();
-    }
-
-    /**
-     *
-     * @return
-     */
-    private PrerollPlayer getPrerollPlayer() {
-        if (streamBundle == null) return null;
-        return streamBundle.getPrerollPlayer();
     }
 
     /**
@@ -600,25 +610,16 @@ public class LiveFragment extends Fragment {
         return activity.getNavigationDrawerFragment();
     }
 
-    private void buildNotification() {
-        MainActivity activity = (MainActivity)getActivity();
-        if (activity != null) {
-            PendingIntent pi = PendingIntent.getActivity(activity.getApplicationContext(), 0,
-                    new Intent(activity.getApplicationContext(), MainActivity.class),
-                    PendingIntent.FLAG_UPDATE_CURRENT);
+    @Override // StreamBindFragment
+    protected void buildNotification() {
+        super.buildNotification();
 
-            mNotificationBuilder = new NotificationCompat.Builder(activity.getApplicationContext())
-                    .setSmallIcon(R.drawable.menu_antenna)
-                    .setContentTitle(getString(R.string.kpcc_live))
-                    .setContentIntent(pi)
-                    .setOngoing(true);
-
-            updateNotificationWithCurrentScheduleData();
-        }
+        initNotificationBuilder(R.drawable.menu_antenna, getString(R.string.kpcc_live));
+        updateNotificationWithCurrentScheduleData();
     }
 
     private void updateNotificationWithCurrentScheduleData() {
-        if (mNotificationBuilder == null) return;
+        if (getNotificationBuilder() == null) buildNotification();
 
         String programName;
         ScheduleOccurrence schedule = getCurrentSchedule();
@@ -629,26 +630,9 @@ public class LiveFragment extends Fragment {
             programName = schedule.getTitle();
         }
 
-        mNotificationBuilder.
+        getNotificationBuilder().
                 setTicker(String.format(Locale.ENGLISH, getString(R.string.now_playing_program), programName)).
                 setContentText(programName);
-    }
-
-    private void cancelNotification() {
-        MainActivity activity = (MainActivity)getActivity();
-        if (activity != null) {
-            NotificationManager notificationManager = (NotificationManager) activity.getSystemService(Service.NOTIFICATION_SERVICE);
-            notificationManager.cancel(NOTIFICATION_ID);
-        }
-    }
-
-    private void sendNotification() {
-        MainActivity activity = (MainActivity)getActivity();
-        if (activity != null) {
-            mNotificationBuilder.setWhen(System.currentTimeMillis());
-            NotificationManager notificationManager = (NotificationManager) activity.getSystemService(Service.NOTIFICATION_SERVICE);
-            notificationManager.notify(NOTIFICATION_ID, mNotificationBuilder.build());
-        }
     }
 
     /**
@@ -676,13 +660,10 @@ public class LiveFragment extends Fragment {
         public void run() {
             // Do this stuff every second. This should never be stopped by any action except
             // leaving the fragment.
-
-            LivePlayer livePlayer = getLivePlayer();
-            if (livePlayer == null) return;
-
+            LivePlayer stream = getLivePlayer();
             mLiveSeekViewManager.setSecondaryProgressFromSchedule();
 
-            long relativeMsBehindLive = livePlayer.relativeMsBehindLive();
+            long relativeMsBehindLive = stream.relativeMsBehindLive();
             long minBehindLive = TimeUnit.MILLISECONDS.toMinutes(relativeMsBehindLive);
 
             if (minBehindLive >= 2) {
@@ -721,8 +702,8 @@ public class LiveFragment extends Fragment {
                 mLiveSeekViewManager.showProgramStartBtn();
             }
 
-            mLiveSeekViewManager.toggleBackwardBtn(livePlayer.canSeekBackward());
-            mLiveSeekViewManager.toggleForwardBtn(livePlayer.canSeekForward());
+            mLiveSeekViewManager.toggleBackwardBtn(stream.canSeekBackward());
+            mLiveSeekViewManager.toggleForwardBtn(stream.canSeekForward());
         }
     }
 
@@ -787,8 +768,10 @@ public class LiveFragment extends Fragment {
                 if (didChangeProgram) {
                     NetworkImageManager.getInstance().setBitmap(getActivity(), mBackground, schedule.getProgramSlug());
 
-                    if (mNotificationBuilder != null) {
-                        updateNotificationWithCurrentScheduleData();
+                    updateNotificationWithCurrentScheduleData();
+
+                    LivePlayer stream = getLivePlayer();
+                    if (stream != null && stream.isPlaying()) {
                         sendNotification();
                     }
                 }
@@ -825,8 +808,8 @@ public class LiveFragment extends Fragment {
         @Override
         public void onPreparing() {
             // This may happen while preroll is playing so we shouldn't update audio button state in that case.
-            PrerollPlayer prerollPlayer = getPrerollPlayer();
-            if (prerollPlayer == null || prerollPlayer.isIdle()) {
+            PrerollPlayer stream = getPrerollPlayer();
+            if (stream == null || stream.isIdle()) {
                 mAudioButtonManager.toggleLoading();
             }
         }
@@ -837,10 +820,12 @@ public class LiveFragment extends Fragment {
             mLiveSeekViewManager.showSeekButtons();
             mLiveSeekViewManager.enableSeekBar();
 
-            LivePlayer livePlayer = getLivePlayer();
-            if (livePlayer != null && mLiveSeekBarUpdater == null) {
+            LivePlayer stream = getLivePlayer();
+            if (stream == null ) return;
+
+            if (mLiveSeekBarUpdater == null) {
                 mLiveSeekBarUpdater = new PeriodicBackgroundUpdater(
-                        new PeriodicBackgroundUpdater.ProgressBarRunner(livePlayer), LIVE_SEEKBAR_REFRESH_INTERVAL);
+                        new PeriodicBackgroundUpdater.ProgressBarRunner(stream), LIVE_SEEKBAR_REFRESH_INTERVAL);
             }
 
             mLiveSeekBarUpdater.start();
@@ -851,20 +836,22 @@ public class LiveFragment extends Fragment {
         }
 
         @Override
-        public void onProgress(int currentPosition) {
+        public void onProgress(final int currentPosition) {
             mLiveSeekViewManager.incrementProgress();
-            LivePlayer livePlayer = getLivePlayer();
-            if (livePlayer == null) return;
 
-            mLiveSeekViewManager.setSeekProgressFromPlayerPosition(livePlayer.getUpperBoundMs(), currentPosition);
+            LivePlayer stream = getLivePlayer();
+            if (stream == null) return;
+            mLiveSeekViewManager.setSeekProgressFromPlayerPosition(stream.getUpperBoundMs(), currentPosition);
         }
 
         @Override
         public void onPause() {
             mAudioButtonManager.togglePaused();
 
-            LivePlayer livePlayer = getLivePlayer();
-            if (livePlayer != null) livePlayer.setPausedAt(System.currentTimeMillis());
+            LivePlayer stream = getLivePlayer();
+            if (stream != null) {
+                stream.setPausedAt(System.currentTimeMillis());
+            }
 
             if (mLiveSeekBarUpdater != null) mLiveSeekBarUpdater.release();
             cancelNotification();
@@ -874,8 +861,10 @@ public class LiveFragment extends Fragment {
         public void onStop() {
             mAudioButtonManager.toggleStopped();
 
-            LivePlayer livePlayer = getLivePlayer();
-            if (livePlayer != null) livePlayer.setPausedAt(System.currentTimeMillis());
+            LivePlayer stream = getLivePlayer();
+            if (stream != null) {
+                stream.setPausedAt(System.currentTimeMillis());
+            }
 
             if (mLiveSeekBarUpdater != null) mLiveSeekBarUpdater.release();
             cancelNotification();
@@ -946,9 +935,11 @@ public class LiveFragment extends Fragment {
         public void onPlay() {
             mAudioButtonManager.togglePlayingForPause();
 
-            PrerollPlayer prerollPlayer = getPrerollPlayer();
-            if (prerollPlayer != null && mPrerollSeekBarUpdater == null) {
-                mPrerollSeekBarUpdater = new PeriodicBackgroundUpdater(new PeriodicBackgroundUpdater.ProgressBarRunner(prerollPlayer), 100);
+            PrerollPlayer stream = getPrerollPlayer();
+            if (stream == null) return;
+
+            if (mPrerollSeekBarUpdater == null) {
+                mPrerollSeekBarUpdater = new PeriodicBackgroundUpdater(new PeriodicBackgroundUpdater.ProgressBarRunner(stream), 100);
             }
 
             mPrerollSeekBarUpdater.start();

@@ -2,7 +2,6 @@ package org.kpcc.android;
 
 import android.content.Context;
 import android.os.Bundle;
-import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.view.LayoutInflater;
@@ -31,7 +30,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 
-public class EpisodesFragment extends Fragment
+public class EpisodesFragment extends StreamBindFragment
         implements AdapterView.OnItemClickListener {
 
     public final static String STACK_TAG = "EpisodesFragment";
@@ -79,17 +78,17 @@ public class EpisodesFragment extends Fragment
                              Bundle savedInstanceState) {
 
         mView = inflater.inflate(R.layout.fragment_episodes, container, false);
-        getActivity().setTitle(mProgram.title);
+        getActivity().setTitle(mProgram.getTitle());
         ImageView background = (ImageView) mView.findViewById(R.id.background);
-        NetworkImageManager.getInstance().setBitmap(getActivity(), background, mProgram.slug);
+        NetworkImageManager.getInstance().setBitmap(getActivity(), background, mProgram.getSlug());
         mListView = (AbsListView) mView.findViewById(android.R.id.list);
         mProgressBar = (LinearLayout) mView.findViewById(R.id.progress_layout);
         mErrorView = (LinearLayout)mView.findViewById(R.id.generic_load_error);
         mErrorText = (TextView)mErrorView.findViewById(R.id.error_text);
 
-        AppConnectivityManager.getInstance().addOnNetworkConnectivityListener(EpisodesFragment.STACK_TAG, new AppConnectivityManager.NetworkConnectivityListener() {
+        AppConnectivityManager.getInstance().addOnNetworkConnectivityListener(getActivity(), EpisodesFragment.STACK_TAG, new AppConnectivityManager.NetworkConnectivityListener() {
             @Override
-            public void onConnect() {
+            public void onConnect(Context context) {
                 if (mProgressBar != null) {
                     mErrorView.setVisibility(View.GONE);
                     mProgressBar.setVisibility(View.VISIBLE);
@@ -99,7 +98,7 @@ public class EpisodesFragment extends Fragment
             }
 
             @Override
-            public void onDisconnect() {
+            public void onDisconnect(Context context) {
                 showError(R.string.network_error);
             }
         }, true);
@@ -129,7 +128,7 @@ public class EpisodesFragment extends Fragment
 
         HashMap<String, String> params = new HashMap<>();
 
-        params.put(PARAM_PROGRAM, mProgram.slug);
+        params.put(PARAM_PROGRAM, mProgram.getSlug());
         params.put(PARAM_LIMIT, EPISODE_LIMIT);
 
         mRequest = Episode.Client.getCollection(params, new Response.Listener<JSONObject>() {
@@ -184,7 +183,7 @@ public class EpisodesFragment extends Fragment
         fragmentManager.beginTransaction()
                 .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN)
                 .replace(R.id.container,
-                        EpisodesPagerFragment.newInstance(mEpisodes, position, mProgram.slug),
+                        EpisodesPagerFragment.newInstance(mEpisodes, position, mProgram.getSlug()),
                         EpisodesPagerFragment.STACK_TAG)
                 .addToBackStack(EpisodesPagerFragment.STACK_TAG)
                 .commit();
@@ -213,17 +212,17 @@ public class EpisodesFragment extends Fragment
                     convertView = inflater.inflate(R.layout.list_item_episode, null);
                 }
 
-                Episode episode = mEpisodes.get(position);
+                final Episode episode = mEpisodes.get(position);
                 TextView title = (TextView) convertView.findViewById(R.id.episode_title);
                 TextView date = (TextView) convertView.findViewById(R.id.air_date);
-                ImageView audio_icon = (ImageView) convertView.findViewById(R.id.audio_icon);
+                final ImageView audio_icon = (ImageView) convertView.findViewById(R.id.audio_icon);
 
                 title.setText(episode.getTitle());
                 date.setText(episode.getFormattedAirDate());
 
-                if (StreamManager.ConnectivityManager.getInstance().getStreamIsBound()) {
-                    OnDemandPlayer currentPlayer = StreamManager.ConnectivityManager.getInstance().getStreamManager().getCurrentOnDemandPlayer();
-                    if (currentPlayer != null && currentPlayer.getAudioUrl().equals(episode.getAudio().getUrl())) {
+                OnDemandPlayer stream = getOnDemandPlayer();
+                if (stream != null) {
+                    if (stream.getAudioUrl().equals(episode.getAudio().getUrl())) {
                         audio_icon.setVisibility(View.VISIBLE);
                     } else {
                         audio_icon.setVisibility(View.GONE);

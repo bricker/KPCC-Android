@@ -13,7 +13,7 @@ import android.widget.Button;
  * A simple {@link Fragment} subclass.
  * to handle interaction events.
  */
-public class XFSTokenSuccessFragment extends Fragment {
+public class XFSTokenSuccessFragment extends StreamBindFragment {
     public static String STACK_TAG = "XFSTokenSuccessFragment";
     public static XFSTokenSuccessFragment newInstance() {
         return new XFSTokenSuccessFragment();
@@ -39,9 +39,9 @@ public class XFSTokenSuccessFragment extends Fragment {
                 DataManager.getInstance().setPlayNow(true);
 
                 // Release the currently playing stream, so we can restart it with the new URL.
-                LivePlayer livePlayer = StreamManager.ConnectivityManager.getInstance().getStreamManager().getCurrentLivePlayer();
-                if (livePlayer != null) {
-                    StreamManager.ConnectivityManager.getInstance().getStreamManager().getCurrentLivePlayer().release();
+                LivePlayer stream = getLivePlayer();
+                if (stream != null) {
+                    stream.release();
                 }
 
                 startActivity(activityIntent);

@@ -21,7 +21,6 @@ class PrerollManager {
     ////////////////////////////////////////////////////////////////////////////////////////////////
     // Static Variables
     ////////////////////////////////////////////////////////////////////////////////////////////////
-    private final static PrerollManager instance = new PrerollManager();
     private final static String PREROLL_URL = AppConfiguration.getInstance().getConfig("preroll.url");
     final static private String LAST_PREROLL_PLAY_KEY = "lastPrerollPlay";
     final static long PREROLL_THRESHOLD = 1000 * 60 * 60 * 4; // 4 hours
@@ -35,10 +34,6 @@ class PrerollManager {
     ////////////////////////////////////////////////////////////////////////////////////////////////
     // Static Functions
     ////////////////////////////////////////////////////////////////////////////////////////////////
-    static PrerollManager getInstance() {
-        return instance;
-    }
-
     synchronized long getLastPlay() {
         String val = AppConfiguration.getInstance().getDynamicProperty(LAST_PREROLL_PLAY_KEY);
         long num = 0;

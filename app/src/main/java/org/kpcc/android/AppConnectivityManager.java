@@ -53,10 +53,10 @@ public class AppConnectivityManager {
     ////////////////////////////////////////////////////////////////////////////////////////////////
     boolean isConnectedToNetwork() {
         NetworkInfo activeNetwork = mConnectivityManager.getActiveNetworkInfo();
-        return activeNetwork != null && activeNetwork.isConnectedOrConnecting();
+        return activeNetwork != null && activeNetwork.isConnected();
     }
 
-    void addOnNetworkConnectivityListener(String tag, NetworkConnectivityListener listener, boolean doNow) {
+    void addOnNetworkConnectivityListener(Context context, String tag, NetworkConnectivityListener listener, boolean doNow) {
         mNetworkConnectivityListeners.put(tag, listener);
 
         if (!doNow) {
@@ -64,9 +64,9 @@ public class AppConnectivityManager {
         }
 
         if (AppConnectivityManager.getInstance().isConnectedToNetwork()) {
-            listener.onConnect();
+            listener.onConnect(context);
         } else {
-            listener.onDisconnect();
+            listener.onDisconnect(context);
         }
     }
 
@@ -90,16 +90,16 @@ public class AppConnectivityManager {
                 if (isFailover) {
                     // TODO Do something?
                 } else if (noConnection || !AppConnectivityManager.getInstance().isConnectedToNetwork()) {
-                    listener.onDisconnect();
+                    listener.onDisconnect(context);
                 } else {
-                    listener.onConnect();
+                    listener.onConnect(context);
                 }
             }
         }
     }
 
     interface NetworkConnectivityListener {
-        void onConnect();
-        void onDisconnect();
+        void onConnect(Context context);
+        void onDisconnect(Context context);
     }
 }

@@ -1,8 +1,8 @@
 package org.kpcc.android;
 
 import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
-import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.view.LayoutInflater;
@@ -20,7 +20,7 @@ import com.android.volley.Request;
 
 import org.kpcc.api.Program;
 
-public class ProgramsFragment extends Fragment
+public class ProgramsFragment extends StreamBindFragment
         implements AdapterView.OnItemClickListener, ProgramsManager.OnProgramsResponseListener {
     public final static String STACK_TAG = "ProgramsFragment";
 
@@ -39,9 +39,9 @@ public class ProgramsFragment extends Fragment
         super.onCreate(savedInstanceState);
         setRetainInstance(true);
 
-        AppConnectivityManager.getInstance().addOnNetworkConnectivityListener(ProgramsFragment.STACK_TAG, new AppConnectivityManager.NetworkConnectivityListener() {
+        AppConnectivityManager.getInstance().addOnNetworkConnectivityListener(getActivity(), ProgramsFragment.STACK_TAG, new AppConnectivityManager.NetworkConnectivityListener() {
             @Override
-            public void onConnect() {
+            public void onConnect(Context context) {
                 if (mProgressBar != null) {
                     mErrorView.setVisibility(View.GONE);
                     mProgressBar.setVisibility(View.VISIBLE);
@@ -51,10 +51,12 @@ public class ProgramsFragment extends Fragment
             }
 
             @Override
-            public void onDisconnect() {
+            public void onDisconnect(Context context) {
                 showError(R.string.network_error);
             }
         }, true);
+
+        bindStreamService();
     }
 
     @Override
@@ -98,7 +100,7 @@ public class ProgramsFragment extends Fragment
         fragmentManager.beginTransaction()
                 .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN)
                 .replace(R.id.container,
-                        EpisodesFragment.newInstance(program.slug),
+                        EpisodesFragment.newInstance(program.getSlug()),
                         EpisodesFragment.STACK_TAG)
                 .addToBackStack(EpisodesFragment.STACK_TAG)
                 .commit();
@@ -125,20 +127,18 @@ public class ProgramsFragment extends Fragment
                 ImageView audio_icon = (ImageView) view.findViewById(R.id.audio_icon);
                 TextView letter = (TextView) view.findViewById(R.id.program_letter);
 
-                if (StreamManager.ConnectivityManager.getInstance().getStreamIsBound()) {
-                    OnDemandPlayer currentPlayer = StreamManager.ConnectivityManager.getInstance().getStreamManager().getCurrentOnDemandPlayer();
-                    if (currentPlayer != null && currentPlayer.getProgramSlug().equals(program.slug)) {
-                        arrow.setVisibility(View.GONE);
-                        audio_icon.setVisibility(View.VISIBLE);
-                    } else {
-                        arrow.setVisibility(View.VISIBLE);
-                        audio_icon.setVisibility(View.GONE);
-                    }
+                OnDemandPlayer stream = getOnDemandPlayer();
+                if (stream != null && stream.getProgramSlug().equals(program.getSlug())) {
+                    arrow.setVisibility(View.GONE);
+                    audio_icon.setVisibility(View.VISIBLE);
+                } else {
+                    arrow.setVisibility(View.VISIBLE);
+                    audio_icon.setVisibility(View.GONE);
                 }
 
-                title.setText(program.title);
+                title.setText(program.getTitle());
 
-                String underscoreSlug = program.slug.replace("-", "_");
+                String underscoreSlug = program.getSlug().replace("-", "_");
                 int resId = getResources().getIdentifier(
                         "program_avatar_" + underscoreSlug,
                         "drawable",
@@ -146,7 +146,7 @@ public class ProgramsFragment extends Fragment
 
                 if (resId == 0) {
                     avatar.setImageResource(R.drawable.avatar_placeholder_bg);
-                    letter.setText(String.valueOf(program.normalizedTitle.charAt(0)));
+                    letter.setText(String.valueOf(program.getNormalizedTitle().charAt(0)));
                     letter.setVisibility(View.VISIBLE);
                 } else {
                     letter.setVisibility(View.GONE);

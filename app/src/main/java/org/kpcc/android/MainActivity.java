@@ -25,9 +25,6 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        StreamManager.ConnectivityManager.setupInstance(this);
-        StreamManager.ConnectivityManager.getInstance().bindStreamService();
-
         if (Navigation.getInstance().navigationItems.isEmpty()) {
             Navigation.getInstance().addItem(R.string.kpcc_live, R.drawable.menu_antenna, LiveFragment.STACK_TAG,
                     new Navigation.NavigationItemSelectedCallback() {
@@ -181,7 +178,6 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        StreamManager.ConnectivityManager.getInstance().unbindStreamService();
     }
 
     NavigationDrawerFragment getNavigationDrawerFragment() {
