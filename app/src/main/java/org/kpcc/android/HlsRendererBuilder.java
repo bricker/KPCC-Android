@@ -46,7 +46,7 @@ import java.io.IOException;
 public class HlsRendererBuilder implements AudioPlayer.RendererBuilder {
 
     private static final int BUFFER_SEGMENT_SIZE = 64 * 1024;
-    private static final int BUFFER_SEGMENTS = 254;
+    private static final int BUFFER_SEGMENTS = 54;
 
     private final Context context;
     private final String userAgent;
@@ -122,13 +122,16 @@ public class HlsRendererBuilder implements AudioPlayer.RendererBuilder {
             DefaultBandwidthMeter bandwidthMeter = new DefaultBandwidthMeter();
             PtsTimestampAdjusterProvider timestampAdjusterProvider = new PtsTimestampAdjusterProvider();
 
-            DataSource dataSource = new DefaultUriDataSource(context, bandwidthMeter, userAgent);
-            HlsChunkSource chunkSource = new HlsChunkSource(true /* isMaster */, dataSource, url,
-                    manifest, DefaultHlsTrackSelector.newDefaultInstance(context), bandwidthMeter,
-                    timestampAdjusterProvider, HlsChunkSource.ADAPTIVE_MODE_SPLICE,
+            DataSource dataSource = new DefaultUriDataSource(context, userAgent);
+
+            HlsChunkSource chunkSource = new HlsChunkSource(true /* isMaster */, dataSource,
+                    url, manifest, DefaultHlsTrackSelector.newDefaultInstance(context), bandwidthMeter,
+                    timestampAdjusterProvider, HlsChunkSource.ADAPTIVE_MODE_NONE,
                     player.getMainHandler(), player, AudioPlayer.TYPE_AUDIO);
+
             HlsSampleSource sampleSource = new HlsSampleSource(chunkSource, loadControl,
                     BUFFER_SEGMENTS * BUFFER_SEGMENT_SIZE, mainHandler, player, AudioPlayer.TYPE_AUDIO);
+
             MediaCodecAudioTrackRenderer audioRenderer = new MediaCodecAudioTrackRenderer(sampleSource,
                 MediaCodecSelector.DEFAULT, null, true, player.getMainHandler(), player,
                 AudioCapabilities.getCapabilities(context), AudioManager.STREAM_MUSIC);

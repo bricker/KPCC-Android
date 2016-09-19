@@ -55,7 +55,6 @@ public class LiveFragment extends StreamBindFragment {
     private TextView mTitle;
     private TextView mStatus;
     private NetworkImageView mAdView;
-    private LiveStreamBundle streamBundle = null;
     private AudioButtonManager mAudioButtonManager;
     private LiveSeekViewManager mLiveSeekViewManager;
     private ProgressBar mPrerollProgressBar;
@@ -71,7 +70,6 @@ public class LiveFragment extends StreamBindFragment {
     private LinearLayout mTimerRemainingWrapper;
     private ScheduleOccurrence mCurrentSchedule = null;
     private final AtomicBoolean mScheduleUpdaterMutex = new AtomicBoolean(false);
-    private NotificationCompat.Builder mNotificationBuilder;
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
     // Implementations
@@ -129,8 +127,8 @@ public class LiveFragment extends StreamBindFragment {
         // It's hard to tell for sure but this is what I guess was happening.
         // So, we're being more proactive about managing streams on network connectivity changes.
         if (activity != null) {
+            bindStreamService();
             AppConnectivityManager.getInstance().addOnNetworkConnectivityListener(getActivity(), LIVESTREAM_LISTENER_KEY, new LiveStreamConnectivityListener(), false);
-            mStreamConnection.bindStreamService(activity, StreamService.class);
         }
 
         mAudioButtonManager.getPlayButton().setOnClickListener(new View.OnClickListener() {
@@ -146,87 +144,82 @@ public class LiveFragment extends StreamBindFragment {
 
                 LivePlayer stream = getLivePlayer();
 
-                if (stream != null) {
-                    if (stream.isPaused() && stream.getPausedAt() > (System.currentTimeMillis() - 1000 * 60 * 60 * 8)) {
-                        // Stream was paused; start it again.
-                        stream.play();
-                    } else {
-                        // Initialize the lives stream/preroll bundle.
-                        final LivePlayer livePlayer = new LivePlayer(getActivity());
-                        final PrerollPlayer prerollPlayer = new PrerollPlayer(getActivity());
+                if (stream != null && stream.isPaused() && stream.getPausedAt() > (System.currentTimeMillis() - 1000 * 60 * 60 * 8)) {
+                    // Stream was paused; start it again.
+                    stream.play();
+                } else {
+                    // Initialize the lives stream/preroll bundle.
+                    final LivePlayer livePlayer = new LivePlayer(getActivity());
+                    final PrerollPlayer prerollPlayer = new PrerollPlayer(getActivity());
 
-                        // If they just installed the app (less than 10 minutes ago), and have never played the live
-                        // stream, don't play preroll.
-                        // Otherwise do the normal preroll flow.
-                        final long now = System.currentTimeMillis();
+                    livePlayer.setAudioEventListener(new LivePlayerAudioEventListener());
+                    prerollPlayer.setAudioEventListener(new PrerollPlayerAudioEventListener());
 
-                        final PrerollManager prerollManager = new PrerollManager();
-                        boolean hasPlayedLiveStream = DataManager.getInstance().getHasPlayedLiveStream();
-                        boolean installedRecently = KPCCApplication.INSTALLATION_TIME > (now - PrerollManager.INSTALL_GRACE);
-                        boolean heardPrerollRecently = prerollManager.getLastPlay() > (now - PrerollManager.PREROLL_THRESHOLD);
+                    // If they just installed the app (less than 10 minutes ago), and have never played the live
+                    // stream, don't play preroll.
+                    // Otherwise do the normal preroll flow.
+                    final long now = System.currentTimeMillis();
 
-                        if (mNotificationBuilder == null) {
-                            buildNotification();
+                    final PrerollManager prerollManager = new PrerollManager();
+                    boolean hasPlayedLiveStream = DataManager.getInstance().getHasPlayedLiveStream();
+                    boolean installedRecently = KPCCApplication.INSTALLATION_TIME > (now - PrerollManager.INSTALL_GRACE);
+                    boolean heardPrerollRecently = prerollManager.getLastPlay() > (now - PrerollManager.PREROLL_THRESHOLD);
+
+                    buildNotification();
+
+                    if (!AppConfiguration.getInstance().getConfigBool("preroll.enabled") ||
+                            (!hasPlayedLiveStream && installedRecently) ||
+                            heardPrerollRecently) {
+
+                        // Skipping Preroll
+                        setCurrentStream(livePlayer, STACK_TAG);
+                        StreamService service = getStreamService();
+                        if (service != null) {
+                            service.startForeground(Stream.NOTIFICATION_ID, getNotificationBuilder().build());
+                            getLivePlayer().prepareAndStart();
                         }
+                    } else {
+                        prerollPlayer.getAudioEventListener().onPreparing();
 
-                        if ((AppConfiguration.getInstance().isDebug && !AppConfiguration.getInstance().getConfigBool("preroll.enabled")) ||
-                                (!hasPlayedLiveStream && installedRecently) ||
-                                heardPrerollRecently) {
-                            // Skipping Preroll
-                            StreamService service = mStreamConnection.getStreamService();
-                            if (service != null) {
-                                service.setCurrentStream(livePlayer);
-                                service.startForeground(Stream.NOTIFICATION_ID, mNotificationBuilder.build());
-                                stream.prepareAndStart();
-                            }
-                        } else {
-                            prerollPlayer.getAudioEventListener().onPreparing();
+                        final MainActivity activity = (MainActivity) getActivity();
+                        if (activity != null) {
+                            // Normal preroll flow (preroll still may not play, based on preroll response)
+                            prerollManager.getPrerollData(activity, new PrerollManager.PrerollCallbackListener() {
+                                @Override
+                                public void onPrerollResponse(final PrerollManager.PrerollData prerollData) {
+                                    if (prerollData == null || prerollData.getAudioUrl() == null) {
+                                        setCurrentStream(livePlayer, STACK_TAG);
+                                        livePlayer.prepareAndStart();
+                                    } else {
+                                        setCurrentStream(prerollPlayer, STACK_TAG);
+                                        StreamService service = getStreamService();
+                                        if (service != null) {
+                                            MainActivity activity = (MainActivity) getActivity();
+                                            prerollPlayer.setupPreroll(activity, prerollData.getAudioUrl());
+                                            prerollPlayer.getAudioEventListener().onPrerollData(prerollData);
+                                            prerollPlayer.prepareAndStart();
+                                            prerollManager.setLastPlayToNow();
 
-                            final MainActivity activity = (MainActivity) getActivity();
-                            if (activity != null) {
-                                // Normal preroll flow (preroll still may not play, based on preroll response)
-                                prerollManager.getPrerollData(activity, new PrerollManager.PrerollCallbackListener() {
-                                    @Override
-                                    public void onPrerollResponse(final PrerollManager.PrerollData prerollData) {
-                                        if (prerollData == null || prerollData.getAudioUrl() == null) {
-                                            livePlayer.prepareAndStart();
-                                        } else {
-                                            StreamService service = mStreamConnection.getStreamService();
-                                            if (service != null) {
-                                                service.setCurrentStream(prerollPlayer);
-                                                service.setNextStream(livePlayer);
-
-                                                MainActivity activity = (MainActivity) getActivity();
-                                                prerollPlayer.setupPreroll(activity, prerollData.getAudioUrl());
-                                                prerollPlayer.getAudioEventListener().onPrerollData(prerollData);
-                                                prerollPlayer.prepareAndStart();
-                                                prerollManager.setLastPlayToNow();
-
-                                                livePlayer.prepare();
-                                                prerollPlayer.setOnPrerollCompleteCallback(new PrerollPlayer.PrerollCompleteCallback() {
-                                                    @Override
-                                                    void onPrerollComplete() {
-                                                        livePlayer.prepareAndStart();
-                                                    }
-                                                });
-
-                                            }
+                                            livePlayer.prepare();
+                                            prerollPlayer.setOnPrerollCompleteCallback(new PrerollPlayer.PrerollCompleteCallback() {
+                                                @Override
+                                                void onPrerollComplete() {
+                                                    setCurrentStream(livePlayer, STACK_TAG);
+                                                    livePlayer.play();
+                                                }
+                                            });
                                         }
                                     }
-                                });
-                            }
+                                }
+                            });
                         }
-
-                        if (!hasPlayedLiveStream) {
-                            DataManager.getInstance().setHasPlayedLiveStream(true);
-                        }
-
-
-                        Intent i = new Intent(getActivity(), LiveStreamBundle.class);
-                        getActivity().startService(i);
-                        streamBundle.playWithPrerollAttempt(getActivity());
-                        AppConfiguration.getInstance().setDynamicProperty(PLAY_START_KEY, String.valueOf(System.currentTimeMillis()));
                     }
+
+                    if (!hasPlayedLiveStream) {
+                        DataManager.getInstance().setHasPlayedLiveStream(true);
+                    }
+
+                    AppConfiguration.getInstance().setDynamicProperty(PLAY_START_KEY, String.valueOf(System.currentTimeMillis()));
                 }
             }
         });
@@ -234,10 +227,9 @@ public class LiveFragment extends StreamBindFragment {
         mAudioButtonManager.getPauseButton().setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (mStreamConnection.getStreamIsBound()) {
-                    Stream stream = mStreamConnection.getStreamService().getCurrentStream();
-                    stream.pause();
-                }
+                Stream stream = getCurrentStream();
+                if (stream != null) { stream.pause(); }
+                cancelNotification();
             }
         });
 
@@ -421,7 +413,7 @@ public class LiveFragment extends StreamBindFragment {
         // Setup connectivity handlers
         // This will init state immediately if stream is already bound.
         // We're putting it here (in onResume) so it can change for network updates.
-        mStreamConnection.addOnStreamBindListener(LiveFragment.STACK_TAG, new StreamServiceConnection.OnStreamBindListener() {
+        getStreamConnection().addOnStreamBindListener(LiveFragment.STACK_TAG, new StreamServiceConnection.OnStreamBindListener() {
             @Override
             public void onBind() {
                 // When returning to this fragment, this will probably be run right away and setup the view state.
@@ -551,21 +543,25 @@ public class LiveFragment extends StreamBindFragment {
      * 2. The fragment is re-initialized when the player was already playing (eg. a user comes back to the app after previously leaving).
      */
     private synchronized void initAudio() {
-        if (mStreamConnection.getStreamIsBound()) {
-            LivePlayer stream = getLivePlayer();
-            if (stream != null) {
-                LivePlayerAudioEventListener ls = new LivePlayerAudioEventListener();
-                stream.setAudioEventListener(ls);
-                if (stream.isPlaying()) ls.onPlay();
-            }
+        getStreamConnection().addOnStreamBindListener(LiveFragment.STACK_TAG, new StreamServiceConnection.OnStreamBindListener() {
+            @Override
+            public void onBind() {
+                LivePlayer stream = getLivePlayer();
+                if (stream != null) {
+                    LivePlayerAudioEventListener ls = new LivePlayerAudioEventListener();
+                    stream.setAudioEventListener(ls);
+                    if (stream.isPlaying()) ls.onPlay();
+                }
 
-            PrerollPlayer preroll = getPrerollPlayer();
-            if (preroll != null) {
-                PrerollPlayerAudioEventListener ls = new PrerollPlayerAudioEventListener();
-                preroll.setAudioEventListener(ls);
-                if (preroll.isPlaying()) ls.onPlay();
+                PrerollPlayer preroll = getPrerollPlayer();
+                if (preroll != null) {
+                    PrerollPlayerAudioEventListener ls = new PrerollPlayerAudioEventListener();
+                    preroll.setAudioEventListener(ls);
+                    if (preroll.isPlaying()) ls.onPlay();
+                }
+
             }
-        }
+        });
     }
 
     private void resetLiveState() {
@@ -604,25 +600,16 @@ public class LiveFragment extends StreamBindFragment {
         return activity.getNavigationDrawerFragment();
     }
 
-    private void buildNotification() {
-        MainActivity activity = (MainActivity)getActivity();
-        if (activity != null) {
-            PendingIntent pi = PendingIntent.getActivity(activity.getApplicationContext(), 0,
-                    new Intent(activity.getApplicationContext(), MainActivity.class),
-                    PendingIntent.FLAG_UPDATE_CURRENT);
+    @Override // StreamBindFragment
+    protected void buildNotification() {
+        super.buildNotification();
 
-            mNotificationBuilder = new NotificationCompat.Builder(activity.getApplicationContext())
-                    .setSmallIcon(R.drawable.menu_antenna)
-                    .setContentTitle(getString(R.string.kpcc_live))
-                    .setContentIntent(pi)
-                    .setOngoing(true);
-
-            updateNotificationWithCurrentScheduleData();
-        }
+        initNotificationBuilder(R.drawable.menu_antenna, getString(R.string.kpcc_live));
+        updateNotificationWithCurrentScheduleData();
     }
 
     private void updateNotificationWithCurrentScheduleData() {
-        if (mNotificationBuilder == null) return;
+        if (getNotificationBuilder() == null) buildNotification();
 
         String programName;
         ScheduleOccurrence schedule = getCurrentSchedule();
@@ -633,26 +620,9 @@ public class LiveFragment extends StreamBindFragment {
             programName = schedule.getTitle();
         }
 
-        mNotificationBuilder.
+        getNotificationBuilder().
                 setTicker(String.format(Locale.ENGLISH, getString(R.string.now_playing_program), programName)).
                 setContentText(programName);
-    }
-
-    private void cancelNotification() {
-        MainActivity activity = (MainActivity)getActivity();
-        if (activity != null) {
-            NotificationManager notificationManager = (NotificationManager) activity.getSystemService(Service.NOTIFICATION_SERVICE);
-            notificationManager.cancel(Stream.NOTIFICATION_ID);
-        }
-    }
-
-    private void sendNotification() {
-        MainActivity activity = (MainActivity)getActivity();
-        if (activity != null) {
-            mNotificationBuilder.setWhen(System.currentTimeMillis());
-            NotificationManager notificationManager = (NotificationManager) activity.getSystemService(Service.NOTIFICATION_SERVICE);
-            notificationManager.notify(Stream.NOTIFICATION_ID, mNotificationBuilder.build());
-        }
     }
 
     /**
@@ -788,8 +758,10 @@ public class LiveFragment extends StreamBindFragment {
                 if (didChangeProgram) {
                     NetworkImageManager.getInstance().setBitmap(getActivity(), mBackground, schedule.getProgramSlug());
 
-                    if (mNotificationBuilder != null) {
-                        updateNotificationWithCurrentScheduleData();
+                    updateNotificationWithCurrentScheduleData();
+
+                    LivePlayer stream = getLivePlayer();
+                    if (stream != null && stream.isPlaying()) {
                         sendNotification();
                     }
                 }

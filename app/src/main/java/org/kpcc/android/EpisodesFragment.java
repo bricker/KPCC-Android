@@ -2,7 +2,6 @@ package org.kpcc.android;
 
 import android.content.Context;
 import android.os.Bundle;
-import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.view.LayoutInflater;
@@ -79,9 +78,9 @@ public class EpisodesFragment extends StreamBindFragment
                              Bundle savedInstanceState) {
 
         mView = inflater.inflate(R.layout.fragment_episodes, container, false);
-        getActivity().setTitle(mProgram.title);
+        getActivity().setTitle(mProgram.getTitle());
         ImageView background = (ImageView) mView.findViewById(R.id.background);
-        NetworkImageManager.getInstance().setBitmap(getActivity(), background, mProgram.slug);
+        NetworkImageManager.getInstance().setBitmap(getActivity(), background, mProgram.getSlug());
         mListView = (AbsListView) mView.findViewById(android.R.id.list);
         mProgressBar = (LinearLayout) mView.findViewById(R.id.progress_layout);
         mErrorView = (LinearLayout)mView.findViewById(R.id.generic_load_error);
@@ -129,7 +128,7 @@ public class EpisodesFragment extends StreamBindFragment
 
         HashMap<String, String> params = new HashMap<>();
 
-        params.put(PARAM_PROGRAM, mProgram.slug);
+        params.put(PARAM_PROGRAM, mProgram.getSlug());
         params.put(PARAM_LIMIT, EPISODE_LIMIT);
 
         mRequest = Episode.Client.getCollection(params, new Response.Listener<JSONObject>() {
@@ -184,7 +183,7 @@ public class EpisodesFragment extends StreamBindFragment
         fragmentManager.beginTransaction()
                 .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN)
                 .replace(R.id.container,
-                        EpisodesPagerFragment.newInstance(mEpisodes, position, mProgram.slug),
+                        EpisodesPagerFragment.newInstance(mEpisodes, position, mProgram.getSlug()),
                         EpisodesPagerFragment.STACK_TAG)
                 .addToBackStack(EpisodesPagerFragment.STACK_TAG)
                 .commit();

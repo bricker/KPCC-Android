@@ -42,9 +42,8 @@ public class StreamService extends Service {
 
     @Override // Service
     public int onStartCommand(Intent intent, int flags, int startId) {
-        if (currentStream != null) {
-            startForeground(6379, currentStream.getNotificationBuilder().build());
-            currentStream.play();
+        if (getCurrentStream() != null) {
+            getCurrentStream().prepareAndStart();
         }
 
         return START_STICKY;
@@ -99,6 +98,10 @@ public class StreamService extends Service {
         previousStream.pause();
         currentStream.pause();
         nextStream.pause();
+    }
+
+    void prepareAndStart() {
+        currentStream.prepareAndStart();
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////

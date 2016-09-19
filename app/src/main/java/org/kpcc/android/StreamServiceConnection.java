@@ -9,6 +9,7 @@ import android.os.IBinder;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -29,7 +30,7 @@ public class StreamServiceConnection implements ServiceConnection {
     ////////////////////////////////////////////////////////////////////////////////////////////////
     private StreamService mStreamService;
     private final AtomicBoolean mStreamIsBound = new AtomicBoolean(false);
-    private final Map<String, OnStreamBindListener> mStreamBindListeners = new HashMap<>();
+    private final List<OnStreamBindListener> mStreamBindListeners = new ArrayList<>();
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
     // Constructors
@@ -61,7 +62,7 @@ public class StreamServiceConnection implements ServiceConnection {
         setStreamService(service);
         mStreamIsBound.set(true);
 
-        for (OnStreamBindListener listener : mStreamBindListeners.values()) {
+        for (OnStreamBindListener listener : mStreamBindListeners) {
             listener.onBind();
         }
 
@@ -82,12 +83,8 @@ public class StreamServiceConnection implements ServiceConnection {
         if (mStreamIsBound.get()) {
             listener.onBind();
         } else {
-            mStreamBindListeners.put(tag, listener);
+            mStreamBindListeners.add(listener);
         }
-    }
-
-    void removeOnStreamBindListener(String tag) {
-        mStreamBindListeners.remove(tag);
     }
 
     void bindStreamService(Context context, Class<?> clazz) {

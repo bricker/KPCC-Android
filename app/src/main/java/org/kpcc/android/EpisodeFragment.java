@@ -1,10 +1,11 @@
 package org.kpcc.android;
 
+import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
+import android.support.v4.app.NotificationCompat;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -19,6 +20,7 @@ import org.json.JSONException;
 import org.kpcc.api.Episode;
 import org.kpcc.api.Program;
 
+import java.util.Locale;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 
@@ -26,6 +28,7 @@ public class EpisodeFragment extends StreamBindFragment {
     ////////////////////////////////////////////////////////////////////////////////////////////////
     // Static Variables
     ////////////////////////////////////////////////////////////////////////////////////////////////
+    private static final String STACK_TAG = "EpisodeFragment";
     private static final int SHARE_TYPE_REQUEST = 1;
     private static final String ARG_PROGRAM_SLUG = "programSlug";
     private static final String ARG_EPISODE = "episode";
@@ -37,7 +40,6 @@ public class EpisodeFragment extends StreamBindFragment {
     public final AtomicBoolean pagerVisible = new AtomicBoolean(false);
     public Episode episode;
     public Program program;
-//    private OnDemandPlayer mPlayer;
     private SeekBar mSeekBar;
     private TextView mCurrentTime;
     private AudioButtonManager mAudioButtonManager;
@@ -127,12 +129,15 @@ public class EpisodeFragment extends StreamBindFragment {
                 Intent sendIntent = new Intent();
                 sendIntent.setAction(Intent.ACTION_SEND);
                 sendIntent.putExtra(Intent.EXTRA_TEXT,
-                        String.format(SHARE_TEXT, episode.getTitle(), program.title, episode.getPublicUrl()));
+                        String.format(SHARE_TEXT, episode.getTitle(), program.getTitle(), episode.getPublicUrl()));
                 sendIntent.setType("text/plain");
 
-                getActivity().startActivityForResult(
-                        Intent.createChooser(sendIntent, getString(R.string.share_episode)),
-                        SHARE_TYPE_REQUEST);
+                MainActivity activity = (MainActivity)getActivity();
+                if (activity != null) {
+                    activity.startActivityForResult(
+                            Intent.createChooser(sendIntent, getString(R.string.share_episode)),
+                            SHARE_TYPE_REQUEST);
+                }
             }
         });
 
@@ -141,7 +146,7 @@ public class EpisodeFragment extends StreamBindFragment {
         mSeekBar.setMax(episode.getAudio().getDurationSeconds() * 1000);
         mSeekBar.setEnabled(false);
 
-        programTitle.setText(program.title);
+        programTitle.setText(program.getTitle());
         date.setText(episode.getFormattedAirDate());
         totalTime.setText(Stream.getTimeFormat(episode.getAudio().getDurationSeconds()));
 
@@ -182,7 +187,6 @@ public class EpisodeFragment extends StreamBindFragment {
             }
         }, true);
 
-        final OnDemandPlayer stream = getOnDemandPlayer();
         mSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
@@ -190,6 +194,7 @@ public class EpisodeFragment extends StreamBindFragment {
                     return;
                 }
 
+                OnDemandPlayer stream = getOnDemandPlayer();
                 if (stream != null) {
                     stream.seekTo(progress);
                 }
@@ -207,17 +212,27 @@ public class EpisodeFragment extends StreamBindFragment {
         mAudioButtonManager.getPlayButton().setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                stream.prepareAndStart();
+                StreamService service = getStreamService();
+                if (service != null) {
+                    OnDemandPlayer stream = getOnDemandPlayer();
+                    if (stream != null) {
+                        service.startForeground(Stream.NOTIFICATION_ID, getNotificationBuilder().build());
+                        stream.prepareAndStart();
+                    }
+                }
             }
         });
 
         mAudioButtonManager.getPauseButton().setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                stream.pause();
+                OnDemandPlayer stream = getOnDemandPlayer();
+                if (stream != null) { stream.pause(); }
+                cancelNotification();
             }
         });
 
+        buildNotification();
         return view;
     }
 
@@ -250,8 +265,8 @@ public class EpisodeFragment extends StreamBindFragment {
 
             // Audio should be released when next one starts, based on Audio Focus rules.
         } else {
-            stream = new OnDemandPlayer(getActivity(), episode.getAudio().getUrl(), program.slug);
-            mStreamConnection.getStreamService().setCurrentStream(stream);
+            stream = new OnDemandPlayer(getActivity(), episode.getAudio().getUrl(), program.getSlug());
+            setCurrentStream(stream, STACK_TAG);
         }
 
 
@@ -269,6 +284,8 @@ public class EpisodeFragment extends StreamBindFragment {
                 if (mPeriodicBackgroundUpdater != null) {
                     mPeriodicBackgroundUpdater.start();
                 }
+
+                sendNotification();
             }
 
             @Override
@@ -277,6 +294,8 @@ public class EpisodeFragment extends StreamBindFragment {
                 if (mPeriodicBackgroundUpdater != null) {
                     mPeriodicBackgroundUpdater.release();
                 }
+
+                cancelNotification();
             }
 
             @Override
@@ -285,6 +304,8 @@ public class EpisodeFragment extends StreamBindFragment {
                 if (mPeriodicBackgroundUpdater != null) {
                     mPeriodicBackgroundUpdater.release();
                 }
+
+                cancelNotification();
             }
 
             @Override
@@ -356,9 +377,17 @@ public class EpisodeFragment extends StreamBindFragment {
 
         if (!alreadyPlaying) {
             mAudioButtonManager.toggleStopped();
+
             // Start the episode right away unless it's already playing.
-            mAudioButtonManager.clickPlay();
+            getStreamConnection().addOnStreamBindListener(EpisodeFragment.STACK_TAG, new StreamServiceConnection.OnStreamBindListener() {
+                @Override
+                public void onBind() {
+                    mAudioButtonManager.clickPlay();
+                }
+            });
         }
+
+        bindStreamService();
     }
 
     /**
@@ -379,9 +408,30 @@ public class EpisodeFragment extends StreamBindFragment {
     }
 
 
+    @Override // StreamBindFragment
+    protected void buildNotification() {
+        initNotificationBuilder(R.drawable.menu_antenna, getString(R.string.now_playing));
+        updateNotificationWithCurrentEpisodeData();
+    }
+
     ////////////////////////////////////////////////////////////////////////////////////////////////
     // Member Functions
     ////////////////////////////////////////////////////////////////////////////////////////////////
+    private void updateNotificationWithCurrentEpisodeData() {
+        if (getNotificationBuilder() == null) buildNotification();
+
+        String programName;
+        if (program == null) {
+            programName = getString(R.string.kpcc_live);
+        } else {
+            programName = program.getTitle();
+        }
+
+        getNotificationBuilder().
+                setTicker(String.format(Locale.ENGLISH, getString(R.string.now_playing_program), programName)).
+                setContentText(programName);
+    }
+
     boolean episodeWasSkipped() {
         OnDemandPlayer stream = getOnDemandPlayer();
         if (stream == null) return false;

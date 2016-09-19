@@ -3,7 +3,6 @@ package org.kpcc.android;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.view.LayoutInflater;
@@ -57,8 +56,7 @@ public class ProgramsFragment extends StreamBindFragment
             }
         }, true);
 
-        getActivity().bindService(new Intent(getActivity(), StreamService.class), mStreamConnection, Context.BIND_AUTO_CREATE);
-
+        bindStreamService();
     }
 
     @Override
@@ -102,7 +100,7 @@ public class ProgramsFragment extends StreamBindFragment
         fragmentManager.beginTransaction()
                 .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN)
                 .replace(R.id.container,
-                        EpisodesFragment.newInstance(program.slug),
+                        EpisodesFragment.newInstance(program.getSlug()),
                         EpisodesFragment.STACK_TAG)
                 .addToBackStack(EpisodesFragment.STACK_TAG)
                 .commit();
@@ -130,7 +128,7 @@ public class ProgramsFragment extends StreamBindFragment
                 TextView letter = (TextView) view.findViewById(R.id.program_letter);
 
                 OnDemandPlayer stream = getOnDemandPlayer();
-                if (stream != null && stream.getProgramSlug().equals(program.slug)) {
+                if (stream != null && stream.getProgramSlug().equals(program.getSlug())) {
                     arrow.setVisibility(View.GONE);
                     audio_icon.setVisibility(View.VISIBLE);
                 } else {
@@ -138,9 +136,9 @@ public class ProgramsFragment extends StreamBindFragment
                     audio_icon.setVisibility(View.GONE);
                 }
 
-                title.setText(program.title);
+                title.setText(program.getTitle());
 
-                String underscoreSlug = program.slug.replace("-", "_");
+                String underscoreSlug = program.getSlug().replace("-", "_");
                 int resId = getResources().getIdentifier(
                         "program_avatar_" + underscoreSlug,
                         "drawable",
@@ -148,7 +146,7 @@ public class ProgramsFragment extends StreamBindFragment
 
                 if (resId == 0) {
                     avatar.setImageResource(R.drawable.avatar_placeholder_bg);
-                    letter.setText(String.valueOf(program.normalizedTitle.charAt(0)));
+                    letter.setText(String.valueOf(program.getNormalizedTitle().charAt(0)));
                     letter.setVisibility(View.VISIBLE);
                 } else {
                     letter.setVisibility(View.GONE);
