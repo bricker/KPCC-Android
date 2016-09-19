@@ -13,12 +13,33 @@ import com.parse.ParsePush;
 import com.parse.ParsePushBroadcastReceiver;
 
 class AppNotificationManager implements SharedPreferences.OnSharedPreferenceChangeListener {
-
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    // Static Variables
+    ////////////////////////////////////////////////////////////////////////////////////////////////
     private static final String CHANNEL_LISTEN_LIVE = AppConfiguration.getInstance().getConfig("channel.listenLive");
     private static AppNotificationManager instance = null;
 
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    // Member Variables
+    ////////////////////////////////////////////////////////////////////////////////////////////////
     private final Application application;
 
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    // Static Functions
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    static void setupInstance(Application application) {
+        if (getInstance() == null) {
+            instance = new AppNotificationManager(application);
+        }
+    }
+
+    private static AppNotificationManager getInstance() {
+        return instance;
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    // Constructors
+    ////////////////////////////////////////////////////////////////////////////////////////////////
     private AppNotificationManager(Application application) {
         this.application = application;
 
@@ -32,16 +53,9 @@ class AppNotificationManager implements SharedPreferences.OnSharedPreferenceChan
         }
     }
 
-    static void setupInstance(Application application) {
-        if (getInstance() == null) {
-            instance = new AppNotificationManager(application);
-        }
-    }
-
-    private static AppNotificationManager getInstance() {
-        return instance;
-    }
-
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    // Member Functions
+    ////////////////////////////////////////////////////////////////////////////////////////////////
     private void enableReceivers() {
         PackageManager pm = application.getPackageManager();
 
@@ -70,6 +84,19 @@ class AppNotificationManager implements SharedPreferences.OnSharedPreferenceChan
                 PackageManager.DONT_KILL_APP);
     }
 
+    private void subscribe(String channel) {
+        ParsePush.subscribeInBackground(channel);
+        enableReceivers();
+    }
+
+    private void unsubscribe(String channel) {
+        ParsePush.unsubscribeInBackground(channel);
+        disableReceivers();
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    // Implementations
+    ////////////////////////////////////////////////////////////////////////////////////////////////
     @Override // SharedPreferences.OnSharedPreferenceChangeListener
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences,
                                           String key) {
@@ -87,16 +114,9 @@ class AppNotificationManager implements SharedPreferences.OnSharedPreferenceChan
         }
     }
 
-    private void subscribe(String channel) {
-        ParsePush.subscribeInBackground(channel);
-        enableReceivers();
-    }
-
-    private void unsubscribe(String channel) {
-        ParsePush.unsubscribeInBackground(channel);
-        disableReceivers();
-    }
-
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    // Classes
+    ////////////////////////////////////////////////////////////////////////////////////////////////
     public static class BroadcastReceiver extends ParsePushBroadcastReceiver {
         @Override
         protected void onPushOpen(Context context, Intent intent) {

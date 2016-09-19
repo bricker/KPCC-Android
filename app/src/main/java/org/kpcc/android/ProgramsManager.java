@@ -45,7 +45,7 @@ public class ProgramsManager {
                             Program program = Program.buildFromJson(jsonPrograms.getJSONObject(i));
 
                             // Skip hidden programs.
-                            if (!hiddenPrograms.contains(program.slug)) {
+                            if (!hiddenPrograms.contains(program.getSlug())) {
                                 ALL_PROGRAMS.add(program);
                             }
                         } catch (JSONException e) {
@@ -73,7 +73,7 @@ public class ProgramsManager {
         Program foundProgram = null;
 
         for (Program program : ALL_PROGRAMS) {
-            if (program.slug.equals(slug)) {
+            if (program.getSlug().equals(slug)) {
                 foundProgram = program;
                 break;
             }
