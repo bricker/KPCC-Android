@@ -1,8 +1,6 @@
 package org.kpcc.android;
 
-import android.app.Service;
 import android.content.Context;
-import android.os.IBinder;
 
 import com.google.android.exoplayer.TimeRange;
 

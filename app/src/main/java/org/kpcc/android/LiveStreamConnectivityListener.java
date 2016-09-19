@@ -1,9 +1,6 @@
 package org.kpcc.android;
 
-import android.content.BroadcastReceiver;
 import android.content.Context;
-
-import java.util.Locale;
 
 /**
  * Created by rickb014 on 4/4/16.
