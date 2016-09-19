@@ -1,15 +1,3 @@
-buildscript {
-    repositories {
-        jcenter()
-        mavenCentral()
-        maven { url 'https://maven.fabric.io/public' }
-    }
-    dependencies {
-        classpath 'com.android.tools.build:gradle:2.1.2'
-        classpath 'io.fabric.tools:gradle:1.21.6'
-    }
-}
-
 apply plugin: 'com.android.application'
 apply plugin: 'io.fabric'
 
@@ -29,6 +17,7 @@ android {
         versionCode 91
         versionName "3.3.0"
     }
+
     buildTypes {
         release {
             minifyEnabled true
@@ -36,6 +25,7 @@ android {
         }
 
         debug {
+            minifyEnabled false
             debuggable true
         }
     }
@@ -60,4 +50,7 @@ dependencies {
     compile 'uk.co.chrisjenx:calligraphy:2.1.0'
     compile 'com.astuetz:pagerslidingtabstrip:1.0.1'
     compile 'com.flurry.android:analytics:6.2.0'
+
+    // FOR DEBUG ONLY
+//    compile project(':ExoPlayer')
 }
