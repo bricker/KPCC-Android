@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Bundle;
+import android.os.IBinder;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -56,7 +57,7 @@ public class AppConnectivityManager {
         return activeNetwork != null && activeNetwork.isConnected();
     }
 
-    void addOnNetworkConnectivityListener(Context context, String tag, NetworkConnectivityListener listener, boolean doNow) {
+    void addOnNetworkConnectivityListener(Context context, String tag, boolean doNow, StreamService streamService, NetworkConnectivityListener listener) {
         mNetworkConnectivityListeners.put(tag, listener);
 
         if (!doNow) {
@@ -64,9 +65,9 @@ public class AppConnectivityManager {
         }
 
         if (AppConnectivityManager.getInstance().isConnectedToNetwork()) {
-            listener.onConnect(context);
+            listener.onConnect(context, streamService);
         } else {
-            listener.onDisconnect(context);
+            listener.onDisconnect(context, streamService);
         }
     }
 
@@ -86,20 +87,26 @@ public class AppConnectivityManager {
             boolean isFailover = extras.getBoolean(ConnectivityManager.EXTRA_IS_FAILOVER);
             boolean noConnection = extras.getBoolean(ConnectivityManager.EXTRA_NO_CONNECTIVITY);
 
+            StreamService.LocalBinder streamBinder = (StreamService.LocalBinder)peekService(context, new Intent(context, StreamService.class));
+            StreamService streamService = null;
+            if (streamBinder != null) {
+                streamService = streamBinder.getService();
+            }
+
             for (NetworkConnectivityListener listener : AppConnectivityManager.getInstance().mNetworkConnectivityListeners.values()) {
                 if (isFailover) {
                     // TODO Do something?
                 } else if (noConnection || !AppConnectivityManager.getInstance().isConnectedToNetwork()) {
-                    listener.onDisconnect(context);
+                    listener.onDisconnect(context, streamService);
                 } else {
-                    listener.onConnect(context);
+                    listener.onConnect(context, streamService);
                 }
             }
         }
     }
 
     interface NetworkConnectivityListener {
-        void onConnect(Context context);
-        void onDisconnect(Context context);
+        void onConnect(Context context, StreamService streamService);
+        void onDisconnect(Context context, StreamService streamService);
     }
 }

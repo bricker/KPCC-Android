@@ -70,29 +70,30 @@ public class FeedbackFragment extends Fragment {
         mErrorMessage = (TextView) view.findViewById(R.id.errorMessage);
         mProgressBar = (ProgressBar) view.findViewById(R.id.progress_circular);
 
-        AppConnectivityManager.getInstance().addOnNetworkConnectivityListener(getActivity(), FeedbackFragment.STACK_TAG,
+        AppConnectivityManager.getInstance().addOnNetworkConnectivityListener(getActivity(), FeedbackFragment.STACK_TAG, true, null,
                 new AppConnectivityManager.NetworkConnectivityListener() {
-            @Override
-            public void onConnect(Context context) {
-                if (mErrorMessage == null) {
-                    return;
+                    @Override
+                    public void onConnect(Context context, StreamService streamService) {
+                        if (mErrorMessage == null) {
+                            return;
+                        }
+
+                        setButtonState();
+                        mErrorMessage.setVisibility(View.GONE);
+                    }
+
+                    @Override
+                    public void onDisconnect(Context context, StreamService streamService) {
+                        if (mErrorMessage == null) {
+                            return;
+                        }
+
+                        disableButton();
+                        mErrorMessage.setText(R.string.network_error);
+                        mErrorMessage.setVisibility(View.VISIBLE);
+                    }
                 }
-
-                setButtonState();
-                mErrorMessage.setVisibility(View.GONE);
-            }
-
-            @Override
-            public void onDisconnect(Context context) {
-                if (mErrorMessage == null) {
-                    return;
-                }
-
-                disableButton();
-                mErrorMessage.setText(R.string.network_error);
-                mErrorMessage.setVisibility(View.VISIBLE);
-            }
-        }, true);
+        );
 
         mFeedbackTypeBug.setOnClickListener(new View.OnClickListener() {
             @Override

@@ -39,22 +39,24 @@ public class ProgramsFragment extends StreamBindFragment
         super.onCreate(savedInstanceState);
         setRetainInstance(true);
 
-        AppConnectivityManager.getInstance().addOnNetworkConnectivityListener(getActivity(), ProgramsFragment.STACK_TAG, new AppConnectivityManager.NetworkConnectivityListener() {
-            @Override
-            public void onConnect(Context context) {
-                if (mProgressBar != null) {
-                    mErrorView.setVisibility(View.GONE);
-                    mProgressBar.setVisibility(View.VISIBLE);
+        AppConnectivityManager.getInstance().addOnNetworkConnectivityListener(getActivity(), ProgramsFragment.STACK_TAG, true, getStreamService(),
+                new AppConnectivityManager.NetworkConnectivityListener() {
+                    @Override
+                    public void onConnect(Context context, StreamService streamService) {
+                        if (mProgressBar != null) {
+                            mErrorView.setVisibility(View.GONE);
+                            mProgressBar.setVisibility(View.VISIBLE);
+                        }
+
+                        mRequest = ProgramsManager.instance.loadPrograms(ProgramsFragment.this);
+                    }
+
+                    @Override
+                    public void onDisconnect(Context context, StreamService streamService) {
+                        showError(R.string.network_error);
+                    }
                 }
-
-                mRequest = ProgramsManager.instance.loadPrograms(ProgramsFragment.this);
-            }
-
-            @Override
-            public void onDisconnect(Context context) {
-                showError(R.string.network_error);
-            }
-        }, true);
+        );
 
         bindStreamService();
     }

@@ -14,6 +14,8 @@ import android.text.Spannable;
 import android.text.SpannableString;
 import android.text.style.TypefaceSpan;
 
+import java.util.Locale;
+
 import uk.co.chrisjenx.calligraphy.CalligraphyContextWrapper;
 
 
@@ -103,6 +105,8 @@ public class MainActivity extends AppCompatActivity {
 
                             if (intent.resolveActivity(getPackageManager()) != null) {
                                 startActivity(intent);
+
+                                AnalyticsManager.getInstance().sendAction(AnalyticsManager.CATEGORY_USER_INTERACTION, AnalyticsManager.ACTION_USER_DONATE);
                             }
                         }
                     }

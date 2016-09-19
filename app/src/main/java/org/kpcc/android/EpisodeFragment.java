@@ -1,11 +1,9 @@
 package org.kpcc.android;
 
-import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.FragmentManager;
-import android.support.v4.app.NotificationCompat;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -38,6 +36,7 @@ public class EpisodeFragment extends StreamBindFragment {
     // Member Variables
     ////////////////////////////////////////////////////////////////////////////////////////////////
     public final AtomicBoolean pagerVisible = new AtomicBoolean(false);
+
     public Episode episode;
     public Program program;
     private SeekBar mSeekBar;
@@ -46,6 +45,9 @@ public class EpisodeFragment extends StreamBindFragment {
     // Unrecoverable error. Just show an error message if this is true.
     private boolean mDidError = false;
     private PeriodicBackgroundUpdater mPeriodicBackgroundUpdater;
+    private AtomicBoolean mDidReach75 = new AtomicBoolean(false);
+    private AtomicBoolean mDidReach50 = new AtomicBoolean(false);
+    private AtomicBoolean mDidReach25 = new AtomicBoolean(false);
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
     // Constructors
@@ -165,27 +167,29 @@ public class EpisodeFragment extends StreamBindFragment {
 
         mAudioButtonManager = new AudioButtonManager(view);
 
-        AppConnectivityManager.getInstance().addOnNetworkConnectivityListener(getActivity(), episode.getPublicUrl(), new AppConnectivityManager.NetworkConnectivityListener() {
-            @Override
-            public void onConnect(Context context) {
-                if (mAudioButtonManager == null) {
-                    return;
+        AppConnectivityManager.getInstance().addOnNetworkConnectivityListener(getActivity(), episode.getPublicUrl(), true, getStreamService(),
+                new AppConnectivityManager.NetworkConnectivityListener() {
+                    @Override
+                    public void onConnect(Context context, StreamService streamService) {
+                        if (mAudioButtonManager == null) {
+                            return;
+                        }
+
+                        // We want this here so the schedule will get updated immediately when connectivity
+                        // is back, so we'll just restart it.
+                        mAudioButtonManager.hideError();
+                    }
+
+                    @Override
+                    public void onDisconnect(Context context, StreamService streamService) {
+                        if (mAudioButtonManager == null) {
+                            return;
+                        }
+
+                        mAudioButtonManager.showError(R.string.network_error);
+                    }
                 }
-
-                // We want this here so the schedule will get updated immediately when connectivity
-                // is back, so we'll just restart it.
-                mAudioButtonManager.hideError();
-            }
-
-            @Override
-            public void onDisconnect(Context context) {
-                if (mAudioButtonManager == null) {
-                    return;
-                }
-
-                mAudioButtonManager.showError(R.string.network_error);
-            }
-        }, true);
+        );
 
         mSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
@@ -196,6 +200,7 @@ public class EpisodeFragment extends StreamBindFragment {
 
                 OnDemandPlayer stream = getOnDemandPlayer();
                 if (stream != null) {
+                    analyticsLogSeekEvent("scrubber", progress - stream.getCurrentPosition());
                     stream.seekTo(progress);
                 }
             }
@@ -218,6 +223,7 @@ public class EpisodeFragment extends StreamBindFragment {
                     if (stream != null) {
                         service.startForeground(Stream.NOTIFICATION_ID, getNotificationBuilder().build());
                         stream.prepareAndStart();
+                        analyticsLogPlayEvent();
                     }
                 }
             }
@@ -227,7 +233,10 @@ public class EpisodeFragment extends StreamBindFragment {
             @Override
             public void onClick(View v) {
                 OnDemandPlayer stream = getOnDemandPlayer();
-                if (stream != null) { stream.pause(); }
+                if (stream != null) {
+                    stream.pause();
+                    analyticsLogPauseEvent(stream);
+                }
                 cancelNotification();
             }
         });
@@ -253,7 +262,6 @@ public class EpisodeFragment extends StreamBindFragment {
         // listeners.
         boolean alreadyPlaying = false;
 
-
         OnDemandPlayer stream = getOnDemandPlayer();
         if (stream != null && stream.getAudioUrl().equals(episode.getAudio().getUrl())) {
             mSeekBar.setEnabled(true);
@@ -269,6 +277,8 @@ public class EpisodeFragment extends StreamBindFragment {
             setCurrentStream(stream, STACK_TAG);
         }
 
+        analyticsLogForegroundEvent(stream);
+        stream.setBackgroundStart(-1);
 
         stream.setAudioEventListener(new Stream.AudioEventListener() {
             @Override
@@ -315,6 +325,8 @@ public class EpisodeFragment extends StreamBindFragment {
                     return;
                 }
 
+                analyticsLogCompletedEvent(stream);
+
                 if (mPeriodicBackgroundUpdater != null) {
                     mPeriodicBackgroundUpdater.release();
                 }
@@ -340,6 +352,20 @@ public class EpisodeFragment extends StreamBindFragment {
             public void onProgress(int progress) {
                 mSeekBar.setProgress(progress);
                 mCurrentTime.setText(Stream.getTimeFormat(progress / 1000));
+
+                OnDemandPlayer stream = getOnDemandPlayer();
+                if (stream != null) {
+                    if (!mDidReach75.get() && (float) progress / (float) mSeekBar.getMax() >= 0.75f) {
+                        mDidReach75.set(true);
+                        analyticsLog75PercentEvent(stream);
+                    } else if (!mDidReach50.get() && (float) progress / (float) mSeekBar.getMax() >= 0.50f) {
+                        mDidReach50.set(true);
+                        analyticsLog50PercentEvent(stream);
+                    } else if (!mDidReach25.get() && (float) progress / (float) mSeekBar.getMax() >= 0.25f) {
+                        mDidReach25.set(true);
+                        analyticsLog25PercentEvent(stream);
+                    }
+                }
             }
 
             @Override
@@ -405,6 +431,12 @@ public class EpisodeFragment extends StreamBindFragment {
         }
 
         if (mPeriodicBackgroundUpdater != null) { mPeriodicBackgroundUpdater.release(); }
+
+        OnDemandPlayer stream = getOnDemandPlayer();
+        if (stream != null) {
+            analyticsLogBackgroundEvent(stream);
+            stream.setBackgroundStart(System.currentTimeMillis());
+        }
     }
 
 
@@ -448,5 +480,114 @@ public class EpisodeFragment extends StreamBindFragment {
         OnDemandPlayer stream = getOnDemandPlayer();
         if (stream == null) return 0;
         return stream.getCurrentPosition() / 1000;
+    }
+
+
+    /**
+     * For Analytics
+     * @param method
+     * @param amountMs
+     */
+    private void analyticsLogSeekEvent(String method, long amountMs) {
+        String dir = amountMs < 0 ? "Backward" : "Forward";
+
+        AnalyticsManager.getInstance().sendAction(AnalyticsManager.CATEGORY_ON_DEMAND, AnalyticsManager.ACTION_ON_DEMAND_AUDIO_TIME_SHIFTED,
+                String.format(Locale.ENGLISH, AnalyticsManager.LABEL_ON_DEMAND_AUDIO_TIME_SHIFTED,
+                        String.format(Locale.ENGLISH, "%s %s", dir, String.valueOf(amountMs / 1000)), method));
+    }
+
+    /**
+     * For Analytics
+     */
+    private void analyticsLogPlayEvent() {
+        AnalyticsManager.getInstance().sendAction(AnalyticsManager.CATEGORY_ON_DEMAND, AnalyticsManager.ACTION_ON_DEMAND_PLAY,
+                String.format(Locale.ENGLISH, AnalyticsManager.LABEL_ON_DEMAND_PLAY, getEpisodeTitle(), getProgramTitle()));
+    }
+
+    /**
+     * For Analytics
+     */
+    private void analyticsLogPauseEvent(OnDemandPlayer stream) {
+        int currentProgress = (int)(stream.getCurrentPosition() / stream.getDuration() / 1000) * 100;
+        int duration = (int)(stream.getDuration() / 1000);
+
+        AnalyticsManager.getInstance().sendAction(AnalyticsManager.CATEGORY_ON_DEMAND, AnalyticsManager.ACTION_ON_DEMAND_PLAY,
+                String.format(Locale.ENGLISH, AnalyticsManager.LABEL_ON_DEMAND_PLAY,
+                        String.valueOf(currentProgress), String.valueOf(duration), getEpisodeTitle(), getProgramTitle()));
+    }
+
+    /**
+     * For Analytics
+     */
+    private void analyticsLogCompletedEvent(OnDemandPlayer stream) {
+        int duration = (int)(stream.getDuration() / 1000);
+
+        AnalyticsManager.getInstance().sendAction(AnalyticsManager.CATEGORY_ON_DEMAND, AnalyticsManager.ACTION_ON_DEMAND_PLAY,
+                String.format(Locale.ENGLISH, AnalyticsManager.LABEL_ON_DEMAND_PLAY,
+                        "100", String.valueOf(duration), getEpisodeTitle(), getProgramTitle()));
+    }
+
+    /**
+     * For Analytics
+     * @param stream
+     */
+    private void analyticsLogBackgroundEvent(OnDemandPlayer stream) {
+        AnalyticsManager.getInstance().sendAction(AnalyticsManager.CATEGORY_ON_DEMAND, AnalyticsManager.ACTION_ON_DEMAND_MOVED_TO_BACKGROUND,
+                String.format(Locale.ENGLISH, AnalyticsManager.LABEL_ON_DEMAND_MOVED_TO_BACKGROUND,
+                        String.valueOf(stream.getSessionDurationMs() / 1000)));
+    }
+
+    /**
+     * For Analytics
+     * @param stream
+     */
+    private void analyticsLogForegroundEvent(OnDemandPlayer stream) {
+        AnalyticsManager.getInstance().sendAction(AnalyticsManager.CATEGORY_ON_DEMAND, AnalyticsManager.ACTION_ON_DEMAND_RETURNED_TO_FOREGROUND,
+                String.format(Locale.ENGLISH, AnalyticsManager.LABEL_ON_DEMAND_RETURNED_TO_FOREGROUND,
+                        String.valueOf(System.currentTimeMillis() - stream.getBackgroundStart())));
+    }
+
+    /**
+     * For Analytics
+     * @param stream
+     */
+    private void analyticsLog25PercentEvent(OnDemandPlayer stream) {
+        int duration = (int)(stream.getDuration() / 1000);
+
+        AnalyticsManager.getInstance().sendAction(AnalyticsManager.CATEGORY_ON_DEMAND, AnalyticsManager.ACTION_ON_DEMAND_25_PERCENT,
+                String.format(Locale.ENGLISH, AnalyticsManager.LABEL_ON_DEMAND_25_PERCENT,
+                        "25", duration, getEpisodeTitle(), getProgramTitle()));
+    }
+
+    /**
+     * For Analytics
+     * @param stream
+     */
+    private void analyticsLog50PercentEvent(OnDemandPlayer stream) {
+        int duration = (int)(stream.getDuration() / 1000);
+
+        AnalyticsManager.getInstance().sendAction(AnalyticsManager.CATEGORY_ON_DEMAND, AnalyticsManager.ACTION_ON_DEMAND_MIDWAY,
+                String.format(Locale.ENGLISH, AnalyticsManager.LABEL_ON_DEMAND_MIDWAY,
+                        "50", duration, getEpisodeTitle(), getProgramTitle()));
+    }
+
+    /**
+     * For Analytics
+     * @param stream
+     */
+    private void analyticsLog75PercentEvent(OnDemandPlayer stream) {
+        int duration = (int)(stream.getDuration() / 1000);
+
+        AnalyticsManager.getInstance().sendAction(AnalyticsManager.CATEGORY_ON_DEMAND, AnalyticsManager.ACTION_ON_DEMAND_75_PERCENT,
+                String.format(Locale.ENGLISH, AnalyticsManager.LABEL_ON_DEMAND_75_PERCENT,
+                        "75", duration, getEpisodeTitle(), getProgramTitle()));
+    }
+
+    private String getEpisodeTitle() {
+        return episode == null ? "UNKNOWN" : episode.getTitle();
+    }
+
+    private String getProgramTitle() {
+        return program == null ? "UNKNOWN" : program.getTitle();
     }
 }

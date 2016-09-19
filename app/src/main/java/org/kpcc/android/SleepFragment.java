@@ -103,6 +103,8 @@ public class SleepFragment extends StreamBindFragment {
                     DataManager.getInstance().setPlayNow(true);
                     startActivity(activityIntent);
                 }
+
+                AnalyticsManager.getInstance().sendAction(AnalyticsManager.CATEGORY_ALARM, AnalyticsManager.ACTION_SLEEP_TIMER_ARMED);
             }
         });
 
@@ -111,6 +113,7 @@ public class SleepFragment extends StreamBindFragment {
             public void onClick(View v) {
                 BaseAlarmManager.SleepManager.getInstance().cancel();
                 showSeekPrompt();
+                AnalyticsManager.getInstance().sendAction(AnalyticsManager.CATEGORY_ALARM, AnalyticsManager.ACTION_SLEEP_TIMER_CANCELED);
             }
         });
 

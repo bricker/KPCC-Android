@@ -49,6 +49,8 @@ public class WakeFragment extends Fragment {
 
                 BaseAlarmManager.WakeManager.getInstance().set(hourOfDay, minute);
                 showCurrentAlarmData();
+
+                AnalyticsManager.getInstance().sendAction(AnalyticsManager.CATEGORY_ALARM, AnalyticsManager.ACTION_ALARM_ARMED);
             }
         });
 
@@ -57,6 +59,7 @@ public class WakeFragment extends Fragment {
             public void onClick(View v) {
                 BaseAlarmManager.WakeManager.getInstance().cancel();
                 showTimePickerPrompt();
+                AnalyticsManager.getInstance().sendAction(AnalyticsManager.CATEGORY_ALARM, AnalyticsManager.ACTION_ALARM_CANCELED);
             }
         });
 

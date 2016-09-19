@@ -86,22 +86,24 @@ public class EpisodesFragment extends StreamBindFragment
         mErrorView = (LinearLayout)mView.findViewById(R.id.generic_load_error);
         mErrorText = (TextView)mErrorView.findViewById(R.id.error_text);
 
-        AppConnectivityManager.getInstance().addOnNetworkConnectivityListener(getActivity(), EpisodesFragment.STACK_TAG, new AppConnectivityManager.NetworkConnectivityListener() {
-            @Override
-            public void onConnect(Context context) {
-                if (mProgressBar != null) {
-                    mErrorView.setVisibility(View.GONE);
-                    mProgressBar.setVisibility(View.VISIBLE);
+        AppConnectivityManager.getInstance().addOnNetworkConnectivityListener(getActivity(), EpisodesFragment.STACK_TAG, true, getStreamService(),
+                new AppConnectivityManager.NetworkConnectivityListener() {
+                    @Override
+                    public void onConnect(Context context, StreamService streamService) {
+                        if (mProgressBar != null) {
+                            mErrorView.setVisibility(View.GONE);
+                            mProgressBar.setVisibility(View.VISIBLE);
+                        }
+
+                        loadEpisodes();
+                    }
+
+                    @Override
+                    public void onDisconnect(Context context, StreamService streamService) {
+                        showError(R.string.network_error);
+                    }
                 }
-
-                loadEpisodes();
-            }
-
-            @Override
-            public void onDisconnect(Context context) {
-                showError(R.string.network_error);
-            }
-        }, true);
+        );
 
         if (mDidError) {
             showError(mErrorMessage);

@@ -16,6 +16,8 @@ public class AlarmReceiver {
             context.startActivity(activityIntent);
 
             BaseAlarmManager.WakeManager.getInstance().reset();
+
+            AnalyticsManager.getInstance().sendAction(AnalyticsManager.CATEGORY_ALARM, AnalyticsManager.ACTION_ALARM_FIRED);
         }
     }
 
@@ -30,6 +32,8 @@ public class AlarmReceiver {
             }
 
             BaseAlarmManager.SleepManager.getInstance().reset();
+
+            AnalyticsManager.getInstance().sendAction(AnalyticsManager.CATEGORY_ALARM, AnalyticsManager.ACTION_SLEEP_TIMER_FIRED);
         }
     }
 }

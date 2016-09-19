@@ -91,6 +91,10 @@ public class StreamBindFragment extends Fragment {
         return mStreamConnection.getStreamService();
     }
 
+    protected StreamService getStreamServiceUnsafe() {
+        if (mStreamConnection == null) return null;
+        return mStreamConnection.getStreamService();
+    }
 
     protected void initNotificationBuilder(int icon, String title) {
         if (mNotificationBuilder != null) return;

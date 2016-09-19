@@ -37,6 +37,10 @@ public class AnalyticsManager {
     ////////////////////////////////////////////////////////////////////////////////////////////////
     public static AnalyticsManager instance;
 
+    /**
+    Specs: https://docs.google.com/spreadsheets/d/1gBUhrJD--JmZXIgUgiOv3QyP6n3VUPjw_YJ97D0IhW0/edit#gid=0
+     */
+
     public static final String CATEGORY_LIVE_STREAM = "Live Stream";
     public static final String CATEGORY_ON_DEMAND = "On Demand";
     public static final String CATEGORY_USER_INTERACTION = "User Interaction";
@@ -78,6 +82,7 @@ public class AnalyticsManager {
     public static final String ACTION_SLEEP_TIMER_FIRED = "sleepTimerFired";
     public static final String ACTION_SLEEP_TIMER_CANCELED = "sleepTimerCanceled";
     public static final String ACTION_ALARM_ARMED = "alarmClockArmed";
+    public static final String ACTION_ALARM_CANCELED = "alarmClockCanceled";
     public static final String ACTION_ALARM_FIRED = "alarmClockFired";
     public static final String ACTION_KPCC_PLUS_SELECTED = "kpcc-plus-selected";
     public static final String ACTION_TICKET_AD_TAPPED = "ticketTuesdayAdTapped";
@@ -139,10 +144,6 @@ public class AnalyticsManager {
         instance = new AnalyticsManager(context);
     }
 
-    static String buildLabel(String label, String... values) {
-        return String.format(Locale.ENGLISH, label, values);
-    }
-
     static AnalyticsManager getInstance() {
         return instance;
     }
@@ -163,6 +164,13 @@ public class AnalyticsManager {
                 .setCategory(category)
                 .setAction(action)
                 .setLabel(label)
+                .build());
+    }
+
+    void sendAction(String category, String action) {
+        mTracker.send(new HitBuilders.EventBuilder()
+                .setCategory(category)
+                .setAction(action)
                 .build());
     }
 }

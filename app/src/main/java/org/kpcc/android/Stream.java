@@ -49,6 +49,9 @@ abstract class Stream implements AudioManager.OnAudioFocusChangeListener, AudioP
     private boolean mIsTemporarilyPaused;
     private final AtomicBoolean mIsPaused = new AtomicBoolean(false); // ExoPlayer doesn't have a proper "paused" state so we keep track of it here.
     private long mPausedAt = 0;
+    private long mSessionStart = -1;
+    private long mSessionStop = -1;
+    private long mBackgroundStart = -1;
 
     private NotificationCompat.Builder mNotificationBuilder;
 
@@ -76,8 +79,6 @@ abstract class Stream implements AudioManager.OnAudioFocusChangeListener, AudioP
                 .setSmallIcon(R.drawable.menu_antenna)
                 .setTicker(context.getString(R.string.now_playing))
                 .setOngoing(true);
-
-        setNotificationBuilder(builder);
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -99,6 +100,8 @@ abstract class Stream implements AudioManager.OnAudioFocusChangeListener, AudioP
 
         prepare();
         play();
+
+        mSessionStart = System.currentTimeMillis();
     }
 
     void play() {
@@ -107,6 +110,7 @@ abstract class Stream implements AudioManager.OnAudioFocusChangeListener, AudioP
         try {
             mIsPaused.set(false);
             getAudioPlayer().getPlayerControl().start();
+
         } catch (IllegalStateException e) {
             // Call release() to stop progress observer, update button state, etc.
             release();
@@ -120,6 +124,7 @@ abstract class Stream implements AudioManager.OnAudioFocusChangeListener, AudioP
             mIsPaused.set(true);
             setPausedAt(System.currentTimeMillis());
             getAudioPlayer().getPlayerControl().pause();
+
         } catch (IllegalStateException e) {
             // Call release() to stop progress observer, update button state, etc.
             release();
@@ -139,6 +144,8 @@ abstract class Stream implements AudioManager.OnAudioFocusChangeListener, AudioP
         mIsPaused.set(false);
         if (getAudioPlayer() == null) return;
         getAudioPlayer().release();
+
+        mSessionStop = System.currentTimeMillis();
     }
 
     void seekTo(final long pos) {
@@ -216,9 +223,12 @@ abstract class Stream implements AudioManager.OnAudioFocusChangeListener, AudioP
 
     protected boolean isTemporarilyPaused() { return mIsTemporarilyPaused; }
 
-    protected void setNotificationBuilder(NotificationCompat.Builder builder) { mNotificationBuilder = builder; }
-    NotificationCompat.Builder getNotificationBuilder() {
-        return mNotificationBuilder;
+    void setBackgroundStart(long time) {
+        mBackgroundStart = time;
+    }
+
+    long getBackgroundStart() {
+        return mBackgroundStart;
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -293,17 +303,6 @@ abstract class Stream implements AudioManager.OnAudioFocusChangeListener, AudioP
     ////////////////////////////////////////////////////////////////////////////////////////////////
     // Member Functions
     ////////////////////////////////////////////////////////////////////////////////////////////////
-    void updateNotification(String title, String text) {
-        getNotificationBuilder()
-                .setContentTitle(title)
-                .setContentText(text);
-    }
-
-    void sendNotification(Context context) {
-        NotificationManager nm = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
-        nm.notify(Stream.NOTIFICATION_ID, getNotificationBuilder().build());
-    }
-
     boolean requestAudioFocus() {
         int result = getAudioManager().requestAudioFocus(this, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN);
         return result == AudioManager.AUDIOFOCUS_REQUEST_GRANTED;
@@ -425,6 +424,16 @@ abstract class Stream implements AudioManager.OnAudioFocusChangeListener, AudioP
     private void unduckStream() {
         if (getAudioPlayer() == null) return;
         getAudioPlayer().setVolume(1.0f);
+    }
+
+    /**
+     * Used for Analytics
+     * @return
+     */
+    long getSessionDurationMs() {
+        if (mSessionStart == -1) return -1;
+        long end = mSessionStop == -1 ? System.currentTimeMillis() : mSessionStop;
+        return end - mSessionStart;
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////

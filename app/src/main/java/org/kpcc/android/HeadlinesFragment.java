@@ -116,6 +116,7 @@ public class HeadlinesFragment extends Fragment {
             }
         });
 
+        AnalyticsManager.getInstance().sendAction(AnalyticsManager.CATEGORY_USER_INTERACTION, AnalyticsManager.ACTION_USER_VIEWING_HEADLINES);
         return view;
     }
 

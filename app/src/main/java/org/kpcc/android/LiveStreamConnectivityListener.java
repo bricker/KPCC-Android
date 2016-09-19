@@ -1,41 +1,49 @@
 package org.kpcc.android;
 
+import android.content.BroadcastReceiver;
 import android.content.Context;
+
+import java.util.Locale;
 
 /**
  * Created by rickb014 on 4/4/16.
  */
 class LiveStreamConnectivityListener implements AppConnectivityManager.NetworkConnectivityListener {
     @Override
-    public void onConnect(Context context) {
-//        MainActivity activity = (MainActivity)context;
-//        activity.bind
-//        StreamService service = (StreamService)context;
-//
-//        if (service == null) {
-//            // Nothing we can do
-//            return;
-//        }
-//
-//        Stream stream = service.getCurrentStream();
-//
-//        if (stream != null) {
-//            stream.playIfTemporarilyPaused();
-//        }
+    public void onConnect(Context context, StreamService streamServiceUnsafe) {
+        if (streamServiceUnsafe == null) {
+            // Nothing we can do
+            return;
+        }
+
+        try {
+            Stream stream = streamServiceUnsafe.getCurrentStream();
+
+            if (stream != null) {
+                stream.playIfTemporarilyPaused();
+            }
+        } catch (Exception e) {
+            if (BuildConfig.DEBUG) { throw e; }
+            // Otherwise swallow this error.
+        }
     }
 
     @Override
-    public void onDisconnect(Context context) {
-//        StreamManager streamManager = StreamManager.ConnectivityManager.getInstance().getStreamManager();
-//        if (streamManager == null) {
-//            // Nothing we can do
-//            return;
-//        }
-//
-//        LivePlayer currentLivePlayer = streamManager.getCurrentLivePlayer();
-//
-//        if (currentLivePlayer != null) {
-//            currentLivePlayer.pauseTemporary();
-//        }
+    public void onDisconnect(Context context, StreamService streamServiceUnsafe) {
+        if (streamServiceUnsafe == null) {
+            // Nothing we can do
+            return;
+        }
+
+        try {
+            LivePlayer currentLivePlayer = (LivePlayer) streamServiceUnsafe.getCurrentStream();
+
+            if (currentLivePlayer != null) {
+                currentLivePlayer.pauseTemporary();
+            }
+        } catch (Exception e) {
+            if (BuildConfig.DEBUG) { throw e; }
+            // Otherwise swallow this error.
+        }
     }
 }

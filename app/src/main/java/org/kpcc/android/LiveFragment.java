@@ -1,18 +1,11 @@
 package org.kpcc.android;
 
-import android.app.Notification;
-import android.app.NotificationManager;
-import android.app.PendingIntent;
-import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
-import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
-import android.support.v4.app.NotificationCompat;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -130,7 +123,8 @@ public class LiveFragment extends StreamBindFragment {
         // So, we're being more proactive about managing streams on network connectivity changes.
         if (activity != null) {
             bindStreamService();
-            AppConnectivityManager.getInstance().addOnNetworkConnectivityListener(getActivity(), LIVESTREAM_LISTENER_KEY, new LiveStreamConnectivityListener(), false);
+            AppConnectivityManager.getInstance().addOnNetworkConnectivityListener(getActivity(), LIVESTREAM_LISTENER_KEY,
+                    false, getStreamServiceUnsafe(), new LiveStreamConnectivityListener());
         }
 
         mAudioButtonManager.getPlayButton().setOnClickListener(new View.OnClickListener() {
@@ -145,9 +139,6 @@ public class LiveFragment extends StreamBindFragment {
                 initAudio();
 
                 LivePlayer stream = getLivePlayer();
-
-                AnalyticsManager.getInstance().sendAction(AnalyticsManager.CATEGORY_LIVE_STREAM, AnalyticsManager.ACTION_LIVE_STREAM_PLAY,
-                        AnalyticsManager.buildLabel(AnalyticsManager.LABEL_LIVE_STREAM_PLAY, "0", "test-status", "test-program-title", "KPCC Live"));
 
                 if (stream != null && stream.isPaused() && stream.getPausedAt() > (System.currentTimeMillis() - 1000 * 60 * 60 * 8)) {
                     // Stream was paused; start it again.
@@ -181,7 +172,9 @@ public class LiveFragment extends StreamBindFragment {
                         StreamService service = getStreamService();
                         if (service != null) {
                             service.startForeground(Stream.NOTIFICATION_ID, getNotificationBuilder().build());
-                            getLivePlayer().prepareAndStart();
+                            LivePlayer p = getLivePlayer();
+                            p.prepareAndStart();
+                            analyticsLogPlayEvent(p);
                         }
                     } else {
                         prerollPlayer.getAudioEventListener().onPreparing();
@@ -195,6 +188,7 @@ public class LiveFragment extends StreamBindFragment {
                                     if (prerollData == null || prerollData.getAudioUrl() == null) {
                                         setCurrentStream(livePlayer, STACK_TAG);
                                         livePlayer.prepareAndStart();
+                                        analyticsLogPlayEvent(livePlayer);
                                     } else {
                                         setCurrentStream(prerollPlayer, STACK_TAG);
                                         StreamService service = getStreamService();
@@ -211,6 +205,7 @@ public class LiveFragment extends StreamBindFragment {
                                                 void onPrerollComplete() {
                                                     setCurrentStream(livePlayer, STACK_TAG);
                                                     livePlayer.play();
+                                                    analyticsLogPlayEvent(livePlayer);
                                                 }
                                             });
                                         }
@@ -232,8 +227,11 @@ public class LiveFragment extends StreamBindFragment {
         mAudioButtonManager.getPauseButton().setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Stream stream = getCurrentStream();
-                if (stream != null) { stream.pause(); }
+                LivePlayer stream = getLivePlayer();
+                if (stream != null) {
+                    stream.pause();
+                    analyticsLogPauseEvent(stream);
+                }
                 cancelNotification();
             }
         });
@@ -269,12 +267,15 @@ public class LiveFragment extends StreamBindFragment {
                 if (progress >= mLiveSeekViewManager.getLiveHeadProgress()) {
                     // Prevent from seeking past live head.
                     mLiveSeekViewManager.setSeekProgressToLiveHead();
+                    analyticsLogSeekEvent("scrubber", stream.relativeMsBehindLive());
                     stream.seekToLive();
                     return;
                 }
 
                 long programStartPositionInHLSWindow = mLiveSeekViewManager.getProgramStartWindowPositionMs(stream.getUpperBoundMs());
-                stream.seekTo(programStartPositionInHLSWindow + progress);
+                long seekPos = programStartPositionInHLSWindow + progress;
+                analyticsLogSeekEvent("scrubber", seekPos - stream.getCurrentPosition());
+                stream.seekTo(seekPos);
             }
 
             @Override
@@ -292,6 +293,7 @@ public class LiveFragment extends StreamBindFragment {
                 LivePlayer stream = getLivePlayer();
                 if (stream == null) return;
 
+                analyticsLogSeekEvent("button", -LivePlayer.JUMP_INTERVAL_MS);
                 stream.skipBackward();
                 mLiveSeekViewManager.skipBackward(stream.canSeekBackward());
 
@@ -308,6 +310,7 @@ public class LiveFragment extends StreamBindFragment {
                 LivePlayer stream = getLivePlayer();
                 if (stream == null) return;
 
+                analyticsLogSeekEvent("button", LivePlayer.JUMP_INTERVAL_MS);
                 stream.skipForward();
                 mLiveSeekViewManager.skipForward(stream.canSeekForward());
 
@@ -332,6 +335,9 @@ public class LiveFragment extends StreamBindFragment {
                         stream.pause();
                         mAudioButtonManager.toggleLoading();
                         mAudioButtonManager.lock();
+
+                        analyticsLogSeekEvent("back-to-live-button", stream.relativeMsBehindLive());
+
                         stream.seekToLive();
                     }
 
@@ -370,6 +376,8 @@ public class LiveFragment extends StreamBindFragment {
                         mAudioButtonManager.lock();
 
                         long programStartPositionInHLSWindow = mLiveSeekViewManager.getProgramStartWindowPositionMs(stream.getUpperBoundMs());
+                        analyticsLogSeekEvent("rewind-to-start-button", programStartPositionInHLSWindow - stream.getCurrentPosition());
+
                         stream.seekTo(programStartPositionInHLSWindow);
                     }
 
@@ -393,6 +401,7 @@ public class LiveFragment extends StreamBindFragment {
 
         return view;
     }
+
 
     /**
      *
@@ -439,22 +448,30 @@ public class LiveFragment extends StreamBindFragment {
         // The callbacks below will get run right away whatever the state is. We want to start it
         // no matter what to setup the default state, and then let the callbacks handle the
         // connected state. Calling start() again should be safe and not start a second thread.
-        AppConnectivityManager.getInstance().addOnNetworkConnectivityListener(getActivity(), LiveFragment.STACK_TAG, new AppConnectivityManager.NetworkConnectivityListener() {
-            @Override
-            public void onConnect(Context context) {
-                // We want this here so the schedule will get updated immediately when connectivity
-                // is back, so we'll just restart it.
-                if (mScheduleUpdater != null) mScheduleUpdater.start();
-                mAudioButtonManager.hideError();
-            }
+        AppConnectivityManager.getInstance().addOnNetworkConnectivityListener(getActivity(), LiveFragment.STACK_TAG, true, getStreamService(),
+                new AppConnectivityManager.NetworkConnectivityListener() {
+                    @Override
+                    public void onConnect(Context context, StreamService streamService) {
+                        // We want this here so the schedule will get updated immediately when connectivity
+                        // is back, so we'll just restart it.
+                        if (mScheduleUpdater != null) mScheduleUpdater.start();
+                        mAudioButtonManager.hideError();
+                    }
 
-            @Override
-            public void onDisconnect(Context context) {
-                if (mScheduleUpdater != null) mScheduleUpdater.release();
-                setDefaultScheduleValues();
-                mAudioButtonManager.showError(R.string.network_error);
-            }
-        }, true);
+                    @Override
+                    public void onDisconnect(Context context, StreamService streamService) {
+                        if (mScheduleUpdater != null) mScheduleUpdater.release();
+                        setDefaultScheduleValues();
+                        mAudioButtonManager.showError(R.string.network_error);
+                    }
+                }
+        );
+
+        LivePlayer livePlayer = getLivePlayer();
+        if (livePlayer != null) {
+            analyticsLogForegroundEvent(livePlayer);
+            livePlayer.setBackgroundStart(-1);
+        }
     }
 
     /**
@@ -473,6 +490,12 @@ public class LiveFragment extends StreamBindFragment {
         if (mLiveStatusUpdater != null) mLiveStatusUpdater.release();
 
         AppConnectivityManager.getInstance().removeOnNetworkConnectivityListener(LiveFragment.STACK_TAG);
+
+        LivePlayer livePlayer = getLivePlayer();
+        if (livePlayer != null) {
+            analyticsLogBackgroundEvent(livePlayer);
+            livePlayer.setBackgroundStart(System.currentTimeMillis());
+        }
 
         super.onPause();
     }
@@ -518,6 +541,76 @@ public class LiveFragment extends StreamBindFragment {
     ////////////////////////////////////////////////////////////////////////////////////////////////
     // Member Functions
     ////////////////////////////////////////////////////////////////////////////////////////////////
+
+    /**
+     *
+     * @param stream
+     */
+    private void analyticsLogPlayEvent(LivePlayer stream) {
+        String status;
+
+        float msBehindLive = stream.relativeMsBehindLive();
+        if (msBehindLive < LivePlayer.JUMP_INTERVAL_MS) {
+            status = "LIVE";
+        } else {
+            status = String.format(Locale.ENGLISH, "%d HR %d MINS", (int)msBehindLive/1000/60/60, (int)msBehindLive/1000/60%60);
+        }
+
+        String title = mCurrentSchedule == null ? "UNKNOWN" : mCurrentSchedule.getTitle();
+
+        AnalyticsManager.getInstance().sendAction(AnalyticsManager.CATEGORY_LIVE_STREAM, AnalyticsManager.ACTION_LIVE_STREAM_PLAY,
+                String.format(Locale.ENGLISH, AnalyticsManager.LABEL_LIVE_STREAM_PLAY,
+                        String.valueOf(stream.relativeMsBehindLive() / 1000), status, title, "KPCC Live"));
+    }
+
+    /**
+     *
+     * @param stream
+     */
+    private void analyticsLogPauseEvent(LivePlayer stream) {
+        String title = mCurrentSchedule == null ? "UNKNOWN" : mCurrentSchedule.getTitle();
+        long lengthMs = stream.getSessionDurationMs();
+        int lengthSec = lengthMs == -1 ? -1 : (int)(lengthMs / 1000);
+        int lengthMin = lengthSec == -1 ? -1 : lengthSec / 60;
+
+        AnalyticsManager.getInstance().sendAction(AnalyticsManager.CATEGORY_LIVE_STREAM, AnalyticsManager.ACTION_LIVE_STREAM_PAUSE,
+                String.format(Locale.ENGLISH, AnalyticsManager.LABEL_LIVE_STREAM_PAUSE,
+                        title, String.valueOf(lengthMin), String.valueOf(lengthSec)));
+    }
+
+    /**
+     *
+     * @param method
+     * @param amountMs
+     */
+    private void analyticsLogSeekEvent(String method, long amountMs) {
+        String dir = amountMs < 0 ? "Backward" : "Forward";
+
+        AnalyticsManager.getInstance().sendAction(AnalyticsManager.CATEGORY_LIVE_STREAM, AnalyticsManager.ACTION_LIVE_STREAM_TIME_SHIFTED,
+                String.format(Locale.ENGLISH, AnalyticsManager.LABEL_LIVE_STREAM_TIME_SHIFTED,
+                        String.format(Locale.ENGLISH, "%s %s", dir, String.valueOf(amountMs / 1000)), method));
+    }
+
+    /**
+     *
+     * @param stream
+     */
+    private void analyticsLogBackgroundEvent(LivePlayer stream) {
+        AnalyticsManager.getInstance().sendAction(AnalyticsManager.CATEGORY_LIVE_STREAM, AnalyticsManager.ACTION_LIVE_STREAM_MOVED_TO_BACKGROUND,
+                String.format(Locale.ENGLISH, AnalyticsManager.LABEL_LIVE_STREAM_MOVED_TO_BACKGROUND,
+                        String.valueOf(stream.getSessionDurationMs() / 1000)));
+    }
+
+    /**
+     *
+     * @param stream
+     */
+    private void analyticsLogForegroundEvent(LivePlayer stream) {
+        AnalyticsManager.getInstance().sendAction(AnalyticsManager.CATEGORY_LIVE_STREAM, AnalyticsManager.ACTION_LIVE_STREAM_RETURNED_TO_FOREGROUND,
+                String.format(Locale.ENGLISH, AnalyticsManager.LABEL_LIVE_STREAM_RETURNED_TO_FOREGROUND,
+                        String.valueOf(System.currentTimeMillis() - stream.getBackgroundStart())));
+    }
+
     /**
      *
      */
