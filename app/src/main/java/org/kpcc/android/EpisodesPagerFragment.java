@@ -96,7 +96,16 @@ public class EpisodesPagerFragment extends Fragment {
 
             @Override
             public void onPageSelected(int position) {
+                EpisodeFragment prevFragment = mAdapter.getRegisteredFragment(mPrevPos);
                 EpisodeFragment fragment = mAdapter.getRegisteredFragment(position);
+
+                if (prevFragment != null) {
+                    prevFragment.releaseUpdater();
+                    OnDemandPlayer stream = prevFragment.getStreamPublic();
+                    if (stream != null) {
+                        stream.release();
+                    }
+                }
 
                 if (fragment != null) {
                     fragment.pagerVisible.set(true);

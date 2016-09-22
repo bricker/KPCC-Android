@@ -35,7 +35,10 @@ public class KPCCApplication extends Application {
                 AppConfiguration.getInstance().getSecret("parse.applicationId"),
                 AppConfiguration.getInstance().getSecret("parse.clientKey")
         );
-        ParseInstallation.getCurrentInstallation().saveInBackground();
+
+        final ParseInstallation parseInstallation = ParseInstallation.getCurrentInstallation();
+        parseInstallation.put("GCMSenderId", AppConfiguration.getInstance().getConfig("gcm.senderId"));
+        parseInstallation.saveInBackground();
 
         FlurryAgent.setLogEnabled(AppConfiguration.getInstance().isDebug);
         FlurryAgent.init(this, AppConfiguration.getInstance().getSecret("flurry.apiKey"));

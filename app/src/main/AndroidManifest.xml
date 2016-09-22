@@ -25,6 +25,9 @@
         <meta-data
             android:name="com.google.android.gms.version"
             android:value="@integer/google_play_services_version" />
+        <meta-data
+            android:name="com.parse.push.gcm_sender_id"
+            android:value="id:630795214876" />
 
         <activity
             android:name=".MainActivity"

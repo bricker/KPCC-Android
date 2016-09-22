@@ -441,6 +441,10 @@ public class EpisodeFragment extends StreamBindFragment {
     }
 
 
+    void releaseUpdater() {
+        if (mPeriodicBackgroundUpdater != null) { mPeriodicBackgroundUpdater.release(); }
+    }
+
     @Override // StreamBindFragment
     protected void buildNotification() {
         initNotificationBuilder(R.drawable.menu_antenna, getString(R.string.now_playing));
@@ -484,6 +488,9 @@ public class EpisodeFragment extends StreamBindFragment {
     }
 
 
+    public OnDemandPlayer getStreamPublic() {
+        return getOnDemandPlayer();
+    }
     /**
      * For Analytics
      * @param method
