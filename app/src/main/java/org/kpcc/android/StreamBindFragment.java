@@ -112,10 +112,6 @@ public class StreamBindFragment extends Fragment {
         return mNotificationBuilder;
     }
 
-    // Override this for your own class.
-    protected void buildNotification() {
-    }
-
     protected void stopService() {
         StreamService service = getStreamService();
         if (service != null) {
@@ -124,7 +120,7 @@ public class StreamBindFragment extends Fragment {
     }
 
     protected void sendNotification() {
-        if (mNotificationBuilder == null) buildNotification();
+        if (mNotificationBuilder == null) return;
 
         MainActivity activity = (MainActivity)getActivity();
         if (activity != null) {

@@ -222,6 +222,9 @@ public class EpisodeFragment extends StreamBindFragment {
                 if (service != null) {
                     OnDemandPlayer stream = getOnDemandPlayer();
                     if (stream != null) {
+                        initNotificationBuilder(R.drawable.menu_antenna, getString(R.string.now_playing));
+                        updateNotificationWithCurrentEpisodeData();
+
                         service.startForeground(Stream.NOTIFICATION_ID, getNotificationBuilder().build());
                         stream.prepareAndStart();
                         analyticsLogPlayEvent();
@@ -241,7 +244,6 @@ public class EpisodeFragment extends StreamBindFragment {
             }
         });
 
-        buildNotification();
         return view;
     }
 
@@ -445,17 +447,11 @@ public class EpisodeFragment extends StreamBindFragment {
         if (mPeriodicBackgroundUpdater != null) { mPeriodicBackgroundUpdater.release(); }
     }
 
-    @Override // StreamBindFragment
-    protected void buildNotification() {
-        initNotificationBuilder(R.drawable.menu_antenna, getString(R.string.now_playing));
-        updateNotificationWithCurrentEpisodeData();
-    }
-
     ////////////////////////////////////////////////////////////////////////////////////////////////
     // Member Functions
     ////////////////////////////////////////////////////////////////////////////////////////////////
     private void updateNotificationWithCurrentEpisodeData() {
-        if (getNotificationBuilder() == null) buildNotification();
+        if (getNotificationBuilder() == null) return;
 
         String programName;
         if (program == null) {
