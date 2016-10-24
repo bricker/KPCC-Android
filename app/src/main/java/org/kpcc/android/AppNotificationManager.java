@@ -8,9 +8,9 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.preference.PreferenceManager;
 
+import com.onesignal.OSNotificationOpenResult;
+import com.onesignal.OneSignal;
 import com.parse.GcmBroadcastReceiver;
-import com.parse.ParsePush;
-import com.parse.ParsePushBroadcastReceiver;
 
 class AppNotificationManager implements SharedPreferences.OnSharedPreferenceChangeListener {
     ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -85,12 +85,12 @@ class AppNotificationManager implements SharedPreferences.OnSharedPreferenceChan
     }
 
     private void subscribe(String channel) {
-        ParsePush.subscribeInBackground(channel);
+        OneSignal.setSubscription(true);
         enableReceivers();
     }
 
     private void unsubscribe(String channel) {
-        ParsePush.unsubscribeInBackground(channel);
+        OneSignal.setSubscription(false);
         disableReceivers();
     }
 
@@ -117,15 +117,10 @@ class AppNotificationManager implements SharedPreferences.OnSharedPreferenceChan
     ////////////////////////////////////////////////////////////////////////////////////////////////
     // Classes
     ////////////////////////////////////////////////////////////////////////////////////////////////
-    public static class BroadcastReceiver extends ParsePushBroadcastReceiver {
+    public static class BroadcastReceiver implements OneSignal.NotificationOpenedHandler {
         @Override
-        protected void onPushOpen(Context context, Intent intent) {
-            // Parse automatically opens the MainActivity, which fortunately goes directly
-            // to the live fragment so we don't have to do that ourselves. All we have to do is
-            // tell the live stream to start playing right away.
+        public void notificationOpened(OSNotificationOpenResult result) {
             DataManager.getInstance().setPlayNow(true);
-            super.onPushOpen(context, intent);
         }
-
     }
 }

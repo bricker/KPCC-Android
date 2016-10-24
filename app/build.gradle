@@ -17,6 +17,9 @@ android {
         targetSdkVersion 23
         versionCode 95
         versionName "3.3.0"
+
+        manifestPlaceholders = [onesignal_app_id: "313c4f32-c377-4fa4-8852-e78710bfef1a",
+                                onesignal_google_project_number: "630795214876"]
     }
 
     buildTypes {
@@ -42,6 +45,7 @@ dependencies {
     compile('com.crashlytics.sdk.android:crashlytics:2.5.5@aar') {
         transitive = true;
     }
+    compile 'com.onesignal:OneSignal:3.+@aar'
     compile 'com.parse.bolts:bolts-android:1.1.4'
     compile 'com.android.support:appcompat-v7:23.4.0'
     compile 'com.google.android.gms:play-services-gcm:9.2.1'

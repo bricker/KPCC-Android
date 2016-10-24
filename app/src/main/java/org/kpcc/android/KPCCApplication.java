@@ -6,6 +6,7 @@ import android.preference.PreferenceManager;
 
 import com.crashlytics.android.Crashlytics;
 import com.flurry.android.FlurryAgent;
+import com.onesignal.OneSignal;
 import com.parse.Parse;
 import com.parse.ParseInstallation;
 
@@ -48,6 +49,7 @@ public class KPCCApplication extends Application {
         XFSManager.setupInstance(this);
 
         super.onCreate();
+        OneSignal.startInit(this).setNotificationOpenedHandler(new AppNotificationManager.BroadcastReceiver()).init();
         Fabric.with(this, new Crashlytics());
 
         CalligraphyConfig.initDefault(new CalligraphyConfig.Builder()
