@@ -7,7 +7,8 @@ import android.media.AudioManager;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 
-import com.google.android.exoplayer.ExoPlayer;
+import com.google.android.exoplayer2.ExoPlayer;
+import com.google.android.exoplayer2.SimpleExoPlayer;
 
 import java.util.Locale;
 import java.util.concurrent.TimeUnit;
@@ -37,7 +38,7 @@ abstract class Stream implements AudioManager.OnAudioFocusChangeListener, AudioP
     ////////////////////////////////////////////////////////////////////////////////////////////////
     // Member Variables
     ////////////////////////////////////////////////////////////////////////////////////////////////
-    private AudioPlayer mAudioPlayer;
+    private SimpleExoPlayer mAudioPlayer;
     private AudioEventListener mAudioEventListener;
     private AudioManager mAudioManager;
     private AudioFocusState mAudioFocusState;
@@ -94,7 +95,7 @@ abstract class Stream implements AudioManager.OnAudioFocusChangeListener, AudioP
 
         try {
             mIsPaused.set(false);
-            getAudioPlayer().getPlayerControl().start();
+            getAudioPlayer().setPlayWhenReady(true);
 
         } catch (IllegalStateException e) {
             // Call release() to stop progress observer, update button state, etc.
@@ -108,7 +109,7 @@ abstract class Stream implements AudioManager.OnAudioFocusChangeListener, AudioP
         try {
             mIsPaused.set(true);
             setPausedAt(System.currentTimeMillis());
-            getAudioPlayer().getPlayerControl().pause();
+            getAudioPlayer().setPlayWhenReady(false);
 
         } catch (IllegalStateException e) {
             // Call release() to stop progress observer, update button state, etc.
@@ -164,11 +165,11 @@ abstract class Stream implements AudioManager.OnAudioFocusChangeListener, AudioP
     ////////////////////////////////////////////////////////////////////////////////////////////////
     // Getters / Setters
     ////////////////////////////////////////////////////////////////////////////////////////////////
-    protected AudioPlayer getAudioPlayer() {
+    protected SimpleExoPlayer getAudioPlayer() {
         return mAudioPlayer;
     }
 
-    protected void setAudioPlayer(final AudioPlayer audioPlayer) {
+    protected void setAudioPlayer(final SimpleExoPlayer audioPlayer) {
         mAudioPlayer = audioPlayer;
     }
 
@@ -245,11 +246,6 @@ abstract class Stream implements AudioManager.OnAudioFocusChangeListener, AudioP
                 onPlayerIdle();
                 break;
 
-            case ExoPlayer.STATE_PREPARING:
-                Log.d("ExoPlayer State", "PREPARING");
-                onPlayerPreparing();
-                break;
-
             case ExoPlayer.STATE_BUFFERING:
                 Log.d("ExoPlayer State", "BUFFERING");
                 onPlayerBuffering();
@@ -294,17 +290,12 @@ abstract class Stream implements AudioManager.OnAudioFocusChangeListener, AudioP
     }
 
     long getDuration() {
-        return getAudioPlayer() == null ? -1 : getAudioPlayer().getPlayerControl().getDuration();
+        return getAudioPlayer() == null ? -1 : getAudioPlayer().getDuration();
     }
 
     boolean isIdle() {
         return getAudioPlayer() == null ||
                 getAudioPlayer().getPlaybackState() == ExoPlayer.STATE_IDLE;
-    }
-
-    boolean isPreparing() {
-        return getAudioPlayer() != null &&
-                getAudioPlayer().getPlaybackState() == ExoPlayer.STATE_PREPARING;
     }
 
     boolean isBuffering() {
@@ -320,14 +311,14 @@ abstract class Stream implements AudioManager.OnAudioFocusChangeListener, AudioP
     boolean isPlaying() {
         return getAudioPlayer() != null &&
                 getAudioPlayer().getPlaybackState() == ExoPlayer.STATE_READY &&
-                getAudioPlayer().getPlayerControl().isPlaying();
+                getAudioPlayer().getPlayWhenReady();
     }
 
     boolean isPaused() {
         return mIsPaused.get() &&
                 getAudioPlayer() != null &&
                 getAudioPlayer().getPlaybackState() == ExoPlayer.STATE_READY &&
-                !getAudioPlayer().getPlayerControl().isPlaying();
+                !getAudioPlayer().getPlayWhenReady();
     }
 
     boolean isEnded() {
@@ -363,12 +354,12 @@ abstract class Stream implements AudioManager.OnAudioFocusChangeListener, AudioP
 
     boolean canSeekBackward() {
         if (getAudioPlayer() == null) return false;
-        return getAudioPlayer().getPlayerControl().canSeekBackward();
+        return getAudioPlayer().canSeekBackward();
     }
 
     boolean canSeekForward() {
         if (getAudioPlayer() == null) return false;
-        return getAudioPlayer().getPlayerControl().canSeekForward();
+        return getAudioPlayer().canSeekForward();
     }
 
     private void audioFocusGain() {

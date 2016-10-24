@@ -1,8 +1,22 @@
 package org.kpcc.android;
 
 import android.content.Context;
+import android.os.Handler;
 
 import com.google.android.exoplayer.TimeRange;
+import com.google.android.exoplayer2.DefaultLoadControl;
+import com.google.android.exoplayer2.ExoPlayerFactory;
+import com.google.android.exoplayer2.LoadControl;
+import com.google.android.exoplayer2.SimpleExoPlayer;
+import com.google.android.exoplayer2.source.MediaSource;
+import com.google.android.exoplayer2.source.hls.HlsMediaSource;
+import com.google.android.exoplayer2.trackselection.AdaptiveVideoTrackSelection;
+import com.google.android.exoplayer2.trackselection.DefaultTrackSelector;
+import com.google.android.exoplayer2.trackselection.FixedTrackSelection;
+import com.google.android.exoplayer2.trackselection.TrackSelection;
+import com.google.android.exoplayer2.trackselection.TrackSelector;
+import com.google.android.exoplayer2.upstream.BandwidthMeter;
+import com.google.android.exoplayer2.upstream.DefaultBandwidthMeter;
 
 /**
  * Created by rickb014 on 4/3/16.
@@ -79,12 +93,21 @@ public class LivePlayer extends Stream {
     LivePlayer(Context context) {
         super(context);
 
-        AudioPlayer.RendererBuilder builder = new HlsRendererBuilder(context, Stream.USER_AGENT, LivePlayer.getStreamUrl());
+        Handler mainHandler = new Handler();
+        TrackSelection.Factory trackSelectionFactory = new FixedTrackSelection.Factory();
+        TrackSelector trackSelector = new DefaultTrackSelector(mainHandler, trackSelectionFactory);
 
-        AudioPlayer player = new AudioPlayer(builder);
+        // 2. Create a default LoadControl
+        LoadControl loadControl = new DefaultLoadControl();
+
+        // 3. Create the player
+        SimpleExoPlayer player = ExoPlayerFactory.newSimpleInstance(context, trackSelector, loadControl);
+
+//        AudioPlayer.RendererBuilder builder = new HlsRendererBuilder(context, Stream.USER_AGENT, );
+//
+//        AudioPlayer player = new AudioPlayer(builder);
         player.setPlayWhenReady(false);
         player.addListener(this);
-
         setAudioPlayer(player);
     }
 
