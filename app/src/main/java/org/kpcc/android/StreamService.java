@@ -84,15 +84,15 @@ public class StreamService extends Service {
     }
 
     void releaseAllActiveStreams() {
-        previousStream.release();
-        currentStream.release();
-        nextStream.release();
+        if (previousStream != null) previousStream.release();
+        if (currentStream != null) currentStream.release();
+        if (nextStream != null) nextStream.release();
     }
 
     void pauseAllActiveStreams() {
-        previousStream.pause();
-        currentStream.pause();
-        nextStream.pause();
+        if (previousStream != null) previousStream.pause();
+        if (currentStream != null) currentStream.pause();
+        if (nextStream != null) nextStream.pause();
     }
 
     void prepareAndStart() {

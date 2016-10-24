@@ -514,10 +514,12 @@ public class LiveFragment extends StreamBindFragment {
             @Override
             void onSettingsLoaded() {
                 MenuItem item = menu.findItem(R.id.action_streamselect);
-                if (XFSManager.getInstance().isDriveActive()) {
-                    item.setVisible(true);
-                } else {
-                    item.setVisible(false);
+                if (item != null) {
+                    if (XFSManager.getInstance().isDriveActive()) {
+                        item.setVisible(true);
+                    } else {
+                        item.setVisible(false);
+                    }
                 }
             }
         });
