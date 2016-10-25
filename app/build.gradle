@@ -19,15 +19,15 @@ repositories {
 }
 
 android {
-    compileSdkVersion 22
+    compileSdkVersion 24
     buildToolsVersion "21.1.2"
 
     defaultConfig {
         applicationId "com.skyblue.pra.kpcc"
         minSdkVersion 16
-        targetSdkVersion 22
-        versionCode 87
-        versionName "3.2.1"
+        targetSdkVersion 24
+        versionCode 98
+        versionName "3.3.1"
     }
     buildTypes {
         release {
@@ -44,11 +44,11 @@ android {
 dependencies {
     compile fileTree(include: ['*.jar'], dir: 'libs')
     compile 'com.parse.bolts:bolts-android:1.1.4'
-    compile 'com.android.support:appcompat-v7:22.1.1'
+    compile 'com.android.support:appcompat-v7:24.2.1'
     compile 'com.google.android.gms:play-services-gcm:8.3.0'
     compile 'com.google.android.gms:play-services-ads:8.3.0'
     compile 'com.mcxiaoke.volley:library:1.0.12'
-    compile 'com.android.support:support-v4:22.1.0'
+    compile 'com.android.support:support-v4:24.2.1'
     compile 'uk.co.chrisjenx:calligraphy:2.1.0'
     compile 'com.astuetz:pagerslidingtabstrip:1.0.1'
     compile project(':support-v4-preferencefragment-1.0.0')

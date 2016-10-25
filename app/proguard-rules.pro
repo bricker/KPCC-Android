@@ -38,11 +38,11 @@
     <fields>;
 }
 
--dontwarn com.parse.ParseFacebookUtils
--dontwarn com.parse.FacebookAuthenticationProvider
--dontwarn com.parse.FacebookAuthenticationProvider$2
--dontwarn com.parse.FacebookAuthenticationProvider$1
--dontwarn com.parse.FacebookAuthenticationProvider$2$1
+-dontwarn com.parse.**
 -dontwarn org.mockito.**
 -dontwarn sun.reflect.**
 -dontwarn android.test.**
+-dontwarn com.flurry.**
+-dontwarn android.net.http.AndroidHttpClient
+-dontwarn com.google.android.gms.**
+-dontwarn com.android.volley.toolbox.**
