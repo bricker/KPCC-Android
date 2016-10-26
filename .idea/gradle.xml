@@ -8,7 +8,6 @@
         <option name="gradleHome" value="$APPLICATION_HOME_DIR$/gradle/gradle-2.14.1" />
         <option name="modules">
           <set>
-            <option value="$PROJECT_DIR$/../ExoPlayer/library" />
             <option value="$PROJECT_DIR$" />
             <option value="$PROJECT_DIR$/app" />
             <option value="$PROJECT_DIR$/support-v4-preferencefragment-1.0.0" />
@@ -16,7 +15,6 @@
         </option>
         <option name="myModules">
           <set>
-            <option value="$PROJECT_DIR$/../ExoPlayer/library" />
             <option value="$PROJECT_DIR$" />
             <option value="$PROJECT_DIR$/app" />
             <option value="$PROJECT_DIR$/support-v4-preferencefragment-1.0.0" />
