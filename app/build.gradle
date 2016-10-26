@@ -9,14 +9,14 @@ repositories {
 
 android {
     compileSdkVersion 24
-    buildToolsVersion "24.0.1"
+    buildToolsVersion "21.1.2"
 
     defaultConfig {
         applicationId "com.skyblue.pra.kpcc"
         minSdkVersion 16
         targetSdkVersion 24
-        versionCode 99
-        versionName "3.3.0"
+        versionCode 100
+        versionName "3.3.2"
     }
 
     buildTypes {
@@ -42,11 +42,12 @@ dependencies {
     compile('com.crashlytics.sdk.android:crashlytics:2.5.5@aar') {
         transitive = true;
     }
+
     compile 'com.parse.bolts:bolts-android:1.1.4'
     compile 'com.android.support:appcompat-v7:24.2.1'
-    compile 'com.google.android.gms:play-services-gcm:9.2.1'
-    compile 'com.google.android.gms:play-services-ads:9.2.1'
-    compile 'com.google.android.gms:play-services-analytics:9.2.1'
+    compile 'com.google.android.gms:play-services-gcm:9.4.0'
+    compile 'com.google.android.gms:play-services-ads:9.4.0'
+    compile 'com.google.android.gms:play-services-analytics:9.4.0'
     compile 'com.mcxiaoke.volley:library:1.0.12'
     compile 'com.android.support:support-v4:24.2.1'
     compile 'uk.co.chrisjenx:calligraphy:2.1.0'
