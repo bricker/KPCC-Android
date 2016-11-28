@@ -5,7 +5,9 @@ import android.content.pm.PackageManager;
 import android.preference.PreferenceManager;
 
 import com.crashlytics.android.Crashlytics;
+import com.crashlytics.android.answers.Answers;
 import com.flurry.android.FlurryAgent;
+import com.onesignal.OneSignal;
 import com.parse.Parse;
 import com.parse.ParseInstallation;
 
@@ -48,7 +50,8 @@ public class KPCCApplication extends Application {
         XFSManager.setupInstance(this);
 
         super.onCreate();
-        Fabric.with(this, new Crashlytics());
+        OneSignal.startInit(this).setNotificationOpenedHandler(new AppNotificationManager.BroadcastReceiver()).init();
+        Fabric.with(this, new Crashlytics(), new Answers());
 
         CalligraphyConfig.initDefault(new CalligraphyConfig.Builder()
                         .setDefaultFontPath("fonts/FreigSanProLig.otf")
