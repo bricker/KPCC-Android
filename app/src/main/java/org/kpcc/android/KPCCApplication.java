@@ -9,7 +9,6 @@ import com.crashlytics.android.answers.Answers;
 import com.flurry.android.FlurryAgent;
 import com.onesignal.OneSignal;
 import com.parse.Parse;
-import com.parse.ParseInstallation;
 
 import io.fabric.sdk.android.Fabric;
 import uk.co.chrisjenx.calligraphy.CalligraphyConfig;
@@ -33,14 +32,11 @@ public class KPCCApplication extends Application {
         BaseAlarmManager.setupInstance(this);
         AnalyticsManager.setupInstance(this);
 
-        Parse.initialize(this,
-                AppConfiguration.getInstance().getSecret("parse.applicationId"),
-                AppConfiguration.getInstance().getSecret("parse.clientKey")
+        Parse.initialize(new Parse.Configuration.Builder(this)
+                .applicationId(AppConfiguration.getInstance().getSecret("parse.newApplicationId"))
+                .server("http://parse.scprdev.org/")
+                .build()
         );
-
-        final ParseInstallation parseInstallation = ParseInstallation.getCurrentInstallation();
-        parseInstallation.put("GCMSenderId", AppConfiguration.getInstance().getConfig("gcm.senderId"));
-        parseInstallation.saveInBackground();
 
         FlurryAgent.setLogEnabled(AppConfiguration.getInstance().isDebug);
         FlurryAgent.init(this, AppConfiguration.getInstance().getSecret("flurry.apiKey"));

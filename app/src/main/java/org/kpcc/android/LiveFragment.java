@@ -718,9 +718,13 @@ public class LiveFragment extends StreamBindFragment {
             programName = schedule.getTitle();
         }
 
-        getNotificationBuilder().
-                setTicker(String.format(Locale.ENGLISH, getString(R.string.now_playing_program), programName)).
-                setContentText(programName);
+        try {
+            getNotificationBuilder().
+                    setTicker(String.format(Locale.ENGLISH, getString(R.string.now_playing_program), programName)).
+                    setContentText(programName);
+        } catch (IllegalStateException e) {
+            // FIXME: Fragment not attached. What do?
+        }
     }
 
     /**
@@ -749,6 +753,11 @@ public class LiveFragment extends StreamBindFragment {
             // Do this stuff every second. This should never be stopped by any action except
             // leaving the fragment.
             LivePlayer stream = getLivePlayer();
+
+            if (stream == null) return;
+            if (mLiveSeekViewManager == null) return;
+            if (mStatus == null) return;
+
             mLiveSeekViewManager.setSecondaryProgressFromSchedule();
 
             long relativeMsBehindLive = stream.relativeMsBehindLive();

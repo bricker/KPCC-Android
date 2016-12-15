@@ -8,7 +8,6 @@ import android.preference.PreferenceManager;
 
 import com.onesignal.OSNotificationOpenResult;
 import com.onesignal.OneSignal;
-import com.parse.GcmBroadcastReceiver;
 
 class AppNotificationManager implements SharedPreferences.OnSharedPreferenceChangeListener {
     ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -61,11 +60,6 @@ class AppNotificationManager implements SharedPreferences.OnSharedPreferenceChan
         pm.setComponentEnabledSetting(receiver1,
                 PackageManager.COMPONENT_ENABLED_STATE_ENABLED,
                 PackageManager.DONT_KILL_APP);
-
-        ComponentName receiver2 = new ComponentName(application, GcmBroadcastReceiver.class);
-        pm.setComponentEnabledSetting(receiver2,
-                PackageManager.COMPONENT_ENABLED_STATE_ENABLED,
-                PackageManager.DONT_KILL_APP);
     }
 
     private void disableReceivers() {
@@ -73,11 +67,6 @@ class AppNotificationManager implements SharedPreferences.OnSharedPreferenceChan
 
         ComponentName receiver1 = new ComponentName(application, BroadcastReceiver.class);
         pm.setComponentEnabledSetting(receiver1,
-                PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
-                PackageManager.DONT_KILL_APP);
-
-        ComponentName receiver2 = new ComponentName(application, GcmBroadcastReceiver.class);
-        pm.setComponentEnabledSetting(receiver2,
                 PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
                 PackageManager.DONT_KILL_APP);
     }
