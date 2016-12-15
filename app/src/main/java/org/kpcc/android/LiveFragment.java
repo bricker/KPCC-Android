@@ -151,93 +151,106 @@ public class LiveFragment extends StreamBindFragment {
                 }
 
                 LivePlayer stream = getLivePlayer();
+                PrerollPlayer preroll = getPrerollPlayer();
+
+                if (preroll != null && preroll.isPaused()) {
+                    preroll.play();
+                    return;
+                }
 
                 if (stream != null && stream.isPaused() && stream.getPausedAt() > (System.currentTimeMillis() - 1000 * 60 * 60 * 8)) {
                     // Stream was paused; start it again.
                     stream.play();
+                    return;
+                }
+
+                // Initialize the lives stream/preroll bundle.
+                final LivePlayer livePlayer = new LivePlayer(getActivity());
+                final PrerollPlayer prerollPlayer = new PrerollPlayer(getActivity());
+
+                livePlayer.setAudioEventListener(new LivePlayerAudioEventListener());
+                prerollPlayer.setAudioEventListener(new PrerollPlayerAudioEventListener());
+
+                // If they just installed the app (less than 10 minutes ago), and have never played the live
+                // stream, don't play preroll.
+                // Otherwise do the normal preroll flow.
+                final long now = System.currentTimeMillis();
+
+                final PrerollManager prerollManager = new PrerollManager();
+                boolean hasPlayedLiveStream = DataManager.getInstance().getHasPlayedLiveStream();
+                boolean installedRecently = KPCCApplication.INSTALLATION_TIME > (now - PrerollManager.INSTALL_GRACE);
+                boolean heardPrerollRecently = prerollManager.getLastPlay() > (now - PrerollManager.PREROLL_THRESHOLD);
+
+                if (!AppConfiguration.getInstance().getConfigBool("preroll.enabled") ||
+                        (!hasPlayedLiveStream && installedRecently) ||
+                        heardPrerollRecently) {
+
+                    // Skipping Preroll
+                    setCurrentStream(livePlayer, STACK_TAG);
+                    livePlayer.prepareAndStart();
+                    analyticsLogPlayEvent(livePlayer);
                 } else {
-                    // Initialize the lives stream/preroll bundle.
-                    final LivePlayer livePlayer = new LivePlayer(getActivity());
-                    final PrerollPlayer prerollPlayer = new PrerollPlayer(getActivity());
+                    prerollPlayer.getAudioEventListener().onPreparing();
 
-                    livePlayer.setAudioEventListener(new LivePlayerAudioEventListener());
-                    prerollPlayer.setAudioEventListener(new PrerollPlayerAudioEventListener());
+                    final MainActivity activity = (MainActivity) getActivity();
+                    if (activity != null) {
+                        // Normal preroll flow (preroll still may not play, based on preroll response)
+                        prerollManager.getPrerollData(activity, new PrerollManager.PrerollCallbackListener() {
+                            @Override
+                            public void onPrerollResponse(final PrerollManager.PrerollData prerollData) {
+                                if (prerollData == null || prerollData.getAudioUrl() == null) {
+                                    setCurrentStream(livePlayer, STACK_TAG);
+                                    livePlayer.prepareAndStart();
+                                    analyticsLogPlayEvent(livePlayer);
+                                } else {
+                                    setCurrentStream(prerollPlayer, STACK_TAG);
+                                    StreamService service = getStreamService();
+                                    if (service != null) {
+                                        MainActivity activity = (MainActivity) getActivity();
+                                        if (activity != null) {
+                                            prerollPlayer.setupPreroll(activity, prerollData.getAudioUrl());
+                                            prerollPlayer.getAudioEventListener().onPrerollData(prerollData);
+                                            prerollPlayer.prepareAndStart();
+                                            prerollManager.setLastPlayToNow();
 
-                    // If they just installed the app (less than 10 minutes ago), and have never played the live
-                    // stream, don't play preroll.
-                    // Otherwise do the normal preroll flow.
-                    final long now = System.currentTimeMillis();
-
-                    final PrerollManager prerollManager = new PrerollManager();
-                    boolean hasPlayedLiveStream = DataManager.getInstance().getHasPlayedLiveStream();
-                    boolean installedRecently = KPCCApplication.INSTALLATION_TIME > (now - PrerollManager.INSTALL_GRACE);
-                    boolean heardPrerollRecently = prerollManager.getLastPlay() > (now - PrerollManager.PREROLL_THRESHOLD);
-
-                    if (!AppConfiguration.getInstance().getConfigBool("preroll.enabled") ||
-                            (!hasPlayedLiveStream && installedRecently) ||
-                            heardPrerollRecently) {
-
-                        // Skipping Preroll
-                        setCurrentStream(livePlayer, STACK_TAG);
-                        livePlayer.prepareAndStart();
-                        analyticsLogPlayEvent(livePlayer);
-                    } else {
-                        prerollPlayer.getAudioEventListener().onPreparing();
-
-                        final MainActivity activity = (MainActivity) getActivity();
-                        if (activity != null) {
-                            // Normal preroll flow (preroll still may not play, based on preroll response)
-                            prerollManager.getPrerollData(activity, new PrerollManager.PrerollCallbackListener() {
-                                @Override
-                                public void onPrerollResponse(final PrerollManager.PrerollData prerollData) {
-                                    if (prerollData == null || prerollData.getAudioUrl() == null) {
-                                        setCurrentStream(livePlayer, STACK_TAG);
-                                        livePlayer.prepareAndStart();
-                                        analyticsLogPlayEvent(livePlayer);
-                                    } else {
-                                        setCurrentStream(prerollPlayer, STACK_TAG);
-                                        StreamService service = getStreamService();
-                                        if (service != null) {
-                                            MainActivity activity = (MainActivity) getActivity();
-                                            if (activity != null) {
-                                                prerollPlayer.setupPreroll(activity, prerollData.getAudioUrl());
-                                                prerollPlayer.getAudioEventListener().onPrerollData(prerollData);
-                                                prerollPlayer.prepareAndStart();
-                                                prerollManager.setLastPlayToNow();
-
-                                                livePlayer.prepare();
-                                                prerollPlayer.setOnPrerollCompleteCallback(new PrerollPlayer.PrerollCompleteCallback() {
-                                                    @Override
-                                                    void onPrerollComplete() {
-                                                        setCurrentStream(livePlayer, STACK_TAG);
-                                                        livePlayer.play();
-                                                        analyticsLogPlayEvent(livePlayer);
-                                                    }
-                                                });
-                                            }
+                                            livePlayer.prepare();
+                                            prerollPlayer.setOnPrerollCompleteCallback(new PrerollPlayer.PrerollCompleteCallback() {
+                                                @Override
+                                                void onPrerollComplete() {
+                                                    setCurrentStream(livePlayer, STACK_TAG);
+                                                    livePlayer.play();
+                                                    analyticsLogPlayEvent(livePlayer);
+                                                }
+                                            });
                                         }
                                     }
                                 }
-                            });
-                        }
+                            }
+                        });
                     }
-
-                    if (!hasPlayedLiveStream) {
-                        DataManager.getInstance().setHasPlayedLiveStream(true);
-                    }
-
-                    AppConfiguration.getInstance().setDynamicProperty(PLAY_START_KEY, String.valueOf(System.currentTimeMillis()));
                 }
+
+                if (!hasPlayedLiveStream) {
+                    DataManager.getInstance().setHasPlayedLiveStream(true);
+                }
+
+                AppConfiguration.getInstance().setDynamicProperty(PLAY_START_KEY, String.valueOf(System.currentTimeMillis()));
             }
         });
 
         mAudioButtonManager.getPauseButton().setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                LivePlayer stream = getLivePlayer();
-                if (stream != null) {
-                    stream.pause();
-                    analyticsLogPauseEvent(stream);
+                LivePlayer livePlayer = getLivePlayer();
+                PrerollPlayer prerollPlayer = getPrerollPlayer();
+                if (livePlayer != null && livePlayer.isPlaying()) {
+                    livePlayer.pause();
+                    analyticsLogPauseEvent(livePlayer);
+                }
+
+                if (prerollPlayer != null && prerollPlayer.isPlaying()) {
+                    prerollPlayer.pause();
+                    // We don't log pauses for preroll.
                 }
             }
         });
