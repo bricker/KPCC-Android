@@ -64,13 +64,14 @@
                     android:contentDescription="@string/kpccplus_token_placeholder"/>
 
                 <EditText
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:layout_gravity="center_vertical"
-                        android:inputType="textNoSuggestions"
-                        android:id="@+id/tokenInputField"
-                        android:hint="@string/kpccplus_token_placeholder"
-                        android:background="@android:color/transparent"/>
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_gravity="center_vertical"
+                    android:inputType="textNoSuggestions"
+                    android:id="@+id/tokenInputField"
+                    android:hint="@string/kpccplus_token_placeholder"
+                    android:background="@android:color/transparent"
+                    android:textColor="?android:attr/colorPrimaryDark"/>
             </LinearLayout>
 
             <include

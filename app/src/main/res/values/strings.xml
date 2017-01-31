@@ -10,6 +10,7 @@
     <string name="feedback">Feedback</string>
     <string name="donate">Donate</string>
     <string name="settings">Settings</string>
+    <string name="schedule">Schedule</string>
 
     <string name="contact_us">Contact Us</string>
     <string name="ok">OK</string>
@@ -89,4 +90,7 @@
     <string name="kpccplus_failure_dialog_message">Uh-oh! We can\'t seem to find a match! The token you entered wasn\'t found in our system. Please try again or get in touch with our membership help desk.</string>
     <string name="kpccplus_failure_email_subject">My Pledge Token isn\'t working on the Android app.</string>
     <string name="kpccplus_failure_email_body">Hello, I ran into some trouble entering my pledge token into the Android app.\n\nThe token I entered was: %s\n\nThank you!</string>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
 </resources>

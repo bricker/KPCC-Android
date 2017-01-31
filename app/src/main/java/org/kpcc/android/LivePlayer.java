@@ -1,6 +1,7 @@
 package org.kpcc.android;
 
 import android.content.Context;
+import android.view.MenuItem;
 
 import com.google.android.exoplayer.TimeRange;
 
@@ -64,9 +65,13 @@ public class LivePlayer extends Stream {
     }
 
     public static boolean isXfs() {
-        XFSManager xfsManager = XFSManager.getInstance();
-        String streamPref = DataManager.getInstance().getStreamPreference();
-        return xfsManager.isDriveActive() && streamPref.equals(LivePlayer.STREAM_XFS.getKey());
+        XFSManager.getInstance().loadSettings(new XFSManager.XFSSettingsLoadCallback() {
+            @Override
+            void onSettingsLoaded() {
+                String streamPref = DataManager.getInstance().getStreamPreference();
+                return XFSManager.getInstance().isDriveActive() && streamPref.equals(LivePlayer.STREAM_XFS.getKey());
+            }
+        });
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////

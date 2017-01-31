@@ -51,7 +51,7 @@ public class XFSTokenFragment extends Fragment {
                 disableButton();
 
                 // TODO: [bcr] Network connectivity handling
-                final String token = mTokenInput.getText().toString();
+                final String token = mTokenInput.getText().toString().trim();
 
                 ParseQuery<ParseObject> query = ParseQuery.getQuery("PfsUser");
                 query.whereEqualTo("pledgeToken", token);
