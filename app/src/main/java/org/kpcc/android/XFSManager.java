@@ -113,8 +113,13 @@ public class XFSManager {
 
                 for (ParseObject setting : settings) {
                     String value = (String)setting.get(SETTING_VALUE);
+                    String name = (String)setting.get(SETTING_NAME);
 
-                    switch ((String)setting.get(SETTING_NAME)) {
+                    if (name == null) {
+                        continue;
+                    }
+
+                    switch (name) {
                         case KPCC_PLUS_DRIVE_START:
                             driveStartString = value;
                             driveStartUts = parseISODateTime(value);
